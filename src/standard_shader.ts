@@ -1,5 +1,5 @@
 import {FragmentShader, VertexShader, ShaderProgram, VertexArrayObject} from "./shader"
-import { GlslAttribute, GlslUniformMat4, GlslType, Buffer } from "./glsl"
+import { GlslAttribute, GlslUniformMat4, GlslType, Buffer, VertexAttributeBuffer, VertexIndicesBuffer } from "./glsl"
 import { mat4 } from "gl-matrix"
 
 
@@ -56,27 +56,46 @@ export class StandardShaderProgram extends ShaderProgram{
         let fragment_shader = StandardFragmentShader.create(gl);
         return new StandardShaderProgram(gl, vertex_shader, fragment_shader);
     }
+
+    public run({vao, u_object_to_clip_value}: {
+        vao: StandardVAO,
+        u_object_to_clip_value: mat4,
+    }){
+        vao.bind();
+        this.use();
+        this.vertex_shader.u_object_to_clip.set(u_object_to_clip_value, this);
+        this.gl.drawElements(this.gl.TRIANGLES, vao.num_indices, this.gl.UNSIGNED_SHORT, 0)
+    }
 }
 
 export class StandardVAO extends VertexArrayObject{
+    public readonly a_position_buffer: Buffer<Float32Array>
+    public readonly a_position_indices_buffer: Buffer<Uint16Array>
+    public readonly num_indices: number
     program: StandardShaderProgram
-    constructor({gl, a_position_buffer}: {
+    constructor({gl, program, a_position_data, a_position_indices}: {
         gl: WebGL2RenderingContext,
-        a_position_buffer: Buffer<Float32Array>
+        program: StandardShaderProgram,
+        a_position_data: Float32Array,
+        a_position_indices: Uint16Array
     }){
         super(gl)
-        this.program = StandardShaderProgram.create(gl);
+        this.program = program;
 
-        this.bind()
-        this.program.vertex_shader.a_position.enable({program: this.program, buffer: a_position_buffer, normalize: false})
+        this.a_position_buffer = new VertexAttributeBuffer(gl, "a_position_buffer", a_position_data, "STATIC_DRAW")
+        this.a_position_indices_buffer = new VertexIndicesBuffer(gl, "position_indices_buffer", a_position_indices, "STATIC_DRAW")
+        this.num_indices = a_position_indices.length
+
+        super.bind()
+        this.program.vertex_shader.a_position.enable({program: this.program, buffer: this.a_position_buffer, normalize: false})
     }
 
-    public render({u_object_to_clip_value}: {
-        u_object_to_clip_value: mat4
-    }){
-        this.program.use();
-        this.bind();
-        this.program.vertex_shader.u_object_to_clip.set(u_object_to_clip_value, this.program);
-        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, /*offset=*/0, /*count=*/14); //FIXME: get this from g_position_buffer
+    public bind(){
+        super.bind()
+        this.a_position_indices_buffer.bind()
+    }
+
+    public drop(){
+        console.error("IMPLEMENT ME! Don't forget to also drop the buffers")
     }
 }

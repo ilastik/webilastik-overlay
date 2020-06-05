@@ -69,7 +69,7 @@ export class GlslAttribute<Arr extends BinaryArray>{
     }){
         let location = program.getAttribLocation(this.name);
         this.gl.enableVertexAttribArray(location.raw);
-        buffer.bindAs("ARRAY_BUFFER")
+        buffer.bind()
         this.gl.vertexAttribPointer(
             /*index=*/location.raw,
             /*size=*/this.GlslType.numElements,
@@ -85,11 +85,8 @@ export class GlslAttribute<Arr extends BinaryArray>{
 export type BindTarget = "ARRAY_BUFFER" | "ELEMENT_ARRAY_BUFFER"
 export type BufferUsageHint = "STATIC_DRAW" | "DYNAMIC_DRAW"
 
-export class Buffer<Arr extends BinaryArray>{
-    protected static bindings = new Map<BindTarget, string>();
-
+export abstract class Buffer<Arr extends BinaryArray>{
     protected glbuffer: WebGLBuffer
-    protected target: BindTarget | undefined
     public numElements: number
 
     constructor(
@@ -106,38 +103,36 @@ export class Buffer<Arr extends BinaryArray>{
         this.populate(data, usageHint)
     }
 
+    public abstract get_bind_target(): BindTarget;
+
     public destroy(){
         this.gl.deleteBuffer(this.glbuffer)
     }
 
-    public get bindTarget() : BindTarget | undefined{
-        return this.target
-    }
-
-    public bindAs(target: BindTarget){
-        let previouslyBound = Buffer.bindings.get(target)
-        if(previouslyBound !== undefined){
-            throw `Buffer ${previouslyBound} was still bound to ${target} when binding ${this.name}`
-        }
-        this.gl.bindBuffer(this.gl[target], this.glbuffer);
-        this.target = target
-        Buffer.bindings.set(target, this.name)
+    public bind(){
+        this.gl.bindBuffer(this.gl[this.get_bind_target()], this.glbuffer);
     }
 
     public unbind(){
-        if(this.target === undefined){
-            throw `Trying to unbind unbound vuffer ${this.name}`
-        }
-        this.gl.bindBuffer(this.gl[this.target!], null);
-        Buffer.bindings.delete(this.target)
-        this.target = undefined
+        this.gl.bindBuffer(this.gl[this.get_bind_target()], null);
     }
 
     public populate(data: Arr, usageHint: BufferUsageHint){
-        this.bindAs("ARRAY_BUFFER")
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, data, this.gl[usageHint])
+        this.bind()
+        this.gl.bufferData(this.gl[this.get_bind_target()], data, this.gl[usageHint])
         this.unbind()
         this.numElements = data.length
     }
 }
 
+export class VertexAttributeBuffer extends Buffer<Float32Array>{
+    public get_bind_target(): BindTarget{
+        return "ARRAY_BUFFER"
+    }
+}
+
+export class VertexIndicesBuffer extends Buffer<Uint16Array>{
+    public get_bind_target(): BindTarget{
+        return "ELEMENT_ARRAY_BUFFER"
+    }
+}

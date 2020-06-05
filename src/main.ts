@@ -1,6 +1,7 @@
 import { Cube } from './shapes'
 import { PerspectiveCamera } from './camera'
 import { vec3 } from 'gl-matrix'
+import { StandardShaderProgram } from './standard_shader'
 
 let c = document.querySelector("#c")! as HTMLCanvasElement
 console.log(`This is the canvas: ${c}`)
@@ -16,13 +17,15 @@ c.style.height = c.height + "px"
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 
+let renderer = StandardShaderProgram.create(gl)
+// debugger
+let cube = new Cube({gl, renderer});
+let camera = new PerspectiveCamera({})
+
 function gogo(x: number, y: number, z: number){
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-
-    let cube = new Cube({gl});
-    let camera = new PerspectiveCamera({})
     camera.moveTo(vec3.fromValues(x, y, z))
     camera.lookAt(cube.position)
 
