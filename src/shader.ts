@@ -68,18 +68,3 @@ export class ShaderProgram{
         ShaderProgram.currentProgram = this
     }
 }
-
-export class VertexArrayObject{
-    private glAttributeObject : WebGLVertexArrayObject
-    constructor(public readonly gl: WebGL2RenderingContext){
-        let vao = this.gl.createVertexArray();
-        if(vao === null){
-            throw `Could not create vertex GlslAttribute object`
-        }
-        this.glAttributeObject = vao;
-    }
-
-    public bind(){
-        this.gl.bindVertexArray(this.glAttributeObject);
-    }
-}

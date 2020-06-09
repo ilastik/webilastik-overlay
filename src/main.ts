@@ -17,7 +17,7 @@ c.style.height = c.height + "px"
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 
-let renderer = StandardShaderProgram.create(gl)
+let renderer = new StandardShaderProgram(gl)
 // debugger
 let cube = new Cube({gl, renderer});
 let camera = new PerspectiveCamera({})
@@ -32,6 +32,11 @@ function gogo(x: number, y: number, z: number){
     cube.render(camera)
 }
 
-gogo(2,2,0);
+function rotcube(angle: number){
+    cube.rotateY(angle)
+}
 
-(<any>window)['gg'] = gogo
+gogo(0, 0,2);
+
+(<any>window)['gg'] = gogo;
+(<any>window)['rc'] = rotcube;

@@ -1,14 +1,15 @@
 import {vec3, mat4} from "gl-matrix"
 
 export interface Camera{
-    world_to_perspective_matrix: mat4
+    world_to_view_matrix: mat4
+    view_to_device_matrix: mat4
 }
 
-export class PerspectiveCamera{
+export class PerspectiveCamera implements Camera{
     position = vec3.fromValues(0,0,0)
 
     world_to_view_matrix = mat4.create()
-    view_to_perspective_matrix = mat4.create()
+    view_to_device_matrix = mat4.create()
 
     fovy: number
     aspect: number
@@ -20,7 +21,7 @@ export class PerspectiveCamera{
         near?: number,
         far?: number
     }){
-        mat4.perspective(this.view_to_perspective_matrix, fovy, aspect, near, far)
+        mat4.perspective(this.view_to_device_matrix, fovy, aspect, near, far)
     }
 
     public moveTo(position: vec3){
@@ -34,10 +35,5 @@ export class PerspectiveCamera{
             /*center=*/point,
             /*up=*/up
         )
-    }
-
-    public get world_to_perspective_matrix(): mat4{
-        let out = mat4.create()
-        return mat4.mul(out, this.view_to_perspective_matrix, this.world_to_view_matrix)
     }
 }

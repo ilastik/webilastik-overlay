@@ -1,9 +1,9 @@
 import { mat4, vec3 } from "gl-matrix"
-import { ShaderProgram } from "./shader"
+import { ShaderProgram} from "./shader"
+import { BinaryArray, AttributeElementType } from "./gl"
+import { Buffer } from "./buffer"
 
-export type AttributeElementType = "BYTE" | "SHORT" | "UNSIGNED_BYTE" | "UNSIGNED_SHORT" | "FLOAT"
 export type AttributeNumElements = 1 | 2 | 3 | 4
-export type BinaryArray = ArrayBufferView & {length: number}
 
 export class GlslType<Arr extends BinaryArray>{
     private constructor(
@@ -82,57 +82,3 @@ export class GlslAttribute<Arr extends BinaryArray>{
     }
 }
 
-export type BindTarget = "ARRAY_BUFFER" | "ELEMENT_ARRAY_BUFFER"
-export type BufferUsageHint = "STATIC_DRAW" | "DYNAMIC_DRAW"
-
-export abstract class Buffer<Arr extends BinaryArray>{
-    protected glbuffer: WebGLBuffer
-    public numElements: number
-
-    constructor(
-        public readonly gl: WebGL2RenderingContext,
-        public readonly name: string,
-        data: Arr,
-        usageHint: BufferUsageHint,
-    ){
-        let buf = gl.createBuffer();
-        if(buf === null){
-            throw `Could not create buffer`
-        }
-        this.glbuffer = buf
-        this.populate(data, usageHint)
-    }
-
-    public abstract get_bind_target(): BindTarget;
-
-    public destroy(){
-        this.gl.deleteBuffer(this.glbuffer)
-    }
-
-    public bind(){
-        this.gl.bindBuffer(this.gl[this.get_bind_target()], this.glbuffer);
-    }
-
-    public unbind(){
-        this.gl.bindBuffer(this.gl[this.get_bind_target()], null);
-    }
-
-    public populate(data: Arr, usageHint: BufferUsageHint){
-        this.bind()
-        this.gl.bufferData(this.gl[this.get_bind_target()], data, this.gl[usageHint])
-        this.unbind()
-        this.numElements = data.length
-    }
-}
-
-export class VertexAttributeBuffer extends Buffer<Float32Array>{
-    public get_bind_target(): BindTarget{
-        return "ARRAY_BUFFER"
-    }
-}
-
-export class VertexIndicesBuffer extends Buffer<Uint16Array>{
-    public get_bind_target(): BindTarget{
-        return "ELEMENT_ARRAY_BUFFER"
-    }
-}
