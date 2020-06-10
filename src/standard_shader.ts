@@ -1,6 +1,6 @@
 import {FragmentShader, VertexShader, ShaderProgram} from "./shader"
 import {VertexArrayObject, Vec3AttributeBuffer/*, VertexIndicesBuffer*/} from "./buffer"
-import { mat4 } from "gl-matrix"
+import { mat4, vec3 } from "gl-matrix"
 
 
 
@@ -27,10 +27,12 @@ export class StandardShaderProgram extends ShaderProgram{
 
             in vec3 v_normal_in_world_coords;
 
+            uniform vec3 u_color;
+
             out highp vec4 outf_color;
 
             void main(){
-                vec3 color = vec3(1,0,0) / 3.0; //red
+                vec3 color = u_color / 3.0; // this will be multiplied by a value in [1, 3], so maxium brightness is the original value
                 vec3 light_direction_world = normalize(vec3(-1, -1, -1));
 
                 float cos_angle_between_normal_and_light = dot(v_normal_in_world_coords, light_direction_world);
@@ -45,8 +47,9 @@ export class StandardShaderProgram extends ShaderProgram{
         super(gl, vertex_shader, fragment_shader)
     }
 
-    public run({vao, u_object_to_world, u_world_to_view, u_view_to_device}: {
+    public run({vao, u_color, u_object_to_world, u_world_to_view, u_view_to_device}: {
         vao: StandardVAO,
+        u_color: vec3,
         u_object_to_world: mat4,
         u_world_to_view: mat4,
         u_view_to_device: mat4,
@@ -61,6 +64,9 @@ export class StandardShaderProgram extends ShaderProgram{
 
         uniform_location = this.gl.getUniformLocation(this.glprogram, "u_view_to_device");
         this.gl.uniformMatrix4fv(uniform_location, false, u_view_to_device);
+
+        uniform_location = this.gl.getUniformLocation(this.glprogram, "u_color")
+        this.gl.uniform3f(uniform_location, u_color[0], u_color[1], u_color[2]);
 
         vao.bind();
         console.log(`Trying to draw ${vao.num_positions} verts`)

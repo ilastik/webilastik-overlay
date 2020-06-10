@@ -1,4 +1,4 @@
-import { Cube } from './shapes'
+import { Cube, Plane } from './shapes'
 import { PerspectiveCamera } from './camera'
 import { vec3 } from 'gl-matrix'
 import { StandardShaderProgram } from './standard_shader'
@@ -24,7 +24,8 @@ gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 let renderer = new StandardShaderProgram(gl)
 // debugger
-let cube = new Cube({gl, renderer});
+let plane = new Plane({gl, renderer, color: vec3.fromValues(1, 0, 0), position: vec3.fromValues(0, 0, -1), scale: vec3.fromValues(1, 1, 1)});
+let cube = new Cube({gl, renderer, color: vec3.fromValues(0, 0, 1), scale: vec3.fromValues(0.5, 0.5, 0.5)});
 let camera = new PerspectiveCamera({})
 
 function gogo(x: number, y: number, z: number){
@@ -34,6 +35,9 @@ function gogo(x: number, y: number, z: number){
     camera.moveTo(vec3.fromValues(x, y, z))
     camera.lookAt(cube.position)
 
+    gl.colorMask(false, false, false, false);
+    plane.render(camera)
+    gl.colorMask(true, true, true, true);
     cube.render(camera)
 }
 
