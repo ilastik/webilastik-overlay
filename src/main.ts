@@ -6,7 +6,12 @@ import { StandardShaderProgram } from './standard_shader'
 let c = document.querySelector("#c")! as HTMLCanvasElement
 console.log(`This is the canvas: ${c}`)
 
-let gl = c.getContext("webgl2")!
+let gl = c.getContext("webgl2", {depth: true})!
+//gl.enable(gl.CULL_FACE);
+//gl.cullFace(gl.BACK);
+
+gl.enable(gl.DEPTH_TEST)
+//gl.depthFunc(gl.LESS)
 
 c.width = 800
 c.style.width = c.width + "px"
@@ -24,7 +29,7 @@ let camera = new PerspectiveCamera({})
 
 function gogo(x: number, y: number, z: number){
     gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     camera.moveTo(vec3.fromValues(x, y, z))
     camera.lookAt(cube.position)
@@ -34,9 +39,12 @@ function gogo(x: number, y: number, z: number){
 
 function rotcube(angle: number){
     cube.rotateY(angle)
+    gogo(0, 0, 2.5)
 }
 
-gogo(0, 0,2);
+gogo(0, 0,2.5);
 
-(<any>window)['gg'] = gogo;
-(<any>window)['rc'] = rotcube;
+
+c.addEventListener("click", () => {
+    rotcube(0.1)
+})

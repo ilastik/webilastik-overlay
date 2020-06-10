@@ -12,10 +12,20 @@ const LEFT = vec3.create(); vec3.negate(LEFT, RIGHT);
 const DOWN = vec3.create(); vec3.negate(DOWN,    UP);
 const BACK = vec3.create(); vec3.negate(BACK, FRONT);
 
+
+//front face corners
 const LUF = vec3.create(); vec3.add(LUF,  LEFT,   UP); vec3.add(LUF, LUF, FRONT)
 const LDF = vec3.create(); vec3.add(LDF,  LEFT, DOWN); vec3.add(LDF, LDF, FRONT)
 const RDF = vec3.create(); vec3.add(RDF, RIGHT, DOWN); vec3.add(RDF, RDF, FRONT)
 const RUF = vec3.create(); vec3.add(RUF, RIGHT,   UP); vec3.add(RUF, RUF, FRONT)
+
+
+//back face corners
+const LUB = vec3.create(); vec3.add(LUB, LEFT,    UP); vec3.add(LUB, LUB, BACK);
+const LDB = vec3.create(); vec3.add(LDB, LEFT,  DOWN); vec3.add(LDB, LDB, BACK);
+const RDB = vec3.create(); vec3.add(RDB, RIGHT, DOWN); vec3.add(RDB, RDB, BACK);
+const RUB = vec3.create(); vec3.add(RUB, RIGHT,   UP); vec3.add(RUB, RUB, BACK);
+
 
 function vecs_to_floats(vecs: Array<vec3>): Array<number>{
     let out = new Array<number>()
@@ -59,6 +69,10 @@ export class Triangle{
 
     public static CubeFrontTop(): Triangle{
         return new Triangle(LUF, RDF, RUF);
+    }
+
+    public static CubeLeftBottom(): Triangle{
+        return new Triangle(LUF, LDF, LDB, true);
     }
 }
 
@@ -106,6 +120,9 @@ export class Cube{
 
         let mesh = new Mesh([
             Triangle.CubeFrontBottom(),
+            Triangle.CubeFrontTop(),
+
+            Triangle.CubeLeftBottom(),
         ])
 
         this.vao = new StandardVAO({

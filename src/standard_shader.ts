@@ -37,6 +37,8 @@ export class StandardShaderProgram extends ShaderProgram{
                 float color_intensity = cos_angle_between_normal_and_light + 2.0; //slide interval [-1 , +1] to [1, +3]
 
                 outf_color = vec4((color * color_intensity),1);
+                //outf_color = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1);
+
             }`
         )
 
