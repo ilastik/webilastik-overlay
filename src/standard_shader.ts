@@ -5,7 +5,21 @@ import { mat4, vec3 } from "gl-matrix"
 
 export type StencilOp = "KEEP" | "ZERO" | "REPLACE" | "INCR" | "INCR_WRAP" | "DECR" | "DECR_WRAP" | "INVERT"
 export type StencilFunc = "NEVER" | "LESS" | "EQUAL" | "LEQUAL" | "GREATER" | "NOTEQUAL" | "GEQUAL" | "ALWAYS"
+export enum CullFace{
+    BACK = WebGL2RenderingContext["BACK"],
+    FRONT = WebGL2RenderingContext["FRONT"],
+    FRONT_AND_BACK = WebGL2RenderingContext["FRONT_AND_BACK"],
+}
+export enum FrontFace{
+    CW = WebGL2RenderingContext["CW"],
+    CCW = WebGL2RenderingContext["CCW"],
+}
 
+
+export interface CullConfig{
+    face: CullFace,
+    frontFace: FrontFace,
+}
 
 export interface ColorMask{
     r: boolean, g: boolean, b: boolean, a: boolean
@@ -16,11 +30,23 @@ export interface StencilConfig{
     fail: StencilOp, zfail: StencilOp, zpass: StencilOp,
 }
 
+export enum DepthFunc{
+    NEVER = WebGL2RenderingContext["NEVER"],
+    LESS = WebGL2RenderingContext["LESS"],
+    EQUAL = WebGL2RenderingContext["EQUAL"],
+    LEQUAL = WebGL2RenderingContext["LEQUAL"],
+    GREATER = WebGL2RenderingContext["GREATER"],
+    NOTEQUAL = WebGL2RenderingContext["NOTEQUAL"],
+    GEQUAKL = WebGL2RenderingContext["GEQUAL"],
+    ALWAYS = WebGL2RenderingContext["ALWAYS"],
+}
 
 export interface RenderParams{
     colorMask?: ColorMask,
     depthMask?: boolean,
+    depthFunc?: DepthFunc,
     stencil?: StencilConfig,
+    cullConfig?: CullConfig | false,
 }
 
 
@@ -77,9 +103,14 @@ export class StandardShaderProgram extends ShaderProgram{
         renderParams: {
             colorMask={r: true, g: true, b: true, a: true},
             depthMask=true,
+            depthFunc=DepthFunc.LESS,
             stencil={
                 func: "ALWAYS", ref: 1, mask: 0xFFFFFFFF, //default stencilFunc to Always pass
                 fail: "KEEP", zfail: "KEEP", zpass: "KEEP" //default tencil op to not touch the stencil
+            },
+            cullConfig={
+                face: CullFace.BACK,
+                frontFace: FrontFace.CCW,
             },
         },
     }: {
@@ -94,10 +125,18 @@ export class StandardShaderProgram extends ShaderProgram{
         this.gl.colorMask(colorMask.r, colorMask.g, colorMask.b, colorMask.a)
 
         this.gl.depthMask(depthMask)
+        this.gl.depthFunc(depthFunc)
 
         this.gl.stencilFunc(/*func=*/this.gl[stencil.func], /*ref=*/stencil.ref, /*mask=*/stencil.mask)
         this.gl.stencilOp(/*fail=*/this.gl[stencil.fail], /*zfail=*/this.gl[stencil.zfail], /*zpass=*/this.gl[stencil.zpass])
 
+        if(cullConfig === false){
+            this.gl.disable(this.gl.CULL_FACE)
+        }else{
+            this.gl.enable(this.gl.CULL_FACE)
+            this.gl.frontFace(cullConfig.frontFace)
+            this.gl.cullFace(cullConfig.face)
+        }
 
         this.use()
 

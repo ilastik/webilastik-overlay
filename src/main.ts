@@ -1,7 +1,9 @@
-import { Cube, Plane } from './shapes'
+import { Cube } from './shapes'
+import { Plane } from './shapes'
+
 import { PerspectiveCamera } from './camera'
 import { vec3 } from 'gl-matrix'
-import { StandardShaderProgram } from './standard_shader'
+import { StandardShaderProgram, DepthFunc, /*CullFace, FrontFace*/ } from './standard_shader'
 
 let c = document.querySelector("#c")! as HTMLCanvasElement
 console.log(`This is the canvas: ${c}`)
@@ -25,14 +27,20 @@ gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 let renderer = new StandardShaderProgram(gl)
 // debugger
-let slicing_plane = new Plane({gl, renderer, color: vec3.fromValues(1, 0, 0), position: vec3.fromValues(0, 0, -1), scale: vec3.fromValues(1, 1, 1)});
-
-let stencil_plane = new Plane({
+let slicing_plane = new Plane({
     gl,
-    renderer, color: vec3.fromValues(0, 1, 0),
-    position: vec3.fromValues(0.5, 0, -0.5),
-    scale: vec3.fromValues(0.5, 1, 1)
+    renderer,
+    color: vec3.fromValues(1, 0, 0),
+    //position: vec3.fromValues(0, 0, -1),
+    scale: vec3.fromValues(1, 1, 1)
 });
+
+// let stencil_plane = new Plane({
+//     gl,
+//     renderer, color: vec3.fromValues(0, 1, 0),
+//     position: vec3.fromValues(0.5, 0, 0),
+//     scale: vec3.fromValues(0.5, 1, 1)
+// });
 
 let cube = new Cube({gl, renderer, color: vec3.fromValues(0, 0, 1), scale: vec3.fromValues(0.5, 0.5, 0.5)});
 let camera = new PerspectiveCamera({})
@@ -45,26 +53,29 @@ function gogo(x: number, y: number, z: number){
     camera.lookAt(cube.position)
 
     slicing_plane.render(camera, {
-        depthMask: true,
         //colorMask: {r: false, g: false, b: false, a: false}, //disable drawing of colors. only interested in depth
     })
 
 
-    stencil_plane.render(camera, {
-        depthMask: false, //do not update depth buffer when doing stencil stuff
-        stencil: {
-            func: "ALWAYS", ref: 1, mask: 0xFFFFFFFF, //always pass test to update the stencil buffer with stencil_plane geometry
-            fail: "ZERO", zfail: "ZERO", zpass: "INCR"//since the buffer has been reset, this should increment the buffer to 1
-        },
+    // stencil_plane.render(camera, {
+    //     depthMask: false, //do not update depth buffer when doing stencil stuff
+    //     stencil: {
+    //         func: "ALWAYS", ref: 1, mask: 0xFFFFFFFF, //always pass test to update the stencil buffer with stencil_plane geometry
+    //         fail: "ZERO", zfail: "ZERO", zpass: "INCR"//since the buffer has been reset, this should increment the buffer to 1
+    //     },
+    // })
+
+    cube.render(camera, {
+        cullConfig: false,//{face: CullFace.FRONT, frontFace: FrontFace.CCW}
+        depthFunc: DepthFunc.GREATER
     })
 
-
-   cube.render(camera, {
-    stencil: {
-        func: "EQUAL", ref: 1, mask: 0xFFFFFFFF,//if stencil is 1, pass
-        fail: "KEEP", zfail: "KEEP", zpass: "KEEP", // do not touch stencil
-    }
-   })
+//    cube.render(camera, {
+//     stencil: {
+//         func: "EQUAL", ref: 1, mask: 0xFFFFFFFF,//if stencil is 1, pass
+//         fail: "KEEP", zfail: "KEEP", zpass: "KEEP", // do not touch stencil
+//     }
+//    })
 }
 
 function rotcube(angle: number){

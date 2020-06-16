@@ -44,13 +44,21 @@ export class Triangle{
 
     //points assumed to be counter-clockwise, unless clowckwise is true
     constructor(p0: vec3, p1: vec3, p2: vec3, clockwise=false){
-        this.p0 = p0
-        this.p1 = p1
-        this.p2 = p2
+        this.p0 = vec3.clone(p0);
+        this.p1 = vec3.clone(p1)
+        this.p2 = vec3.clone(p2)
         if(clockwise){
             this.p0 = p2
             this.p2 = p0
         }
+    }
+
+    public move(delta: vec3) : Triangle{
+        vec3.add(this.p0, this.p0, delta)
+        vec3.add(this.p1, this.p1, delta)
+        vec3.add(this.p2, this.p2, delta)
+
+        return this
     }
 
     public get_gl_positions() : Array<number>{
@@ -74,6 +82,26 @@ export class Triangle{
 
     public static CubeLeftBottom(): Triangle{
         return new Triangle(LUF, LDF, LDB, true);
+    }
+
+    public static CubeLeftTop(): Triangle{
+        return new Triangle(LUB, LUF, LDB, true)
+    }
+
+    public static CubeBackBottom(): Triangle{
+        return new Triangle(LUB, LDB, RDB, true);
+    }
+
+    public static CubeBackTop(): Triangle{
+        return new Triangle(LUB, RDB, RUB, true);
+    }
+
+    public static CubeRightBottom(): Triangle{
+        return new Triangle(RUF, RDF, RDB);
+    }
+
+    public static CubeRightTop(): Triangle{
+        return new Triangle(RUB, RUF, RDB);
     }
 }
 
@@ -173,6 +201,13 @@ export class Cube extends MeshObject{
             Triangle.CubeFrontTop(),
 
             Triangle.CubeLeftBottom(),
+            Triangle.CubeLeftTop(),
+
+            // Triangle.CubeBackBottom(),
+            // Triangle.CubeBackTop(),
+
+            // Triangle.CubeRightBottom(),
+            // Triangle.CubeRightTop(),
         ]))
     }
 }
@@ -181,8 +216,8 @@ export class Cube extends MeshObject{
 export class Plane extends MeshObject{
     constructor(params: MeshParams){
         super(params, new Mesh([
-            Triangle.CubeFrontBottom(),
-            Triangle.CubeFrontTop(),
+            Triangle.CubeFrontBottom().move(vec3.fromValues(0, 0, -1)),
+            Triangle.CubeFrontTop().move(vec3.fromValues(0, 0, -1)),
         ]))
     }
 }
