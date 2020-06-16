@@ -3,6 +3,26 @@ import {VertexArrayObject, Vec3AttributeBuffer/*, VertexIndicesBuffer*/} from ".
 import { mat4, vec3 } from "gl-matrix"
 
 
+export type StencilOp = "KEEP" | "ZERO" | "REPLACE" | "INCR" | "INCR_WRAP" | "DECR" | "DECR_WRAP" | "INVERT"
+export type StencilFunc = "NEVER" | "LESS" | "EQUAL" | "LEQUAL" | "GREATER" | "NOTEQUAL" | "GEQUAL" | "ALWAYS"
+
+
+export interface ColorMask{
+    r: boolean, g: boolean, b: boolean, a: boolean
+}
+
+export interface StencilConfig{
+    func: StencilFunc, ref: number, mask: number,
+    fail: StencilOp, zfail: StencilOp, zpass: StencilOp,
+}
+
+
+export interface RenderParams{
+    colorMask?: ColorMask,
+    depthMask?: boolean,
+    stencil?: StencilConfig,
+}
+
 
 export class StandardShaderProgram extends ShaderProgram{
     constructor(gl:WebGL2RenderingContext){
@@ -47,13 +67,38 @@ export class StandardShaderProgram extends ShaderProgram{
         super(gl, vertex_shader, fragment_shader)
     }
 
-    public run({vao, u_color, u_object_to_world, u_world_to_view, u_view_to_device}: {
+    public run({
+        vao,
+        u_color,
+        u_object_to_world,
+        u_world_to_view,
+        u_view_to_device,
+
+        renderParams: {
+            colorMask={r: true, g: true, b: true, a: true},
+            depthMask=true,
+            stencil={
+                func: "ALWAYS", ref: 1, mask: 0xFFFFFFFF, //default stencilFunc to Always pass
+                fail: "KEEP", zfail: "KEEP", zpass: "KEEP" //default tencil op to not touch the stencil
+            },
+        },
+    }: {
         vao: StandardVAO,
         u_color: vec3,
         u_object_to_world: mat4,
         u_world_to_view: mat4,
         u_view_to_device: mat4,
+
+        renderParams: RenderParams
     }){
+        this.gl.colorMask(colorMask.r, colorMask.g, colorMask.b, colorMask.a)
+
+        this.gl.depthMask(depthMask)
+
+        this.gl.stencilFunc(/*func=*/this.gl[stencil.func], /*ref=*/stencil.ref, /*mask=*/stencil.mask)
+        this.gl.stencilOp(/*fail=*/this.gl[stencil.fail], /*zfail=*/this.gl[stencil.zfail], /*zpass=*/this.gl[stencil.zpass])
+
+
         this.use()
 
         let uniform_location = this.gl.getUniformLocation(this.glprogram, "u_object_to_world");

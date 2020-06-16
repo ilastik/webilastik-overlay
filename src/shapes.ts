@@ -1,9 +1,10 @@
 import {vec3, quat, mat4} from "gl-matrix";
 
 import {Camera} from "./camera";
-import {StandardVAO, StandardShaderProgram} from "./standard_shader";
+import {StandardVAO, StandardShaderProgram, RenderParams} from "./standard_shader";
 
 
+//right-handed system
 const RIGHT =  vec3.fromValues(1, 0, 0); // X
 const UP    =  vec3.fromValues(0, 1, 0); // Y
 const FRONT =  vec3.fromValues(0, 0, 1); // Z
@@ -152,13 +153,15 @@ export class MeshObject{
         return out
     }
 
-    public render(camera: Camera){
+    public render(camera: Camera, renderParams: RenderParams){
         this.renderer.run({
             vao: this.vao,
             u_color: this.color,
             u_object_to_world: this.object_to_world_matrix,
             u_world_to_view: camera.world_to_view_matrix,
             u_view_to_device: camera.view_to_device_matrix,
+
+            renderParams
         });
     }
 }
