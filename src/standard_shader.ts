@@ -153,7 +153,7 @@ export class StandardShaderProgram extends ShaderProgram{
         this.gl.uniform3f(uniform_location, u_color[0], u_color[1], u_color[2]);
 
         vao.bind();
-        console.log(`Trying to draw ${vao.num_positions} verts`)
+        //console.log(`Trying to draw ${vao.num_positions} verts`)
         this.gl.drawArrays(this.gl.TRIANGLES, 0, vao.num_positions)
     }
 }
@@ -171,8 +171,8 @@ export class StandardVAO extends VertexArrayObject{
         //vertex_indices: Uint16Array,
     }){
         super(gl)
-        console.log(`Rendering positions: ${a_position_data}`)
-        console.log(`Rendering normals: ${a_normal_data}`)
+        //console.log(`Rendering positions: ${a_position_data}`)
+        //console.log(`Rendering normals: ${a_normal_data}`)
 
         if(a_position_data.length != a_normal_data.length){
             throw `position/normals mismatch!! num positions: ${a_position_data.length} num normals: ${a_normal_data.length}`

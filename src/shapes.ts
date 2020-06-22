@@ -182,11 +182,12 @@ export class MeshObject{
     }
 
     public render(camera: Camera, renderParams: RenderParams){
+        let world_to_view_matrix = mat4.create(); camera.get_world_to_view_matrix(world_to_view_matrix)
         this.renderer.run({
             vao: this.vao,
             u_color: this.color,
             u_object_to_world: this.object_to_world_matrix,
-            u_world_to_view: camera.world_to_view_matrix,
+            u_world_to_view: world_to_view_matrix,
             u_view_to_device: camera.view_to_device_matrix,
 
             renderParams
@@ -203,11 +204,11 @@ export class Cube extends MeshObject{
             Triangle.CubeLeftBottom(),
             Triangle.CubeLeftTop(),
 
-            // Triangle.CubeBackBottom(),
-            // Triangle.CubeBackTop(),
+            Triangle.CubeBackBottom(),
+            Triangle.CubeBackTop(),
 
-            // Triangle.CubeRightBottom(),
-            // Triangle.CubeRightTop(),
+            Triangle.CubeRightBottom(),
+            Triangle.CubeRightTop(),
         ]))
     }
 }
