@@ -1,7 +1,7 @@
 import { Cube } from './shapes'
 //import { Plane } from './shapes'
 
-import { PerspectiveCamera } from './camera'
+import { PerspectiveCamera, forward_c, left_c } from './camera'
 //import { OrthoCamera } from './camera'
 
 import { vec3 } from 'gl-matrix'
@@ -107,34 +107,88 @@ createInput({inputType: "button", value: "Center cam on cube", parentElement: ce
 }})
 
 
-let camera_tilt_controls = createElement({tagName: "table", parentElement: camera_controls})
-camera_tilt_controls.style.border = "solid 1px black"
-    let controls_row = createElement({tagName: "tr", parentElement: camera_tilt_controls})
-        createElement({tagName: "td", parentElement: controls_row});
-        createElement({tagName: "td", parentElement: controls_row, innerHTML: "^", click: () => {
-            console.log("Tilt camera up")
-            camera.tiltUp(0.1)
-        }});
-        createElement({tagName: "td", parentElement: controls_row});
+let velocity = vec3.fromValues(0,0,0);
+let forward_velocity = vec3.fromValues(0, 0, 0)
+let left_velocity = vec3.fromValues(0, 0, 0)
 
-    controls_row = createElement({tagName: "tr", parentElement: camera_tilt_controls})
-        createElement({tagName: "td", parentElement: controls_row, innerHTML: "<", click: () =>{
-            console.log("Rotate camera left...")
-            camera.rotateLeft(0.1)
-        }});
-        createElement({tagName: "td", parentElement: controls_row});
-        createElement({tagName: "td", parentElement: controls_row, innerHTML: ">", click: () => {
-            console.log("Rotate camera right...")
-            camera.rotateLeft(-0.1)
-        }});
+let forward = 0;
+let backward = 0;
+let left = 0;
+let right = 0;
 
-    controls_row = createElement({tagName: "tr", parentElement: camera_tilt_controls})
-        createElement({tagName: "td", parentElement: controls_row});
-        createElement({tagName: "td", parentElement: controls_row, innerHTML: "V", click: () => {
-            console.log("Tilt camera down")
-            camera.tiltUp(-0.1)
-        }});
-        createElement({tagName: "td", parentElement: controls_row});
+let rotating_left = 0
+let rotating_right = 0
+let rotating_up = 0
+let rotating_down = 0
+
+document.addEventListener("keydown", (ev) => {
+    switch(ev.code){
+        case "KeyW":
+            forward = 1
+            break
+        case "KeyS":
+            backward = 1
+            break
+        case "KeyA":
+            left = 1
+            break
+        case "KeyD":
+            right = 1
+            break
+
+
+
+        case "ArrowUp":
+            rotating_up = 1
+            break
+        case "ArrowDown":
+            rotating_down = 1
+            break
+        case "ArrowLeft":
+            rotating_left = 1
+            break
+        case "ArrowRight":
+            rotating_right = 1
+            break
+    }
+})
+
+document.addEventListener("keyup", (ev) => {
+    switch(ev.code){
+        case "KeyW":
+            console.log("pressed W")
+            forward = 0
+            break
+        case "KeyS":
+            console.log("pressed S")
+            backward = 0
+            break
+        case "KeyA":
+            console.log("pressed A")
+            left = 0
+            break
+        case "KeyD":
+            console.log("pressed D")
+            right = 0
+            break
+
+
+
+        case "ArrowUp":
+            rotating_up = 0
+            break
+        case "ArrowDown":
+            rotating_down = 0
+            break
+        case "ArrowLeft":
+            rotating_left = 0
+            break
+        case "ArrowRight":
+            rotating_right = 0
+            break
+    }
+})
+
 
 
 function parseCameraPosition(): vec3{
@@ -143,6 +197,16 @@ function parseCameraPosition(): vec3{
 }
 
 function renderLoop(){
+    vec3.scale(forward_velocity, forward_c, forward - backward)
+    vec3.scale(   left_velocity,    left_c,       left - right)
+    vec3.add(velocity, forward_velocity, left_velocity)
+    vec3.scale(velocity, velocity, 0.1)
+    camera.move(velocity)
+
+    camera.tiltUp((rotating_up - rotating_down) * 0.025)
+    camera.rotateLeft((rotating_left - rotating_right) * 0.025)
+
+
     let angle_rads = parseFloat(rads_input.value)
     cube.rotateY(angle_rads)
 

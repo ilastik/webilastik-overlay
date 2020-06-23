@@ -1,5 +1,9 @@
 import {vec3, mat4, quat, mat3} from "gl-matrix"
 
+export const forward_c = vec3.fromValues( 0,  0, -1);
+export const left_c =    vec3.fromValues(-1,  0,  0);
+
+
 export abstract class Camera{
     position_w = vec3.fromValues(0,0,0)
     rotation = quat.create()
@@ -17,6 +21,11 @@ export abstract class Camera{
 
     public moveTo(position: vec3){
         vec3.copy(this.position_w, position)
+    }
+
+    public move(delta_c: vec3){
+        let delta_w = vec3.create(); vec3.transformQuat(delta_w, delta_c, this.rotation);
+        vec3.add(this.position_w, this.position_w, delta_w)
     }
 
     public lookAt({target_w, up_w=vec3.fromValues(0,1,0), position_w}: {
