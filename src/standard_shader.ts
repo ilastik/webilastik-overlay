@@ -1,6 +1,6 @@
 import {FragmentShader, VertexShader, ShaderProgram} from "./shader"
 import {VertexArrayObject, Vec3AttributeBuffer/*, VertexIndicesBuffer*/} from "./buffer"
-import { mat4, vec3 } from "gl-matrix"
+import { mat4, vec4 } from "gl-matrix"
 
 
 export type StencilOp = "KEEP" | "ZERO" | "REPLACE" | "INCR" | "INCR_WRAP" | "DECR" | "DECR_WRAP" | "INVERT"
@@ -73,18 +73,18 @@ export class StandardShaderProgram extends ShaderProgram{
 
             in vec3 v_normal_in_world_coords;
 
-            uniform vec3 u_color;
+            uniform vec4 u_color;
 
             out highp vec4 outf_color;
 
             void main(){
-                vec3 color = u_color / 3.0; // this will be multiplied by a value in [1, 3], so maxium brightness is the original value
+                vec3 color = u_color.rgb / 3.0; // this will be multiplied by a value in [1, 3], so maxium brightness is the original value
                 vec3 light_direction_world = normalize(vec3(-1, -1, -1));
 
                 float cos_angle_between_normal_and_light = dot(v_normal_in_world_coords, light_direction_world);
                 float color_intensity = cos_angle_between_normal_and_light + 2.0; //slide interval [-1 , +1] to [1, +3]
 
-                outf_color = vec4((color * color_intensity),1);
+                outf_color = vec4((color * color_intensity), u_color.a);
                 //outf_color = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1);
 
             }`
@@ -115,7 +115,7 @@ export class StandardShaderProgram extends ShaderProgram{
         },
     }: {
         vao: StandardVAO,
-        u_color: vec3,
+        u_color: vec4,
         u_object_to_world: mat4,
         u_world_to_view: mat4,
         u_view_to_device: mat4,
@@ -150,7 +150,7 @@ export class StandardShaderProgram extends ShaderProgram{
         this.gl.uniformMatrix4fv(uniform_location, false, u_view_to_device);
 
         uniform_location = this.gl.getUniformLocation(this.glprogram, "u_color")
-        this.gl.uniform3f(uniform_location, u_color[0], u_color[1], u_color[2]);
+        this.gl.uniform4f(uniform_location, u_color[0], u_color[1], u_color[2], u_color[3]);
 
         vao.bind();
         //console.log(`Trying to draw ${vao.num_positions} verts`)

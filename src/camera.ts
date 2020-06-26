@@ -1,4 +1,6 @@
-import {vec3, mat4, quat, mat3} from "gl-matrix"
+import {vec3, mat4, quat, mat3, vec4} from "gl-matrix"
+import { Plane, MeshObject } from "./shapes";
+import { StandardShaderProgram, RenderParams } from "./standard_shader";
 
 export const forward_c = vec3.fromValues( 0,  0, -1);
 export const left_c =    vec3.fromValues(-1,  0,  0);
@@ -59,7 +61,7 @@ export class PerspectiveCamera extends Camera{
     aspect: number
     near: number
     far: number
-    constructor({fovy=2, aspect=1, near=0.1, far=1000}: {
+    constructor({fovy=1, aspect=1, near=0.1, far=1000}: {
         fovy?: number,
         aspect?: number,
         near?: number,
@@ -70,13 +72,58 @@ export class PerspectiveCamera extends Camera{
     }
 }
 
+export interface OrthoCameraConfig{
+    left: number, right: number,
+    bottom: number, top: number,
+    near: number, far: number,
+}
+
 export class OrthoCamera extends Camera{
-    constructor({left, right, bottom, top, near, far}: {
-        left: number, right: number,
-        bottom: number, top: number,
-        near: number, far: number,
-    }){
+    constructor({left, right, bottom, top, near, far}: OrthoCameraConfig){
         super()
         mat4.ortho(this.view_to_device_matrix, left, right, bottom, top, near, far)
+    }
+}
+
+export class SlicingCamera{
+    slicing_plane: Plane
+    private main_renderer : StandardShaderProgram
+    constructor(public readonly gl: WebGL2RenderingContext, public readonly camera: Camera, slicing_plane_position_c: vec3){
+        this.main_renderer =  new StandardShaderProgram(gl)
+        this.slicing_plane = new Plane({gl}, slicing_plane_position_c)
+    }
+
+    public render_slicing_plane(){
+        //let move_slicing_plane_matrix = mat4.create(); mat4.fromRotationTranslation(move_slicing_plane_matrix, quat.create(), vec3.fromValues(0,0, -3))
+        this.main_renderer.run({
+            vao: this.slicing_plane.vao,
+            u_color: vec4.fromValues(1, 0 ,0, 1),
+            u_object_to_world: mat4.create(),
+            u_world_to_view: mat4.create(),
+            u_view_to_device: this.camera.view_to_device_matrix,
+
+            renderParams: {
+                //colorMask: {r: false, g: false, b: false, a: false}, //disable drawing of colors. only interested in depth
+            }
+        });
+    }
+
+    public sliced_render(obj: MeshObject, color: vec4){
+        this.render(obj, color, {})
+    }
+
+    private render(obj: MeshObject, color: vec4, renderParams: RenderParams){
+        this.render_slicing_plane() //this should happen just once, not for every cube being rendered
+
+        let world_to_view_matrix = mat4.create(); this.camera.get_world_to_view_matrix(world_to_view_matrix)
+        this.main_renderer.run({
+            vao: obj.vao,
+            u_color: color,
+            u_object_to_world: obj.object_to_world_matrix,
+            u_world_to_view: world_to_view_matrix,
+            u_view_to_device: this.camera.view_to_device_matrix,
+
+            renderParams
+        });
     }
 }

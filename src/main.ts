@@ -1,11 +1,10 @@
 import { Cube } from './shapes'
 //import { Plane } from './shapes'
 
-import { PerspectiveCamera, forward_c, left_c } from './camera'
+import { forward_c, left_c, SlicingCamera, PerspectiveCamera } from './camera'
 //import { OrthoCamera } from './camera'
 
-import { vec3 } from 'gl-matrix'
-import { StandardShaderProgram, /*DepthFunc, CullFace, FrontFace*/ } from './standard_shader'
+import { vec3, vec4 } from 'gl-matrix'
 import { createInput, createElement } from './utils'
 
 let c = document.querySelector("#c")! as HTMLCanvasElement
@@ -28,30 +27,27 @@ c.style.height = c.height + "px"
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 
-let renderer = new StandardShaderProgram(gl)
 // debugger
 // let slicing_plane = new Plane({
 //     gl,
-//     renderer,
-//     color: vec3.fromValues(1, 0, 0),
 //     //position: vec3.fromValues(0, 0, -1),
 //     scale: vec3.fromValues(1, 1, 1)
 // });
 
 // let stencil_plane = new Plane({
 //     gl,
-//     renderer, color: vec3.fromValues(0, 1, 0),
 //     position: vec3.fromValues(0.5, 0, 0),
 //     scale: vec3.fromValues(0.5, 1, 1)
 // });
 
-let cube = new Cube({gl, renderer, color: vec3.fromValues(0, 0, 1), scale: vec3.fromValues(0.5, 0.5, 0.5)});
-let camera = new PerspectiveCamera({})
+let cube = new Cube({gl,  scale: vec3.fromValues(0.5, 0.5, 0.5)});
 // let camera = new OrthoCamera({
 //     left: -10, right: 10,
 //     near: 0, far: 100,
 //     bottom: -10, top: 10
 // })
+let camera = new PerspectiveCamera({})
+let slicing_camera = new SlicingCamera(gl, camera, vec3.fromValues(0,0,-3))
 
 
 function render(){
@@ -72,10 +68,11 @@ function render(){
     //     },
     // })
 
-    cube.render(camera, {
-        cullConfig: false,//{face: CullFace.FRONT, frontFace: FrontFace.CCW}
-        //depthFunc: DepthFunc.GREATER
-    })
+    slicing_camera.sliced_render(cube, vec4.fromValues(0,0,1, 1));
+    // cube.render(camera, {
+    //     cullConfig: false,//{face: CullFace.FRONT, frontFace: FrontFace.CCW}
+    //     //depthFunc: DepthFunc.GREATER
+    // })
 
 //    cube.render(camera, {
 //     stencil: {
@@ -86,6 +83,7 @@ function render(){
 }
 
 let cube_controls = createElement({tagName: "div", parentElement: document.body})
+
 createElement({tagName: "label", parentElement: cube_controls, innerHTML: "Cube Y rotation (rads): "})
 let rads_input = createInput({inputType: "text", parentElement: cube_controls, value: "0.02"})
 

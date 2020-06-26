@@ -1,7 +1,6 @@
 import {vec3, quat, mat4} from "gl-matrix";
 
-import {Camera} from "./camera";
-import {StandardVAO, StandardShaderProgram, RenderParams} from "./standard_shader";
+import {StandardVAO} from "./standard_shader";
 
 
 //right-handed system
@@ -130,8 +129,6 @@ export class Mesh{
 
 export interface MeshParams{
     gl: WebGL2RenderingContext,
-    renderer: StandardShaderProgram,
-    color?: vec3,
     position?: vec3,
     scale?: vec3,
     rotation?: quat,
@@ -139,30 +136,24 @@ export interface MeshParams{
 
 export class MeshObject{
     public readonly gl: WebGL2RenderingContext
-    public readonly renderer: StandardShaderProgram
 
     public position: vec3 //protecte with accessor?
     public scale: vec3
     protected rotation: quat
-    public color: vec3
 
-    private vao: StandardVAO;
+    public readonly vao: StandardVAO;
     
     constructor({
         gl,
-        renderer,
-        color=vec3.fromValues(1,0,0),
         position=vec3.fromValues(0,0,0),
         scale=vec3.fromValues(1,1,1),
         rotation=quat.create()
     }: MeshParams,
     mesh: Mesh){
         this.gl = gl
-        this.renderer = renderer
         this.position = position
         this.scale = scale
         this.rotation = rotation
-        this.color = color
 
         this.vao = new StandardVAO({
             gl: gl,
@@ -179,19 +170,6 @@ export class MeshObject{
         let out = mat4.create();
         mat4.fromRotationTranslationScale(out, this.rotation, this.position, this.scale)
         return out
-    }
-
-    public render(camera: Camera, renderParams: RenderParams){
-        let world_to_view_matrix = mat4.create(); camera.get_world_to_view_matrix(world_to_view_matrix)
-        this.renderer.run({
-            vao: this.vao,
-            u_color: this.color,
-            u_object_to_world: this.object_to_world_matrix,
-            u_world_to_view: world_to_view_matrix,
-            u_view_to_device: camera.view_to_device_matrix,
-
-            renderParams
-        });
     }
 }
 
@@ -215,10 +193,10 @@ export class Cube extends MeshObject{
 
 
 export class Plane extends MeshObject{
-    constructor(params: MeshParams){
+    constructor(params: MeshParams, location: vec3){
         super(params, new Mesh([
-            Triangle.CubeFrontBottom().move(vec3.fromValues(0, 0, -1)),
-            Triangle.CubeFrontTop().move(vec3.fromValues(0, 0, -1)),
+            Triangle.CubeFrontBottom().move(vec3.fromValues(0, 0, -1)).move(location),
+            Triangle.CubeFrontTop().move(vec3.fromValues(0, 0, -1)).move(location),
         ]))
     }
 }
