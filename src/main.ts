@@ -51,9 +51,6 @@ let slicing_camera = new SlicingCamera(gl, camera, vec3.fromValues(0,0,-3))
 
 
 function render(){
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-
 
     // slicing_plane.render(camera, {
     //     //colorMask: {r: false, g: false, b: false, a: false}, //disable drawing of colors. only interested in depth

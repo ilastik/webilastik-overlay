@@ -1,19 +1,7 @@
 import {FragmentShader, VertexShader, ShaderProgram} from "./shader"
 import {VertexArrayObject, Vec3AttributeBuffer/*, VertexIndicesBuffer*/} from "./buffer"
 import { mat4, vec4 } from "gl-matrix"
-
-
-export type StencilOp = "KEEP" | "ZERO" | "REPLACE" | "INCR" | "INCR_WRAP" | "DECR" | "DECR_WRAP" | "INVERT"
-export type StencilFunc = "NEVER" | "LESS" | "EQUAL" | "LEQUAL" | "GREATER" | "NOTEQUAL" | "GEQUAL" | "ALWAYS"
-export enum CullFace{
-    BACK = WebGL2RenderingContext["BACK"],
-    FRONT = WebGL2RenderingContext["FRONT"],
-    FRONT_AND_BACK = WebGL2RenderingContext["FRONT_AND_BACK"],
-}
-export enum FrontFace{
-    CW = WebGL2RenderingContext["CW"],
-    CCW = WebGL2RenderingContext["CCW"],
-}
+import { CullFace, FrontFace, StencilFunc, StencilOp, BlendFactor, DepthFunc } from "./gl"
 
 
 export interface CullConfig{
@@ -30,28 +18,45 @@ export interface StencilConfig{
     fail: StencilOp, zfail: StencilOp, zpass: StencilOp,
 }
 
-export enum DepthFunc{
-    NEVER = WebGL2RenderingContext["NEVER"],
-    LESS = WebGL2RenderingContext["LESS"],
-    EQUAL = WebGL2RenderingContext["EQUAL"],
-    LEQUAL = WebGL2RenderingContext["LEQUAL"],
-    GREATER = WebGL2RenderingContext["GREATER"],
-    NOTEQUAL = WebGL2RenderingContext["NOTEQUAL"],
-    GEQUAKL = WebGL2RenderingContext["GEQUAL"],
-    ALWAYS = WebGL2RenderingContext["ALWAYS"],
+export interface BlendingConfig{
+    sfactor: BlendFactor,
+    dfactor: BlendFactor,
+}
+
+export interface DepthConfig{
+    mask: boolean,
+    func: DepthFunc,
 }
 
 export interface RenderParams{
     colorMask?: ColorMask,
-    depthMask?: boolean,
-    depthFunc?: DepthFunc,
-    stencil?: StencilConfig,
+    depthConfig?: DepthConfig,
+    stencilConfig?: StencilConfig,
     cullConfig?: CullConfig | false,
+    blendingConfig?: BlendingConfig | false,
 }
+
+const lit_frag_shader_main = `
+    void main(){
+        vec3 color = u_color.rgb / 3.0; // this will be multiplied by a value in [1, 3], so maxium brightness is the original value
+        vec3 light_direction_world = normalize(vec3(-1, -1, -1));
+
+        float cos_angle_between_normal_and_light = dot(v_normal_in_world_coords, light_direction_world);
+        float color_intensity = cos_angle_between_normal_and_light + 2.0; //slide interval [-1 , +1] to [1, +3]
+
+        outf_color = vec4((color * color_intensity), u_color.a);
+    }`
+
+const solid_frag_shader_main = `
+    void main(){
+        outf_color = u_color;
+    }`
 
 
 export class StandardShaderProgram extends ShaderProgram{
-    constructor(gl:WebGL2RenderingContext){
+    constructor(gl:WebGL2RenderingContext, shader_configs: {
+        solid_color: boolean
+    }){
         let vertex_shader = new VertexShader(gl, `
             layout(location=0) in vec3 a_position; 
             layout(location=1) in vec3 a_normal;
@@ -68,26 +73,18 @@ export class StandardShaderProgram extends ShaderProgram{
             }`
         )
 
+        let frag_main = shader_configs.solid_color ? solid_frag_shader_main : lit_frag_shader_main;
+
         let fragment_shader = new FragmentShader(gl, `
             precision mediump float;
-
+        
             in vec3 v_normal_in_world_coords;
-
+        
             uniform vec4 u_color;
-
+        
             out highp vec4 outf_color;
-
-            void main(){
-                vec3 color = u_color.rgb / 3.0; // this will be multiplied by a value in [1, 3], so maxium brightness is the original value
-                vec3 light_direction_world = normalize(vec3(-1, -1, -1));
-
-                float cos_angle_between_normal_and_light = dot(v_normal_in_world_coords, light_direction_world);
-                float color_intensity = cos_angle_between_normal_and_light + 2.0; //slide interval [-1 , +1] to [1, +3]
-
-                outf_color = vec4((color * color_intensity), u_color.a);
-                //outf_color = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1);
-
-            }`
+            
+            ${frag_main}`
         )
 
         super(gl, vertex_shader, fragment_shader)
@@ -102,9 +99,11 @@ export class StandardShaderProgram extends ShaderProgram{
 
         renderParams: {
             colorMask={r: true, g: true, b: true, a: true},
-            depthMask=true,
-            depthFunc=DepthFunc.LESS,
-            stencil={
+            depthConfig={
+                mask: true,
+                func: DepthFunc.LESS,
+            },
+            stencilConfig={
                 func: "ALWAYS", ref: 1, mask: 0xFFFFFFFF, //default stencilFunc to Always pass
                 fail: "KEEP", zfail: "KEEP", zpass: "KEEP" //default tencil op to not touch the stencil
             },
@@ -112,6 +111,10 @@ export class StandardShaderProgram extends ShaderProgram{
                 face: CullFace.BACK,
                 frontFace: FrontFace.CCW,
             },
+            blendingConfig={
+                sfactor: BlendFactor.SRC_ALPHA,
+                dfactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
+            }
         },
     }: {
         vao: StandardVAO,
@@ -124,11 +127,11 @@ export class StandardShaderProgram extends ShaderProgram{
     }){
         this.gl.colorMask(colorMask.r, colorMask.g, colorMask.b, colorMask.a)
 
-        this.gl.depthMask(depthMask)
-        this.gl.depthFunc(depthFunc)
+        this.gl.depthMask(depthConfig.mask)
+        this.gl.depthFunc(depthConfig.func)
 
-        this.gl.stencilFunc(/*func=*/this.gl[stencil.func], /*ref=*/stencil.ref, /*mask=*/stencil.mask)
-        this.gl.stencilOp(/*fail=*/this.gl[stencil.fail], /*zfail=*/this.gl[stencil.zfail], /*zpass=*/this.gl[stencil.zpass])
+        this.gl.stencilFunc(/*func=*/this.gl[stencilConfig.func], /*ref=*/stencilConfig.ref, /*mask=*/stencilConfig.mask)
+        this.gl.stencilOp(/*fail=*/this.gl[stencilConfig.fail], /*zfail=*/this.gl[stencilConfig.zfail], /*zpass=*/this.gl[stencilConfig.zpass])
 
         if(cullConfig === false){
             this.gl.disable(this.gl.CULL_FACE)
@@ -136,6 +139,13 @@ export class StandardShaderProgram extends ShaderProgram{
             this.gl.enable(this.gl.CULL_FACE)
             this.gl.frontFace(cullConfig.frontFace)
             this.gl.cullFace(cullConfig.face)
+        }
+
+        if(blendingConfig === false){
+            this.gl.disable(this.gl.BLEND)
+        }else{
+            this.gl.enable(this.gl.BLEND)
+            this.gl.blendFunc(blendingConfig.sfactor, blendingConfig.dfactor)
         }
 
         this.use()
