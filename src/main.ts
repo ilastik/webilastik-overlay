@@ -218,7 +218,7 @@ function renderLoop(){
 
     vec3.add(velocity, forward_velocity, left_velocity)
     vec3.add(velocity, velocity, up_velocity)
-    vec3.scale(velocity, velocity, 0.1)
+    vec3.scale(velocity, velocity, 0.04)
 
     camera.move(velocity)
 
