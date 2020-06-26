@@ -71,6 +71,9 @@ export class Triangle{
         return normal
     }
 
+    //these constructors are of the form Cube<Face><Triangle>, e.g.:
+    // "CubeFrontBottom" is the bottom triangle of the front face of a cube
+
     public static CubeFrontBottom(): Triangle{
         return new Triangle(LUF, LDF, RDF);
     }
@@ -101,6 +104,22 @@ export class Triangle{
 
     public static CubeRightTop(): Triangle{
         return new Triangle(RUB, RUF, RDB);
+    }
+
+    public static CubeTopFront(): Triangle{
+        return new Triangle(LUB, LUF, RUF);
+    }
+
+    public static CubeTopBack(): Triangle{
+        return new Triangle(LUB, RUF, RUB);
+    }
+
+    public static CubeBottomFront(): Triangle{
+        return new Triangle(LDB, LDF, RDF, true);
+    }
+
+    public static CubeBottomBack(): Triangle{
+        return new Triangle(LDB, RDF, RDB, true);
     }
 }
 
@@ -187,6 +206,12 @@ export class Cube extends MeshObject{
 
             Triangle.CubeRightBottom(),
             Triangle.CubeRightTop(),
+
+            Triangle.CubeTopFront(),
+            Triangle.CubeTopBack(),
+
+            Triangle.CubeBottomFront(),
+            Triangle.CubeBottomBack(),
         ]))
     }
 }
