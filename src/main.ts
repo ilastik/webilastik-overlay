@@ -1,7 +1,7 @@
 import { Cube } from './shapes'
 //import { Plane } from './shapes'
 
-import { forward_c, left_c, SlicingCamera, PerspectiveCamera } from './camera'
+import { forward_c, left_c, SlicingCamera, PerspectiveCamera, up_c } from './camera'
 //import { OrthoCamera } from './camera'
 
 import { vec3, vec4 } from 'gl-matrix'
@@ -108,11 +108,14 @@ createInput({inputType: "button", value: "Center cam on cube", parentElement: ce
 let velocity = vec3.fromValues(0,0,0);
 let forward_velocity = vec3.fromValues(0, 0, 0)
 let left_velocity = vec3.fromValues(0, 0, 0)
+let up_velocity = vec3.fromValues(0, 0, 0)
 
 let forward = 0;
 let backward = 0;
 let left = 0;
 let right = 0;
+let up = 0;
+let down = 0;
 
 let rotating_left = 0
 let rotating_right = 0
@@ -134,6 +137,13 @@ document.addEventListener("keydown", (ev) => {
             right = 1
             break
 
+
+        case "KeyQ":
+            up = 1
+            break
+        case "KeyE":
+            down = 1
+            break
 
 
         case "ArrowUp":
@@ -171,6 +181,13 @@ document.addEventListener("keyup", (ev) => {
             break
 
 
+        case "KeyQ":
+            up = 0
+            break
+        case "KeyE":
+            down = 0
+            break
+
 
         case "ArrowUp":
             rotating_up = 0
@@ -197,8 +214,12 @@ function parseCameraPosition(): vec3{
 function renderLoop(){
     vec3.scale(forward_velocity, forward_c, forward - backward)
     vec3.scale(   left_velocity,    left_c,       left - right)
+    vec3.scale(     up_velocity,      up_c,          up - down)
+
     vec3.add(velocity, forward_velocity, left_velocity)
+    vec3.add(velocity, velocity, up_velocity)
     vec3.scale(velocity, velocity, 0.1)
+
     camera.move(velocity)
 
     camera.tiltUp((rotating_up - rotating_down) * 0.025)

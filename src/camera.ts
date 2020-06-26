@@ -3,7 +3,8 @@ import { Plane, MeshObject } from "./shapes";
 import { StandardShaderProgram, RenderParams } from "./standard_shader";
 
 export const forward_c = vec3.fromValues( 0,  0, -1);
-export const left_c =    vec3.fromValues(-1,  0,  0);
+export const    left_c = vec3.fromValues(-1,  0,  0);
+export const      up_c = vec3.fromValues( 0,  1,  0);
 
 
 export abstract class Camera{
