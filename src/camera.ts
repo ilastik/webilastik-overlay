@@ -1,4 +1,4 @@
-import {vec3, mat4, quat, mat3, vec4} from "gl-matrix"
+import {vec3, mat4, quat, mat3, vec4, ReadonlyVec3} from "gl-matrix"
 import { Plane, MeshObject } from "./shapes";
 import { StandardShaderProgram, RenderParams} from "./standard_shader";
 import { CullFace, FrontFace, DepthFunc } from "./gl";
@@ -27,7 +27,7 @@ export abstract class Camera{
         vec3.copy(this.position_w, position)
     }
 
-    public move(delta_c: vec3){
+    public move(delta_c: ReadonlyVec3){
         let delta_w = vec3.create(); vec3.transformQuat(delta_w, delta_c, this.rotation);
         vec3.add(this.position_w, this.position_w, delta_w)
     }
