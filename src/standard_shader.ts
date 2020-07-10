@@ -1,40 +1,8 @@
 import {FragmentShader, VertexShader, ShaderProgram} from "./shader"
 import {VertexArrayObject, Vec3AttributeBuffer/*, VertexIndicesBuffer*/} from "./buffer"
 import { mat4, vec4 } from "gl-matrix"
-import { CullFace, FrontFace, StencilFunc, StencilOp, BlendFactor, DepthFunc } from "./gl"
+import { CullFace, FrontFace, BlendFactor, DepthFunc, RenderParams, StencilOp, StencilFunc } from "./gl"
 
-
-export interface CullConfig{
-    face: CullFace,
-    frontFace: FrontFace,
-}
-
-export interface ColorMask{
-    r: boolean, g: boolean, b: boolean, a: boolean
-}
-
-export interface StencilConfig{
-    func: StencilFunc, ref: number, mask: number,
-    fail: StencilOp, zfail: StencilOp, zpass: StencilOp,
-}
-
-export interface BlendingConfig{
-    sfactor: BlendFactor,
-    dfactor: BlendFactor,
-}
-
-export interface DepthConfig{
-    mask: boolean,
-    func: DepthFunc,
-}
-
-export interface RenderParams{
-    colorMask?: ColorMask,
-    depthConfig?: DepthConfig,
-    stencilConfig?: StencilConfig,
-    cullConfig?: CullConfig | false,
-    blendingConfig?: BlendingConfig | false,
-}
 
 const lit_frag_shader_main = `
     void main(){
@@ -104,8 +72,8 @@ export class StandardShaderProgram extends ShaderProgram{
                 func: DepthFunc.LESS,
             },
             stencilConfig={
-                func: "ALWAYS", ref: 1, mask: 0xFFFFFFFF, //default stencilFunc to Always pass
-                fail: "KEEP", zfail: "KEEP", zpass: "KEEP" //default tencil op to not touch the stencil
+                func: StencilFunc.ALWAYS, ref: 1, mask: 0xFFFFFFFF, //default stencilFunc to Always pass
+                fail: StencilOp.KEEP, zfail: StencilOp.KEEP, zpass: StencilOp.KEEP //default tencil op to not touch the stencil
             },
             cullConfig={
                 face: CullFace.BACK,
@@ -130,8 +98,8 @@ export class StandardShaderProgram extends ShaderProgram{
         this.gl.depthMask(depthConfig.mask)
         this.gl.depthFunc(depthConfig.func)
 
-        this.gl.stencilFunc(/*func=*/this.gl[stencilConfig.func], /*ref=*/stencilConfig.ref, /*mask=*/stencilConfig.mask)
-        this.gl.stencilOp(/*fail=*/this.gl[stencilConfig.fail], /*zfail=*/this.gl[stencilConfig.zfail], /*zpass=*/this.gl[stencilConfig.zpass])
+        this.gl.stencilFunc(/*func=*/stencilConfig.func, /*ref=*/stencilConfig.ref, /*mask=*/stencilConfig.mask)
+        this.gl.stencilOp(/*fail=*/stencilConfig.fail, /*zfail=*/stencilConfig.zfail, /*zpass=*/stencilConfig.zpass)
 
         if(cullConfig === false){
             this.gl.disable(this.gl.CULL_FACE)

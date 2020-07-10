@@ -2,9 +2,27 @@ export type BinaryArray = ArrayBufferView & {length: number}
 
 export type AttributeElementType = "BYTE" | "SHORT" | "UNSIGNED_BYTE" | "UNSIGNED_SHORT" | "FLOAT"
 
-export type StencilOp = "KEEP" | "ZERO" | "REPLACE" | "INCR" | "INCR_WRAP" | "DECR" | "DECR_WRAP" | "INVERT"
+export enum StencilOp{
+    KEEP = WebGL2RenderingContext["KEEP"],
+    ZERO = WebGL2RenderingContext["ZERO"],
+    REPLACE = WebGL2RenderingContext["REPLACE"],
+    INCR = WebGL2RenderingContext["INCR"],
+    INCR_WRAP = WebGL2RenderingContext["INCR_WRAP"],
+    DECR = WebGL2RenderingContext["DECR"],
+    DECR_WRAP = WebGL2RenderingContext["DECR_WRAP"],
+    INVERT = WebGL2RenderingContext["INVERT"],
+}
 
-export type StencilFunc = "NEVER" | "LESS" | "EQUAL" | "LEQUAL" | "GREATER" | "NOTEQUAL" | "GEQUAL" | "ALWAYS"
+export enum StencilFunc{
+    NEVER = WebGL2RenderingContext["NEVER"],
+    LESS = WebGL2RenderingContext["LESS"],
+    EQUAL = WebGL2RenderingContext["EQUAL"],
+    LEQUAL = WebGL2RenderingContext["LEQUAL"],
+    GREATER = WebGL2RenderingContext["GREATER"],
+    NOTEQUAL = WebGL2RenderingContext["NOTEQUAL"],
+    GEQUAL = WebGL2RenderingContext["GEQUAL"],
+    ALWAYS = WebGL2RenderingContext["ALWAYS"],
+}
 
 export enum CullFace{
     BACK = WebGL2RenderingContext["BACK"],
@@ -44,4 +62,36 @@ export enum DepthFunc{
     NOTEQUAL = WebGL2RenderingContext["NOTEQUAL"],
     GEQUAL = WebGL2RenderingContext["GEQUAL"],
     ALWAYS = WebGL2RenderingContext["ALWAYS"],
+}
+
+export interface CullConfig{
+    face: CullFace,
+    frontFace: FrontFace,
+}
+
+export interface ColorMask{
+    r: boolean, g: boolean, b: boolean, a: boolean
+}
+
+export interface StencilConfig{
+    func: StencilFunc, ref: number, mask: number,
+    fail: StencilOp, zfail: StencilOp, zpass: StencilOp,
+}
+
+export interface BlendingConfig{
+    sfactor: BlendFactor,
+    dfactor: BlendFactor,
+}
+
+export interface DepthConfig{
+    mask: boolean,
+    func: DepthFunc,
+}
+
+export interface RenderParams{
+    colorMask?: ColorMask,
+    depthConfig?: DepthConfig,
+    stencilConfig?: StencilConfig,
+    cullConfig?: CullConfig | false,
+    blendingConfig?: BlendingConfig | false,
 }
