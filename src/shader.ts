@@ -60,6 +60,10 @@ export class ShaderProgram{
         return new AttributeLocation(this.gl.getAttribLocation(this.glprogram, name))
     }
 
+    public getUniformLocation(name: string): WebGLUniformLocation | null{
+        return this.gl.getUniformLocation(this.glprogram, name)
+    }
+
     public use(){
         if(ShaderProgram.currentProgram == this){
             return

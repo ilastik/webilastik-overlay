@@ -1,30 +1,30 @@
-import {vec3, quat, mat4} from "gl-matrix";
+import {vec3, quat, mat4, ReadonlyVec3} from "gl-matrix";
 
 import {StandardVAO} from "./standard_shader";
 
 
 //right-handed system
-const RIGHT =  vec3.fromValues(1, 0, 0); // X
-const UP    =  vec3.fromValues(0, 1, 0); // Y
-const FRONT =  vec3.fromValues(0, 0, 1); // Z
+// const RIGHT =  vec3.fromValues(1, 0, 0); // X
+// const UP    =  vec3.fromValues(0, 1, 0); // Y
+// const FRONT =  vec3.fromValues(0, 0, 1); // Z
 
-const LEFT = vec3.create(); vec3.negate(LEFT, RIGHT);
-const DOWN = vec3.create(); vec3.negate(DOWN,    UP);
-const BACK = vec3.create(); vec3.negate(BACK, FRONT);
+// const LEFT = vec3.create(); vec3.negate(LEFT, RIGHT);
+// const DOWN = vec3.create(); vec3.negate(DOWN,    UP);
+// const BACK = vec3.create(); vec3.negate(BACK, FRONT);
 
 
 //front face corners
-const LUF = vec3.create(); vec3.add(LUF,  LEFT,   UP); vec3.add(LUF, LUF, FRONT)
-const LDF = vec3.create(); vec3.add(LDF,  LEFT, DOWN); vec3.add(LDF, LDF, FRONT)
-const RDF = vec3.create(); vec3.add(RDF, RIGHT, DOWN); vec3.add(RDF, RDF, FRONT)
-const RUF = vec3.create(); vec3.add(RUF, RIGHT,   UP); vec3.add(RUF, RUF, FRONT)
+export const LUF = vec3.fromValues(0, 1, 1)
+export const LDF = vec3.fromValues(0, 0, 1)
+export const RDF = vec3.fromValues(1, 0, 1)
+export const RUF = vec3.fromValues(1, 1, 1)
 
 
 //back face corners
-const LUB = vec3.create(); vec3.add(LUB, LEFT,    UP); vec3.add(LUB, LUB, BACK);
-const LDB = vec3.create(); vec3.add(LDB, LEFT,  DOWN); vec3.add(LDB, LDB, BACK);
-const RDB = vec3.create(); vec3.add(RDB, RIGHT, DOWN); vec3.add(RDB, RDB, BACK);
-const RUB = vec3.create(); vec3.add(RUB, RIGHT,   UP); vec3.add(RUB, RUB, BACK);
+export const LUB = vec3.fromValues(0, 1, 0)
+export const LDB = vec3.fromValues(0, 0, 0)
+export const RDB = vec3.fromValues(1, 0, 0)
+export const RUB = vec3.fromValues(1, 1, 0)
 
 
 function vecs_to_floats(vecs: Array<vec3>): Array<number>{
@@ -183,6 +183,10 @@ export class MeshObject{
 
     public rotateY(angle: number){
         quat.rotateY(this.rotation, this.rotation, angle)
+    }
+
+    public moveTo(point: ReadonlyVec3){
+        vec3.copy(this.position, point)
     }
 
     public get object_to_world_matrix(): mat4{

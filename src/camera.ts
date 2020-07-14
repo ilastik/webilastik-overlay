@@ -1,7 +1,9 @@
 import {vec3, mat4, quat, mat3, vec4, ReadonlyVec3} from "gl-matrix"
-import { Plane, MeshObject } from "./shapes";
-import { StandardShaderProgram, RenderParams} from "./standard_shader";
-import { CullFace, FrontFace, DepthFunc } from "./gl";
+import { Cube } from "./shapes";
+import { SlicingShaderProgram } from "./slicing_shader";
+import { StandardShaderProgram } from "./standard_shader";
+// import { ShaderProgram } from "./shader";
+//import { CullFace, FrontFace } from "./gl";
 
 export const forward_c = vec3.fromValues( 0,  0, -1);
 export const    left_c = vec3.fromValues(-1,  0,  0);
@@ -88,89 +90,65 @@ export class OrthoCamera extends Camera{
 }
 
 export class SlicingCamera{
-    slicing_plane: Plane
-    private main_renderer : StandardShaderProgram
-    private solid_renderer : StandardShaderProgram
-    private identity_mat = mat4.create()
-    constructor(public readonly gl: WebGL2RenderingContext, public readonly camera: Camera, slicing_plane_position_c: vec3){
-        this.main_renderer =  new StandardShaderProgram(gl, {solid_color: false})
-        this.solid_renderer = new StandardShaderProgram(gl, {solid_color: true})
-        this.slicing_plane = new Plane({gl}, slicing_plane_position_c)
+    private slicing_program: SlicingShaderProgram
+    private standard_program: StandardShaderProgram
+    private voxel = new Cube({gl: this.gl, scale: vec3.fromValues(0.5, 0.5, 0.5)});
+
+    constructor(public readonly gl: WebGL2RenderingContext, public readonly camera: Camera){
+        this.slicing_program = new SlicingShaderProgram(gl);
+        this.standard_program = new StandardShaderProgram(gl, {solid_color: false})
     }
 
-    public sliced_render(obj: MeshObject, color: vec4){
-        // these should happen just once, not for every cube being rendered
-        this.gl.clearColor(0, 0, 0, 1);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT | this.gl.STENCIL_BUFFER_BIT);
+    private render_sliced(color: vec4, world_to_view_matrix: mat4, u_cube_position_w: vec3){
+        this.slicing_program.run({
+            vao: this.voxel.vao,
 
-
-        //render the entire cube so we can have some bearing. Debug only, this can be removed ******
-        this.render(obj, vec4.fromValues(color[0], color[1], color[2], 0.8), {
-            // stencilConfig: {
-            //     func: "EQUAL", ref: 1, mask: 0xFFFFFFFF,//if stencil is 1, pass
-            //     fail: "KEEP", zfail: "KEEP", zpass: "KEEP", // do not touch stencil
-            // },
-            cullConfig:{
-                face: CullFace.BACK, //cull the BACK faces (i.e.: render just front faces) into the color buffer
-                frontFace: FrontFace.CCW,
-            },
-        })
-
-        //render the slicing plane just so we get depth values **************
-        this.main_renderer.run({
-            vao: this.slicing_plane.vao,
-            u_color: vec4.fromValues(1, 0 ,0, 0.1),
-            u_object_to_world: this.identity_mat,
-            u_world_to_view: this.identity_mat,
+            u_color: color,
+            u_world_to_view: world_to_view_matrix,
             u_view_to_device: this.camera.view_to_device_matrix,
+            u_cube_position_w: u_cube_position_w,
 
             renderParams: {
-                depthConfig: {
-                    mask: true,
-                    func: DepthFunc.ALWAYS,
-                }
-                //colorMask: {r: false, g: false, b: false, a: false}, //disable drawing of colors. only interested in depth
+                // cullConfig:{
+                //     face: CullFace.FRONT,
+                //     frontFace: FrontFace.CCW,
+                // },
             }
         });
-
-        // Create the stencil of the part of the cube behind the slicing plane ***************
-        this.render(obj, color, {
-            depthConfig:{
-                mask: false, //do not update depth buffer when doing stencil stuff
-                func: DepthFunc.GREATER, //only render the stencil behind the slicing place
-            },
-            colorMask: {r: false, g: false, b: false, a: false}, //disable drawing of colors. only interested in stencil
-            stencilConfig: {
-                func: "ALWAYS", ref: 1 /*DON'T CARE*/, mask: 0xFFFFFFFF, //always pass test to update the stencil buffer with stencil_plane geometry
-                fail: "ZERO", zfail: "ZERO", zpass: "INCR"//since the buffer has been reset, this should increment the buffer to 1
-            },
-            cullConfig:{
-                face: CullFace.FRONT, //cull the front faces (i.e.: render just the backfaces) into the stencil buffer
-                frontFace: FrontFace.CCW,
-            },
-        })
-
-        //Then, finally, draw the front of the cube, only on stencil, as solid colors *******************
-        this.render(obj, vec4.fromValues(1, 0, 1, 0.2), {
-            stencilConfig: {
-                func: "EQUAL", ref: 1, mask: 0xFFFFFFFF,//if stencil is 1, pass
-                fail: "KEEP", zfail: "KEEP", zpass: "KEEP", // do not touch stencil
-            },
-        }, this.solid_renderer)
-
     }
 
-    private render(obj: MeshObject, color: vec4, renderParams: RenderParams, renderer?: StandardShaderProgram){
-        let world_to_view_matrix = mat4.create(); this.camera.get_world_to_view_matrix(world_to_view_matrix)
-        let active_renderer = renderer === undefined ? this.main_renderer : renderer;
-        active_renderer.run({
-            vao: obj.vao,
+    private render_standard(color: vec4, world_to_view_matrix: mat4){
+        this.standard_program.run({
+            vao: this.voxel.vao,
+
             u_color: color,
-            u_object_to_world: obj.object_to_world_matrix,
+            u_object_to_world: this.voxel.object_to_world_matrix,
             u_world_to_view: world_to_view_matrix,
             u_view_to_device: this.camera.view_to_device_matrix,
 
-            renderParams
-        });
+            renderParams: {
+                // cullConfig:{
+                //     face: CullFace.FRONT,
+                //     frontFace: FrontFace.CCW,
+                // },
+            }
+        })
+    }
+
+    public renderBrushStroke(brushStroke: Array<vec3>, color: vec4, sliced: boolean){
+        this.gl.clearColor(0, 0, 0, 1);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT | this.gl.STENCIL_BUFFER_BIT);
+
+        let world_to_view_matrix = mat4.create(); this.camera.get_world_to_view_matrix(world_to_view_matrix)
+
+        let cube_pos = vec3.create();
+        vec3.transformMat4(cube_pos, brushStroke[0], world_to_view_matrix);
+        vec3.transformMat4(cube_pos, cube_pos, this.camera.view_to_device_matrix);
+        // console.log(`Cube_pos.z: ${cube_pos[2]}`)
+        if(sliced){
+            this.render_sliced(color, world_to_view_matrix, brushStroke[0])
+        }else{
+            this.render_standard(color, world_to_view_matrix)
+        }
     }
 }
