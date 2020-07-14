@@ -43,12 +43,13 @@ export class Triangle{
 
     //points assumed to be counter-clockwise, unless clowckwise is true
     constructor(p0: vec3, p1: vec3, p2: vec3, clockwise=false){
-        this.p0 = vec3.clone(p0);
         this.p1 = vec3.clone(p1)
-        this.p2 = vec3.clone(p2)
         if(clockwise){
-            this.p0 = p2
-            this.p2 = p0
+            this.p0 = vec3.clone(p2);
+            this.p2 = vec3.clone(p0);
+        }else{
+            this.p0 = vec3.clone(p0);
+            this.p2 = vec3.clone(p2);
         }
     }
 
