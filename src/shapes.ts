@@ -14,17 +14,17 @@ import {StandardVAO} from "./standard_shader";
 
 
 //front face corners
-export const LUF = vec3.fromValues(0, 1, 1)
-export const LDF = vec3.fromValues(0, 0, 1)
-export const RDF = vec3.fromValues(1, 0, 1)
-export const RUF = vec3.fromValues(1, 1, 1)
+export const LUF = vec3.fromValues(0, 2, 2)
+export const LDF = vec3.fromValues(0, 0, 2)
+export const RDF = vec3.fromValues(2, 0, 2)
+export const RUF = vec3.fromValues(2, 2, 2)
 
 
 //back face corners
-export const LUB = vec3.fromValues(0, 1, 0)
+export const LUB = vec3.fromValues(0, 2, 0)
 export const LDB = vec3.fromValues(0, 0, 0)
-export const RDB = vec3.fromValues(1, 0, 0)
-export const RUB = vec3.fromValues(1, 1, 0)
+export const RDB = vec3.fromValues(2, 0, 0)
+export const RUB = vec3.fromValues(2, 2, 0)
 
 
 function vecs_to_floats(vecs: Array<vec3>): Array<number>{
@@ -200,14 +200,14 @@ export class MeshObject{
 export class Cube extends MeshObject{
     constructor(params: MeshParams){
         super(params, new Mesh([
-            Triangle.CubeFrontBottom(),
-            Triangle.CubeFrontTop(),
+            Triangle.CubeFrontBottom(),//.move(vec3.fromValues(0, 0, 5)),
+            Triangle.CubeFrontTop(),//.move(vec3.fromValues(0, 0, 5)),
 
             Triangle.CubeLeftBottom(),
             Triangle.CubeLeftTop(),
 
-            Triangle.CubeBackBottom(),
-            Triangle.CubeBackTop(),
+            Triangle.CubeBackBottom(),//.move(vec3.fromValues(0, 0, -5)),
+            Triangle.CubeBackTop(),//.move(   vec3.fromValues(0, 0, -5)),
 
             Triangle.CubeRightBottom(),
             Triangle.CubeRightTop(),

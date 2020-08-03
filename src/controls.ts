@@ -115,7 +115,7 @@ export class CameraControls{
         vec3.scale(this.velocity, this.velocity, 0.04)
 
         camera.move(this.velocity)
-        camera.tiltUp((this.rotating_up - this.rotating_down) * 0.025)
-        camera.rotateLeft((this.rotating_left - this.rotating_right) * 0.025)
+        camera.tiltUp((this.rotating_up - this.rotating_down) * 0.01)
+        camera.rotateLeft((this.rotating_left - this.rotating_right) * 0.01)
     }
 }

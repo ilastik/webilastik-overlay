@@ -28,20 +28,10 @@ gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 
 
-let brushStroke = new Array<vec3>()
+let brushStroke = [vec3.fromValues(0, 0, 0)]
 
-for(let x=0; x<1; x++){
-    for(let y=0; y<1; y++){
-       brushStroke.push(vec3.fromValues(x, y, 0))
-    }
-}
-
-let camera = new OrthoCamera({
-    left:   -1, right:  1,
-    near:     0,   far: 100,
-    bottom: -1,   top:  1
-})
-// let camera = new PerspectiveCamera({far: 10 })
+let camera = new OrthoCamera({left: -5, right: 5, near: 0, far: 10, bottom: -5, top:  5})
+// let camera = new PerspectiveCamera({})
 let slicing_camera = new SlicingCamera(gl, camera)
 let controls = new CameraControls()
 
@@ -58,14 +48,15 @@ let controls = new CameraControls()
 
 function renderLoop(){
     controls.updateCamera(camera);
+    console.log(`Camera is at ${camera.position_w}`)
 
     // let angle_rads = parseFloat(rads_input.value)
     // cube.rotateY(angle_rads)
 
-    slicing_camera.renderBrushStroke(brushStroke, vec4.fromValues(0,0,1, 1), false);
+    slicing_camera.renderBrushStroke({brushStroke, color: vec4.fromValues(0,0,1, 1)});
 
     window.requestAnimationFrame(renderLoop)
 }
 
-camera.lookAt({target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 2.5), up_w: vec3.fromValues(0, 1, 0), })
+camera.lookAt({target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 5), up_w: vec3.fromValues(0, 1, 0), })
 window.requestAnimationFrame(renderLoop)

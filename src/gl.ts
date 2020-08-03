@@ -1,3 +1,5 @@
+import { vec4 } from "gl-matrix"
+
 export type BinaryArray = ArrayBufferView & {length: number}
 
 export type AttributeElementType = "BYTE" | "SHORT" | "UNSIGNED_BYTE" | "UNSIGNED_SHORT" | "FLOAT"
@@ -81,6 +83,7 @@ export interface StencilConfig{
 export interface BlendingConfig{
     sfactor: BlendFactor,
     dfactor: BlendFactor,
+    color?: vec4,
 }
 
 export interface DepthConfig{

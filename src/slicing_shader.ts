@@ -8,14 +8,14 @@ import { StandardVAO } from "./standard_shader"
 export class SlicingShaderProgram extends ShaderProgram{
     constructor(gl:WebGL2RenderingContext){
         let vertex_shader = new VertexShader(gl, `
-            layout(location=0) in vec3 a_position_o; 
+            layout(location=0) in vec3 a_position_o;
             layout(location=1) in vec3 a_normal_o;
 
             //voxels never rotate in the world, so just an offset (instead of a mat4) is enough
             uniform vec3 u_cube_position_w;
             uniform mat4 u_world_to_view;
             uniform mat4 u_view_to_device;
-            
+
             out mediump vec4 v_cube_position_d;
 
 
@@ -34,30 +34,26 @@ export class SlicingShaderProgram extends ShaderProgram{
             in vec4 v_cube_position_d;
 
             out highp vec4 outf_color;
-            
+
+
             void main(){
-                float slicing_plane_z_d = 0.5;
                 vec3 color;
                 if(gl_FrontFacing){
-                    if(v_cube_position_d.z > slicing_plane_z_d && gl_FragCoord.z < slicing_plane_z_d){ //only draw front face if the cube is behind (greater depth) slicing plane
-                        color = vec3(1.0, 1.0, 0.0); // yellow
-                    }else{
-                        // discard;
-                        color = u_color.rgb;
-                    }
-                }else{
-                    if(v_cube_position_d.z < slicing_plane_z_d  && gl_FragCoord.z > slicing_plane_z_d){ //only draw back face if the cube is in front of (smaller depth) slicing plane
+                    if(v_cube_position_d.z > 0.0 && gl_FragCoord.z < 0.5){
                         color = vec3(1.0, 0.0, 0.0); // red
                     }else{
-                        // discard;
-                        color = u_color.rgb;
+                        discard;
+                    }
+                }else{
+                    if(v_cube_position_d.z < 0.0 && gl_FragCoord.z > 0.5){
+                        color = vec3(0.0, 1.0, 0.0); // green
+                    }else{
+                        discard;
                     }
                 }
-                    
-                float color_intensity = gl_FragCoord.z;
+                // outf_color = vec4(color * (1.0 - gl_FragCoord.z), 0.0);
+                outf_color = vec4(color, 1.0);
 
-                //outf_color = vec4(color_intensity, color_intensity, color_intensity, u_color.a);
-                outf_color = vec4((color * color_intensity), u_color.a);
             }`
         )
 
@@ -124,6 +120,9 @@ export class SlicingShaderProgram extends ShaderProgram{
         }else{
             this.gl.enable(this.gl.BLEND)
             this.gl.blendFunc(blendingConfig.sfactor, blendingConfig.dfactor)
+            if(blendingConfig.color !== undefined){
+                this.gl.blendColor(blendingConfig.color[0], blendingConfig.color[1], blendingConfig.color[2], blendingConfig.color[3]);
+            }
         }
 
         this.use()
