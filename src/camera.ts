@@ -2,7 +2,7 @@ import {vec3, mat4, quat, mat3, vec4, ReadonlyVec3} from "gl-matrix"
 import { Cube } from "./shapes";
 import { SlicingShaderProgram } from "./slicing_shader";
 import { StandardShaderProgram } from "./standard_shader";
-import { DepthFunc } from "./gl";
+import { DepthFunc, BlendFactor } from "./gl";
 
 export const forward_c = vec3.fromValues( 0,  0, -1);
 export const    left_c = vec3.fromValues(-1,  0,  0);
@@ -128,13 +128,11 @@ export class SlicingCamera{
                         mask: false,
                         func: DepthFunc.ALWAYS,
                     },
-                    blendingConfig: false
-                    // blendingConfig: {
-                    //     sfactor: BlendFactor.CONSTANT_COLOR,
-                    //     dfactor: BlendFactor.CONSTANT_COLOR,
-                    //     color: vec4.fromValues(1, 1, 1, 0)
-
-                    // }
+                    blendingConfig: {
+                        sfactor: BlendFactor.SRC_ALPHA,
+                        dfactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
+                        color: vec4.fromValues(1, 1, 1, 0)
+                    }
                     // cullConfig:{
                     //     face: CullFace.FRONT,
                     //     frontFace: FrontFace.CCW,

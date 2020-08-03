@@ -39,21 +39,20 @@ export class SlicingShaderProgram extends ShaderProgram{
             void main(){
                 vec3 color;
                 if(gl_FrontFacing){
-                    if(v_cube_position_d.z > 0.0 && gl_FragCoord.z < 0.5){
+                    if(/*v_cube_position_d.z > 0.0 && */gl_FragCoord.z < 0.5){
                         color = vec3(1.0, 0.0, 0.0); // red
                     }else{
                         discard;
                     }
                 }else{
-                    if(v_cube_position_d.z < 0.0 && gl_FragCoord.z > 0.5){
+                    if(/*v_cube_position_d.z < 0.0 && */gl_FragCoord.z > 0.5){
                         color = vec3(0.0, 1.0, 0.0); // green
                     }else{
                         discard;
                     }
                 }
                 // outf_color = vec4(color * (1.0 - gl_FragCoord.z), 0.0);
-                outf_color = vec4(color, 1.0);
-
+                outf_color = vec4(color, 0.5);
             }`
         )
 
