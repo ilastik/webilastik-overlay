@@ -1,5 +1,6 @@
 import {FragmentShader, VertexShader, ShaderProgram} from "./shader"
-import {VertexArrayObject, Vec3AttributeBuffer/*, VertexIndicesBuffer*/} from "./buffer"
+import {VertexArrayObject, Vec3AttributeBuffer,/*, VertexIndicesBuffer*/
+BufferUsageHint} from "./buffer"
 import { mat4, vec4 } from "gl-matrix"
 import { CullFace, FrontFace, BlendFactor, DepthFunc, RenderParams, StencilOp, StencilFunc } from "./gl"
 
@@ -26,13 +27,13 @@ export class StandardShaderProgram extends ShaderProgram{
         solid_color: boolean
     }){
         let vertex_shader = new VertexShader(gl, `
-            layout(location=0) in vec3 a_position; 
+            layout(location=0) in vec3 a_position;
             layout(location=1) in vec3 a_normal;
 
-            uniform mat4 u_object_to_world; 
+            uniform mat4 u_object_to_world;
             uniform mat4 u_world_to_view;
             uniform mat4 u_view_to_device;
-            
+
             out mediump vec3 v_normal_in_world_coords;
 
             void main(){
@@ -45,13 +46,13 @@ export class StandardShaderProgram extends ShaderProgram{
 
         let fragment_shader = new FragmentShader(gl, `
             precision mediump float;
-        
+
             in vec3 v_normal_in_world_coords;
-        
+
             uniform vec4 u_color;
-        
+
             out highp vec4 outf_color;
-            
+
             ${frag_main}`
         )
 
@@ -156,14 +157,14 @@ export class StandardVAO extends VertexArrayObject{
             throw `position/normals mismatch!! num positions: ${a_position_data.length} num normals: ${a_normal_data.length}`
         }
         this.bind()
-        this.a_position_buffer = new Vec3AttributeBuffer(gl, a_position_data, "STATIC_DRAW")
+        this.a_position_buffer = new Vec3AttributeBuffer(gl, a_position_data, BufferUsageHint.STATIC_DRAW)
         this.a_position_buffer.useWithAttribute({location: 0, vao: this});
         this.num_positions = a_position_data.length / 3
 
 
-        this.a_normal_buffer = new Vec3AttributeBuffer(gl, a_normal_data, "STATIC_DRAW")
+        this.a_normal_buffer = new Vec3AttributeBuffer(gl, a_normal_data, BufferUsageHint.STATIC_DRAW)
         this.a_normal_buffer.useWithAttribute({location: 1, vao: this});
-        
+
         //this.vertex_indices_buffer = new VertexIndicesBuffer(gl, vertex_indices, "STATIC_DRAW")
         //this.vertex_indices_buffer.bind()
     }

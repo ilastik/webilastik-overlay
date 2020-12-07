@@ -19,8 +19,15 @@ export class VertexArrayObject{
     }
 }
 
-export type BindTarget = "ARRAY_BUFFER" | "ELEMENT_ARRAY_BUFFER"
-export type BufferUsageHint = "STATIC_DRAW" | "DYNAMIC_DRAW"
+export enum BindTarget {
+    ARRAY_BUFFER = WebGL2RenderingContext.ARRAY_BUFFER,
+    ELEMENT_ARRAY_BUFFER = WebGL2RenderingContext.ELEMENT_ARRAY_BUFFER,
+}
+
+export enum BufferUsageHint{
+    STATIC_DRAW = WebGL2RenderingContext.STATIC_DRAW,
+    DYNAMIC_DRAW = WebGL2RenderingContext.DYNAMIC_DRAW,
+}
 
 export abstract class Buffer<Arr extends BinaryArray>{
     protected glbuffer: WebGLBuffer
@@ -47,16 +54,16 @@ export abstract class Buffer<Arr extends BinaryArray>{
     }
 
     public bind(){
-        this.gl.bindBuffer(this.gl[this.get_bind_target()], this.glbuffer);
+        this.gl.bindBuffer(this.get_bind_target(), this.glbuffer);
     }
 
     public unbind(){
-        this.gl.bindBuffer(this.gl[this.get_bind_target()], null);
+        this.gl.bindBuffer(this.get_bind_target(), null);
     }
 
     public populate(data: Arr, usageHint: BufferUsageHint){
         this.bind()
-        this.gl.bufferData(this.gl[this.get_bind_target()], data, this.gl[usageHint])
+        this.gl.bufferData(this.get_bind_target(), data, usageHint)
         //this.unbind() //i'm not sure if unbinding will remove the index buffer from its vao
         this.numElements = data.length
     }
@@ -65,7 +72,7 @@ export abstract class Buffer<Arr extends BinaryArray>{
 
 export abstract class VertexAttributeBuffer extends Buffer<Float32Array>{
     public get_bind_target(): BindTarget{
-        return "ARRAY_BUFFER"
+        return BindTarget.ARRAY_BUFFER
     }
 
     protected vertexAttribPointer({vao, location, byteOffset=0, normalize, numElements, elementType}:{
@@ -114,6 +121,6 @@ export class VertexIndicesBuffer extends Buffer<Uint16Array>{
     }
 
     public get_bind_target(): BindTarget{
-        return "ELEMENT_ARRAY_BUFFER"
+        return BindTarget.ELEMENT_ARRAY_BUFFER
     }
 }
