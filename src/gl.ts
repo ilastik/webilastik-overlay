@@ -2,7 +2,16 @@ import { vec4 } from "gl-matrix"
 
 export type BinaryArray = ArrayBufferView & {length: number}
 
-export type AttributeElementType = "BYTE" | "SHORT" | "UNSIGNED_BYTE" | "UNSIGNED_SHORT" | "FLOAT"
+export enum AttributeElementType{
+    BYTE = WebGL2RenderingContext.BYTE,
+    SHORT = WebGL2RenderingContext.SHORT,
+    UNSIGNED_BYTE = WebGL2RenderingContext.UNSIGNED_BYTE,
+    UNSIGNED_SHORT = WebGL2RenderingContext.UNSIGNED_SHORT,
+    FLOAT = WebGL2RenderingContext.FLOAT,
+}
+
+// determines if each atribute value in the buffer is a single, vec2, vec3 or vec4
+export type AttributeNumComponents = 1 | 2 | 3 | 4
 
 export enum StencilOp{
     KEEP = WebGL2RenderingContext["KEEP"],

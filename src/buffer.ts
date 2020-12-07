@@ -1,4 +1,5 @@
-import { AttributeElementType, BinaryArray } from "./gl";
+import { AttributeElementType, AttributeNumComponents, BinaryArray } from "./gl";
+import { AttributeLocation } from "./shader";
 
 export class VertexArrayObject{
     private glAttributeObject : WebGLVertexArrayObject
@@ -17,6 +18,28 @@ export class VertexArrayObject{
     public unbind(){
         this.gl.bindVertexArray(null);
     }
+
+    protected vertexAttribPointer<Arr extends BinaryArray>({buffer, location, byteOffset=0, normalize, numComponents, elementType}:{
+        buffer: Buffer<Arr>,
+        location: AttributeLocation,
+        byteOffset?: number,
+        normalize: boolean,
+        numComponents: AttributeNumComponents,
+        elementType: AttributeElementType
+    }){
+        this.bind();
+        this.gl.enableVertexAttribArray(location.raw);
+        buffer.bind()
+        this.gl.vertexAttribPointer(
+            /*index=*/location.raw,
+            /*size=*/numComponents,
+            /*type=*/elementType,
+            /*normalize=*/normalize,
+            /*stride=*/0,
+            /*offset=*/byteOffset
+        )
+        this.unbind()
+    }
 }
 
 export enum BindTarget {
@@ -31,7 +54,6 @@ export enum BufferUsageHint{
 
 export abstract class Buffer<Arr extends BinaryArray>{
     protected glbuffer: WebGLBuffer
-    public numElements: number
 
     constructor(
         public readonly gl: WebGL2RenderingContext,
@@ -65,7 +87,6 @@ export abstract class Buffer<Arr extends BinaryArray>{
         this.bind()
         this.gl.bufferData(this.get_bind_target(), data, usageHint)
         //this.unbind() //i'm not sure if unbinding will remove the index buffer from its vao
-        this.numElements = data.length
     }
 
 }
@@ -75,21 +96,21 @@ export abstract class VertexAttributeBuffer extends Buffer<Float32Array>{
         return BindTarget.ARRAY_BUFFER
     }
 
-    protected vertexAttribPointer({vao, location, byteOffset=0, normalize, numElements, elementType}:{
+    protected vertexAttribPointer({vao, location, byteOffset=0, normalize, numComponents, elementType}:{
         vao: VertexArrayObject,
-        location: number,
+        location: AttributeLocation,
         byteOffset?: number,
         normalize: boolean,
-        numElements: number,
+        numComponents: AttributeNumComponents,
         elementType: AttributeElementType
     }){
         vao.bind();
-        this.gl.enableVertexAttribArray(location);
+        this.gl.enableVertexAttribArray(location.raw);
         this.bind()
         this.gl.vertexAttribPointer(
-            /*index=*/location,
-            /*size=*/numElements,
-            /*type=*/this.gl[elementType],
+            /*index=*/location.raw,
+            /*size=*/numComponents,
+            /*type=*/elementType,
             /*normalize=*/normalize,
             /*stride=*/0,
             /*offset=*/byteOffset
@@ -102,9 +123,9 @@ export abstract class VertexAttributeBuffer extends Buffer<Float32Array>{
 export class Vec3AttributeBuffer extends VertexAttributeBuffer{
     public useWithAttribute({vao, location}:{
         vao: VertexArrayObject,
-        location: number,
+        location: AttributeLocation,
     }){
-        this.vertexAttribPointer({vao, location, numElements: 3, elementType: "FLOAT", normalize: false})
+        this.vertexAttribPointer({vao, location, numComponents: 3, elementType: AttributeElementType.FLOAT, normalize: false})
     }
 }
 

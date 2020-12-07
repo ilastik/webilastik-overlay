@@ -14,9 +14,9 @@ export class GlslType<Arr extends BinaryArray>{
     ){
     }
 
-    static vec4 = new GlslType("vec4", "FLOAT", 4, Float32Array)
-    static vec3 = new GlslType("vec3", "FLOAT", 3, Float32Array)
-    static vec2 = new GlslType("vec2", "FLOAT", 2, Float32Array)
+    static vec4 = new GlslType("vec4", AttributeElementType.FLOAT, 4, Float32Array)
+    static vec3 = new GlslType("vec3", AttributeElementType.FLOAT, 3, Float32Array)
+    static vec2 = new GlslType("vec2", AttributeElementType.FLOAT, 2, Float32Array)
 }
 
 export type UniformHostType = mat4 | vec3
@@ -73,7 +73,7 @@ export class GlslAttribute<Arr extends BinaryArray>{
         this.gl.vertexAttribPointer(
             /*index=*/location.raw,
             /*size=*/this.GlslType.numElements,
-            /*type=*/this.gl[this.GlslType.elementType],
+            /*type=*/this.GlslType.elementType,
             /*normalize=*/normalize,
             /*stride=*/0,
             /*offset=*/byteOffset
@@ -81,4 +81,3 @@ export class GlslAttribute<Arr extends BinaryArray>{
         buffer.unbind()
     }
 }
-
