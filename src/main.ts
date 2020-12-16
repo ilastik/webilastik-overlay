@@ -15,9 +15,6 @@ console.log(`This is the canvas: ${c}`)
 
 let gl = c.getContext("webgl2", {depth: true, stencil: true})!
 
-gl.enable(gl.DEPTH_TEST)
-gl.enable(gl.STENCIL_TEST)
-
 c.width = 800
 c.style.width = c.width + "px"
 

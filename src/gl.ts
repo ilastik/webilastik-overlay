@@ -123,8 +123,12 @@ export class StencilConfig{
     public zfail: StencilOp
     public zpass: StencilOp
 
+    public readonly enable: boolean
+
      //default stencil op to not touch the stencil
-    constructor({func=StencilFunc.ALWAYS, ref=1, mask=0xFFFFFFFF, fail=StencilOp.KEEP, zfail=StencilOp.KEEP, zpass=StencilOp.KEEP}: {
+    constructor({
+        func=StencilFunc.ALWAYS, ref=1, mask=0xFFFFFFFF, fail=StencilOp.KEEP, zfail=StencilOp.KEEP, zpass=StencilOp.KEEP, enable=true
+    }: {
         func?: StencilFunc
         ref?: number
         mask?: number
@@ -132,13 +136,20 @@ export class StencilConfig{
         fail?: StencilOp
         zfail?: StencilOp
         zpass?: StencilOp
+
+        enable?: boolean
     }){
-        this.func=func; this.ref=ref; this.mask=mask; this.fail=fail; this.zfail=zfail; this.zpass=zpass
+        this.func=func; this.ref=ref; this.mask=mask; this.fail=fail; this.zfail=zfail; this.zpass=zpass; this.enable=enable
     }
 
     public use(gl: WebGL2RenderingContext){
-        gl.stencilFunc(/*func=*/this.func, /*ref=*/this.ref, /*mask=*/this.mask)
-        gl.stencilOp(/*fail=*/this.fail, /*zfail=*/this.zfail, /*zpass=*/this.zpass)
+        if(this.enable){
+            gl.enable(gl.STENCIL_TEST)
+            gl.stencilFunc(/*func=*/this.func, /*ref=*/this.ref, /*mask=*/this.mask)
+            gl.stencilOp(/*fail=*/this.fail, /*zfail=*/this.zfail, /*zpass=*/this.zpass)
+        }else{
+            gl.disable(gl.STENCIL_TEST)
+        }
     }
 }
 
@@ -168,16 +179,28 @@ export class BlendingConfig{
 }
 
 export class DepthConfig{
-    mask: boolean
-    func: DepthFunc
+    readonly mask: boolean
+    readonly func: DepthFunc
+    readonly enable: boolean
 
-    constructor({mask=true, func=DepthFunc.LESS} : {mask?: boolean, func?:DepthFunc}){
-        this.mask=mask; this.func=func
+
+    constructor({mask=true, func=DepthFunc.LESS, enable=true} : {
+        mask?: boolean,
+        func?:DepthFunc,
+        enable?: boolean
+    }){
+        this.mask=mask; this.func=func; this.enable=enable
     }
 
     public use(gl: WebGL2RenderingContext){
-        gl.depthMask(this.mask)
-        gl.depthFunc(this.func)
+        if(this.enable){
+            gl.enable(gl.DEPTH_TEST)
+            gl.depthMask(this.mask)
+            gl.depthFunc(this.func)
+        }else{
+            gl.disable(gl.DEPTH_TEST)
+        }
+
     }
 }
 
