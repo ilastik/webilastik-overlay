@@ -2,7 +2,7 @@ import {FragmentShader, VertexShader, ShaderProgram, AttributeLocation} from "./
 import {VertexArrayObject, Vec3AttributeBuffer,/*, VertexIndicesBuffer*/
 BufferUsageHint} from "./buffer"
 import { mat4, vec4 } from "gl-matrix"
-import { CullFace, FrontFace, BlendFactor, DepthFunc, RenderParams, StencilOp, StencilFunc } from "./gl"
+import { RenderParams } from "./gl"
 
 
 const lit_frag_shader_main = `
@@ -66,25 +66,7 @@ export class StandardShaderProgram extends ShaderProgram{
         u_world_to_view,
         u_view_to_device,
 
-        renderParams: {
-            colorMask={r: true, g: true, b: true, a: true},
-            depthConfig={
-                mask: true,
-                func: DepthFunc.LESS,
-            },
-            stencilConfig={
-                func: StencilFunc.ALWAYS, ref: 1, mask: 0xFFFFFFFF, //default stencilFunc to Always pass
-                fail: StencilOp.KEEP, zfail: StencilOp.KEEP, zpass: StencilOp.KEEP //default tencil op to not touch the stencil
-            },
-            cullConfig={
-                face: CullFace.BACK,
-                frontFace: FrontFace.CCW,
-            },
-            blendingConfig={
-                sfactor: BlendFactor.SRC_ALPHA,
-                dfactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
-            }
-        },
+        renderParams=new RenderParams({})
     }: {
         vao: StandardVAO,
         u_color: vec4,
@@ -92,31 +74,9 @@ export class StandardShaderProgram extends ShaderProgram{
         u_world_to_view: mat4,
         u_view_to_device: mat4,
 
-        renderParams: RenderParams
+        renderParams?: RenderParams
     }){
-        this.gl.colorMask(colorMask.r, colorMask.g, colorMask.b, colorMask.a)
-
-        this.gl.depthMask(depthConfig.mask)
-        this.gl.depthFunc(depthConfig.func)
-
-        this.gl.stencilFunc(/*func=*/stencilConfig.func, /*ref=*/stencilConfig.ref, /*mask=*/stencilConfig.mask)
-        this.gl.stencilOp(/*fail=*/stencilConfig.fail, /*zfail=*/stencilConfig.zfail, /*zpass=*/stencilConfig.zpass)
-
-        if(cullConfig === false){
-            this.gl.disable(this.gl.CULL_FACE)
-        }else{
-            this.gl.enable(this.gl.CULL_FACE)
-            this.gl.frontFace(cullConfig.frontFace)
-            this.gl.cullFace(cullConfig.face)
-        }
-
-        if(blendingConfig === false){
-            this.gl.disable(this.gl.BLEND)
-        }else{
-            this.gl.enable(this.gl.BLEND)
-            this.gl.blendFunc(blendingConfig.sfactor, blendingConfig.dfactor)
-        }
-
+        renderParams.use(this.gl)
         this.use()
 
         let uniform_location = this.gl.getUniformLocation(this.glprogram, "u_object_to_world");

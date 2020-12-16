@@ -1,7 +1,12 @@
+export enum ShaderType{
+    FRAGMENT_SHADER = WebGL2RenderingContext.FRAGMENT_SHADER,
+    VERTEX_SHADER = WebGL2RenderingContext.VERTEX_SHADER,
+}
+
 export class Shader{
     public readonly raw: WebGLShader
     public readonly source: string
-    constructor(public readonly gl: WebGL2RenderingContext, source: string, shader_type: number){
+    constructor(public readonly gl: WebGL2RenderingContext, source: string, shader_type: ShaderType){
         this.source, source = "#version 300 es\n" + source
         let glshader = gl.createShader(shader_type)! //FIXME check this?
         gl.shaderSource(glshader, source)
@@ -18,13 +23,13 @@ export class Shader{
 
 export class FragmentShader extends Shader{
     constructor(gl: WebGL2RenderingContext, source: string){
-        super(gl, source, gl.FRAGMENT_SHADER)
+        super(gl, source, ShaderType.FRAGMENT_SHADER)
     }
 }
 
 export class VertexShader extends Shader{
     constructor(gl: WebGL2RenderingContext, source: string){
-        super(gl, source, gl.VERTEX_SHADER)
+        super(gl, source, ShaderType.VERTEX_SHADER)
     }
 }
 
