@@ -110,6 +110,17 @@ export class OrthoCamera extends Camera{
         let view_to_device_matrix = mat4.create(); mat4.ortho(view_to_device_matrix, left, right, bottom, top, near, far)
         super({position, orientation, view_to_device_matrix})
     }
+
+    public reconfigure({left, right, bottom, top, near, far}: {
+        left: number,
+        right: number,
+        bottom: number,
+        top: number,
+        near: number,
+        far: number,
+    }){
+        mat4.ortho(this.view_to_device_matrix, left, right, bottom, top, near, far)
+    }
 }
 
 export class SlicingCamera{
