@@ -1,9 +1,10 @@
 import { quat, vec3, vec4 } from 'gl-matrix'
-
-import { SlicingCamera } from './camera'
+import { BrushShaderProgram, BrushStroke } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
+import { RenderParams } from './gl'
+
 
 
 // let cube_controls = createElement({tagName: "div", parentElement: document.body})
@@ -15,19 +16,17 @@ import { CameraControls } from './controls'
 //     camera.lookAt({target_w: cube.position, position_w: camera.position_w, up_w: vec3.fromValues(0, 1, 0), })
 // }})
 
-export class BrushStroke{}
-
 
 export class BrushingOverlay{
     private canvas: HTMLCanvasElement
     private gl: WebGL2RenderingContext
 
     private camera: OrthoCamera
-    private slicing_camera: SlicingCamera
     private camera_controls: CameraControls
 
 
-    private brushStrokes: Array<Array<vec3>> = [[vec3.fromValues(0, 0, 0)]]
+    private brushStrokes: Array<BrushStroke> = []
+    private renderer : BrushShaderProgram
 
     public constructor({target, camera_position, camera_orientation}: {
         target: HTMLElement,
@@ -52,10 +51,15 @@ export class BrushingOverlay{
             left: -5, right: 5, near: 0, far: 10, bottom: -5, top:  5,
             position: camera_position, orientation: camera_orientation
         })
-
-
-        this.slicing_camera = new SlicingCamera(this.gl, this.camera)
         this.camera_controls = new CameraControls()
+
+
+        this.brushStrokes.push(new BrushStroke({start_postition: vec3.fromValues(0,0,0), color: vec4.fromValues(1, 0, 0, 1)}))
+        this.brushStrokes[0].add_voxel(vec3.fromValues(10, 10, 10))
+        this.brushStrokes[0].add_voxel(vec3.fromValues(20, 50, 20))
+
+
+        this.renderer = new BrushShaderProgram(this.gl)
 
         //TODO: put camera looking at the center of the first slice of a dataset by default
         this.camera.lookAt({target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 5), up_w: vec3.fromValues(0, 1, 0), })
@@ -72,7 +76,7 @@ export class BrushingOverlay{
             left: -canvas.scrollWidth / pixels_per_voxel / 2,
             right: canvas.scrollWidth / pixels_per_voxel / 2,
             near: 0,
-            far: 10, // This could be just 1... but oblique views might mess things up since a cube has length 1 * (3 ^ (1/2)) on opposite corners
+            far: 1000, // This could be just 1... but oblique views might mess things up since a cube has length 1 * (3 ^ (1/2)) on opposite corners
             bottom: -canvas.scrollHeight / pixels_per_voxel / 2,
             top: canvas.scrollHeight / pixels_per_voxel / 2,
         })
@@ -88,11 +92,9 @@ export class BrushingOverlay{
         //tells webgl where to render stuff ((0,0)) and how to scale units into pixels
         this.gl.viewport(0, 0, canvas.scrollWidth, canvas.scrollHeight); //FIXME: shuold aspect play a role here?
         this.camera_controls.updateCamera(this.camera);
-        console.log(`Camera is at ${this.camera.position_w}`)
+        // console.log(`Camera is at ${this.camera.position_w}`)
 
-        for(let brushStroke of this.brushStrokes){
-            this.slicing_camera.renderBrushStroke({brushStroke, color: vec4.fromValues(0,0,1, 1)});
-        }
+        this.renderer.render({brush_strokes: this.brushStrokes, camera: this.camera, renderParams: new RenderParams({})})
 
         window.requestAnimationFrame(this.render)
     }
