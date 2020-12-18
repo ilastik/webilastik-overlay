@@ -118,12 +118,12 @@ export class StandardVAO extends VertexArrayObject{
         }
         this.bind()
         this.a_position_buffer = new Vec3AttributeBuffer(gl, a_position_data, BufferUsageHint.STATIC_DRAW)
-        this.a_position_buffer.useWithAttribute({location: new AttributeLocation(0), vao: this});
+        this.a_position_buffer.useWithAttribute({location: new AttributeLocation("a_position", 0), vao: this});
         this.num_positions = a_position_data.length / 3
 
 
         this.a_normal_buffer = new Vec3AttributeBuffer(gl, a_normal_data, BufferUsageHint.STATIC_DRAW)
-        this.a_normal_buffer.useWithAttribute({location: new AttributeLocation(1), vao: this});
+        this.a_normal_buffer.useWithAttribute({location: new AttributeLocation("a_normal", 1), vao: this});
 
         //this.vertex_indices_buffer = new VertexIndicesBuffer(gl, vertex_indices, "STATIC_DRAW")
         //this.vertex_indices_buffer.bind()

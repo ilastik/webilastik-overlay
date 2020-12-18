@@ -204,12 +204,59 @@ export class DepthConfig{
     }
 }
 
+export class ClearConfig{
+    readonly r: number
+    readonly g: number
+    readonly b: number
+    readonly a: number
+
+    readonly clear_color: boolean
+    readonly clear_depth: boolean
+    readonly clear_stencil: boolean
+
+    constructor({r=0, g=0, b=0, a=1, clear_color=true, clear_depth=true, clear_stencil=true}: {
+        r?: number,
+        g?: number,
+        b?: number,
+        a?: number,
+
+        clear_color?: boolean,
+        clear_depth?: boolean,
+        clear_stencil?: boolean,
+    }){
+        this.r = r
+        this.g = g
+        this.b = b
+        this.a = a
+
+        this.clear_color = clear_color
+        this.clear_depth = clear_depth
+        this.clear_stencil = clear_stencil
+    }
+
+    public use(gl: WebGL2RenderingContext){
+        gl.clearColor(this.r, this.g, this.b, this.a);
+        let flags = 0
+        if(this.clear_color){
+            flags = flags | WebGL2RenderingContext.COLOR_BUFFER_BIT
+        }
+        if(this.clear_depth){
+            flags = flags | WebGL2RenderingContext.DEPTH_BUFFER_BIT
+        }
+        if(this.clear_stencil){
+            flags = flags | WebGL2RenderingContext.STENCIL_BUFFER_BIT
+        }
+        gl.clear(flags);
+    }
+}
+
 export class RenderParams{
     public colorMask: ColorMask
     public depthConfig: DepthConfig
     public stencilConfig: StencilConfig
     public cullConfig: CullConfig
     public blendingConfig: BlendingConfig
+    public clearConfig: ClearConfig
 
     public constructor({
         colorMask=new ColorMask({}),
@@ -217,18 +264,21 @@ export class RenderParams{
         stencilConfig=new StencilConfig({}),
         cullConfig=new CullConfig({}),
         blendingConfig=new BlendingConfig({}),
+        clearConfig=new ClearConfig({}),
     }: {
         colorMask?: ColorMask,
         depthConfig?: DepthConfig,
         stencilConfig?: StencilConfig,
         cullConfig?: CullConfig,
         blendingConfig?: BlendingConfig,
+        clearConfig?: ClearConfig,
     }){
         this.colorMask = colorMask
         this.depthConfig = depthConfig
         this.stencilConfig = stencilConfig
         this.cullConfig = cullConfig
         this.blendingConfig = blendingConfig
+        this.clearConfig = clearConfig
     }
 
     public use(gl: WebGL2RenderingContext){
@@ -237,5 +287,6 @@ export class RenderParams{
         this.stencilConfig.use(gl)
         this.cullConfig.use(gl)
         this.blendingConfig.use(gl)
+        this.clearConfig.use(gl)
     }
 }

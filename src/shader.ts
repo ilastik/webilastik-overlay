@@ -34,14 +34,19 @@ export class VertexShader extends Shader{
 }
 
 export class AttributeLocation{
-    constructor(public readonly raw: number){
-        if(raw == -1){throw `Could not find GlslAttribute`}
+    constructor(public readonly name: string, public readonly raw: number){
+        if(raw == -1){throw `Could not find GlslAttribute ${name}`}
+    }
+}
+
+export class UniformLocation{
+    constructor(public readonly name: string, public readonly raw: WebGLUniformLocation | null){
+        if(raw === null){throw `Could not find Glsl Uniform ${name}`}
     }
 }
 
 export class ShaderProgram{
     public readonly glprogram: WebGLProgram
-    public static currentProgram: ShaderProgram | undefined
     constructor(
         public readonly gl: WebGL2RenderingContext,
         vertexShader: VertexShader,
@@ -62,18 +67,14 @@ export class ShaderProgram{
     }
 
     public getAttribLocation(name: string) : AttributeLocation{
-        return new AttributeLocation(this.gl.getAttribLocation(this.glprogram, name))
+        return new AttributeLocation(name, this.gl.getAttribLocation(this.glprogram, name))
     }
 
-    public getUniformLocation(name: string): WebGLUniformLocation | null{
-        return this.gl.getUniformLocation(this.glprogram, name)
+    public getUniformLocation(name: string): UniformLocation{
+        return new UniformLocation(name, this.gl.getUniformLocation(this.glprogram, name))
     }
 
     public use(){
-        if(ShaderProgram.currentProgram == this){
-            return
-        }
         this.gl.useProgram(this.glprogram)
-        ShaderProgram.currentProgram = this
     }
 }
