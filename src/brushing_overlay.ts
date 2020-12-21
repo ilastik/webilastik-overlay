@@ -1,4 +1,4 @@
-import { quat, vec3, vec4 } from 'gl-matrix'
+import { mat4, quat, vec3, vec4 } from 'gl-matrix'
 import { BrushShaderProgram, BrushStroke } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
@@ -6,16 +6,9 @@ import { CameraControls } from './controls'
 import { RenderParams } from './gl'
 
 
-
-// let cube_controls = createElement({tagName: "div", parentElement: document.body})
-// createElement({tagName: "label", parentElement: cube_controls, innerHTML: "Cube Y rotation (rads): "})
-// let rads_input = createInput({inputType: "text", parentElement: cube_controls, value: "0.02"})
-
-// let center_view_controls = createElement({tagName: "div", parentElement: document.body})
-// createInput({inputType: "button", value: "Center cam on cube", parentElement: center_view_controls, click: () => {
-//     camera.lookAt({target_w: cube.position, position_w: camera.position_w, up_w: vec3.fromValues(0, 1, 0), })
-// }})
-
+function vecToStr(v: vec4): string{
+    return `${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)}`
+}
 
 export class BrushingOverlay{
     private canvas: HTMLCanvasElement
@@ -27,6 +20,7 @@ export class BrushingOverlay{
 
     private brushStrokes: Array<BrushStroke> = []
     private renderer : BrushShaderProgram
+    private device_to_view = mat4.create();
 
     public constructor({target, camera_position, camera_orientation}: {
         target: HTMLElement,
@@ -64,7 +58,40 @@ export class BrushingOverlay{
         //TODO: put camera looking at the center of the first slice of a dataset by default
         this.camera.lookAt({target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 5), up_w: vec3.fromValues(0, 1, 0), })
         window.requestAnimationFrame(this.render)
+
+
+        this.canvas.addEventListener("mousedown", (mouseDownEvent) => {
+            let currentBrushStroke = new BrushStroke({
+                start_postition: this.getMouseWorldPosition(mouseDownEvent), color: vec4.fromValues(0, 0, 1, 1)
+            })
+            this.brushStrokes.push(currentBrushStroke)
+
+            let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
+                currentBrushStroke.add_voxel(this.getMouseWorldPosition(mouseMoveEvent))
+            }
+            let handlerCleanup = () => {
+                this.canvas.removeEventListener("mousemove", scribbleHandler)
+                document.removeEventListener("mouseup", handlerCleanup)
+            }
+            this.canvas.addEventListener("mousemove", scribbleHandler)
+            document.addEventListener("mouseup", handlerCleanup)
+        })
     }
+
+    private getMouseWorldPosition(ev: MouseEvent): vec3{
+        this.camera.get_device_to_world_matrix(this.device_to_view)
+
+        let device_position = vec4.fromValues(
+            (ev.offsetX - (this.canvas.scrollWidth / 2)) / (this.canvas.scrollWidth / 2),
+           -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2),
+            0, //FIXME: make sure this is compatible with camera near/far configs
+            1
+        )
+        let world_position = vec4.create(); vec4.transformMat4(world_position, device_position, this.device_to_view)
+        console.log(`Device: ${vecToStr(device_position)}   World: ${vecToStr(world_position)}`)
+        return vec3.fromValues(world_position[0], world_position[1], world_position[2])
+    }
+
 
     private render = () => {
         const pixels_per_voxel = 10 // this is essentially "zoom" in ortho perspective and should be user-configurable

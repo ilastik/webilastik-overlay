@@ -35,6 +35,12 @@ export abstract class Camera{
         return mat4.invert(out, out)
     }
 
+    public get_device_to_world_matrix(out: mat4){
+        this.get_world_to_view_matrix(out) // out = world_to_view
+        mat4.multiply(out, this.view_to_device_matrix, out) // out = world_to_device
+        mat4.invert(out, out) // out = device_to_world
+    }
+
     public reorient(orientation: quat){
         quat.copy(this.orientation, orientation)
     }
