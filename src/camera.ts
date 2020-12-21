@@ -1,8 +1,4 @@
-import {vec3, mat4, quat, mat3, vec4, ReadonlyVec3} from "gl-matrix"
-import { Cube } from "./shapes";
-import { SlicingShaderProgram } from "./slicing_shader";
-import { StandardShaderProgram } from "./standard_shader";
-import { BlendFactor, RenderParams, CullConfig, DepthConfig, BlendingConfig, CullFace, FrontFace } from "./gl";
+import { mat3, mat4, quat, ReadonlyVec3, vec3 } from "gl-matrix";
 
 export const forward_c = vec3.fromValues( 0,  0, -1);
 export const    left_c = vec3.fromValues(-1,  0,  0);
@@ -120,88 +116,5 @@ export class OrthoCamera extends Camera{
         far: number,
     }){
         mat4.ortho(this.view_to_device_matrix, left, right, bottom, top, near, far)
-    }
-}
-
-export class SlicingCamera{
-    private slicing_program: SlicingShaderProgram
-    private standard_program: StandardShaderProgram
-    private voxel : Cube;
-
-
-    constructor(public readonly gl: WebGL2RenderingContext, public readonly camera: Camera){
-        this.slicing_program = new SlicingShaderProgram(gl);
-        this.standard_program = new StandardShaderProgram(gl, {solid_color: false})
-        this.voxel = new Cube({gl: this.gl});
-    }
-
-    private render_sliced(color: vec4, brushStroke: Array<vec3>){
-        this.voxel.moveTo(vec3.fromValues(0,0,0));
-        let world_to_view_matrix = mat4.create(); this.camera.get_world_to_view_matrix(world_to_view_matrix)
-
-        console.log("=============================")
-        for(let vox_position of brushStroke){
-            ////DEBUG BEGIN//////
-            let cube_pos = vec3.create();
-            vec3.transformMat4(cube_pos, vox_position, world_to_view_matrix);
-            vec3.transformMat4(cube_pos, cube_pos, this.camera.view_to_device_matrix);
-            console.log(`Cube_pos.z: ${cube_pos[2]}`)
-            ////DEBUG END//////
-
-
-            this.slicing_program.run({
-                vao: this.voxel.vao,
-
-                u_color: color,
-                u_world_to_view: world_to_view_matrix,
-                u_view_to_device: this.camera.view_to_device_matrix,
-                u_cube_position_w: vox_position,
-
-                renderParams: new RenderParams({
-                    depthConfig: new DepthConfig({
-                        mask: false, //disable writing to depth buffer
-                    }),
-                    blendingConfig: new BlendingConfig({
-                        sfactor: BlendFactor.SRC_ALPHA,
-                        dfactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
-                        color: vec4.fromValues(1, 1, 1, 0)
-                    }),
-                    cullConfig: new CullConfig({
-                        enable: false,  //DEBUG: don't cull so we can see backfaces
-                        face: CullFace.FRONT,
-                        frontFace: FrontFace.CCW,
-                    })
-                }),
-            });
-        }
-    }
-
-    private render_standard(color: vec4, brushStroke: Array<vec3>){
-        let world_to_view_matrix = mat4.create(); this.camera.get_world_to_view_matrix(world_to_view_matrix)
-
-        for(let vox_position of brushStroke){
-            console.log(`Moving voxel to ${vox_position}`)
-            this.voxel.moveTo(vox_position);
-            console.log(`--> obj_to_world: ${this.voxel.object_to_world_matrix}`)
-            this.standard_program.run({
-                vao: this.voxel.vao,
-
-                u_color: color,
-                u_object_to_world: this.voxel.object_to_world_matrix,
-                u_world_to_view: world_to_view_matrix,
-                u_view_to_device: this.camera.view_to_device_matrix,
-
-                renderParams: new RenderParams({})
-            })
-        }
-    }
-
-    public renderBrushStroke({color, brushStroke}: {brushStroke: Array<vec3>, color: vec4}){
-        this.gl.clearColor(0, 0, 0, 1);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT | this.gl.STENCIL_BUFFER_BIT);
-
-        this.render_standard(color, brushStroke)
-        this.gl.clear(this.gl.DEPTH_BUFFER_BIT); //do not let debug rendering disturb slicing?
-        this.render_sliced(color, brushStroke)
     }
 }
