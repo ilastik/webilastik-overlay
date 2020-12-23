@@ -66,7 +66,8 @@ export abstract class Buffer<Arr extends BinaryArray>{
             throw `Could not create buffer`
         }
         this.glbuffer = buf
-        this.populate(data, usageHint)
+        this.bind()
+        this.gl.bufferData(this.get_bind_target(), data, usageHint)
     }
 
     public abstract get_bind_target(): BindTarget;
@@ -83,9 +84,20 @@ export abstract class Buffer<Arr extends BinaryArray>{
         this.gl.bindBuffer(this.get_bind_target(), null);
     }
 
-    public populate(data: Arr, usageHint: BufferUsageHint){
+    public populate({dstByteOffset=0, data, srcOffset=0, length=0}: {
+         dstByteOffset?: number,
+         data: Arr,
+         srcOffset?: number //in elements (not bytes)
+         length?: number // in elements (not bytes)
+        }){
         this.bind()
-        this.gl.bufferData(this.get_bind_target(), data, usageHint)
+        this.gl.bufferSubData(
+            /*target=*/this.get_bind_target(),
+            /*dstByteOffset=*/dstByteOffset,
+            /*srcData=*/data,
+            /*srcOffset=*/srcOffset,
+            /*length=*/length
+        )
         //this.unbind() //i'm not sure if unbinding will remove the index buffer from its vao
     }
 

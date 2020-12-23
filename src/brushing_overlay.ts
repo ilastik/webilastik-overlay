@@ -6,10 +6,6 @@ import { CameraControls } from './controls'
 import { RenderParams } from './gl'
 
 
-function vecToStr(v: vec4): string{
-    return `${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)}`
-}
-
 export class BrushingOverlay{
     private canvas: HTMLCanvasElement
     private gl: WebGL2RenderingContext
@@ -21,6 +17,12 @@ export class BrushingOverlay{
     private brushStrokes: Array<BrushStroke> = []
     private renderer : BrushShaderProgram
     private device_to_view = mat4.create();
+
+    private pixels_per_voxel = 10
+
+    public setZoom(pixels_per_voxel: number){
+        this.pixels_per_voxel = pixels_per_voxel
+    }
 
     public constructor({target, camera_position, camera_orientation}: {
         target: HTMLElement,
@@ -48,7 +50,9 @@ export class BrushingOverlay{
         this.camera_controls = new CameraControls()
 
 
-        this.brushStrokes.push(new BrushStroke({start_postition: vec3.fromValues(0,0,0), color: vec4.fromValues(1, 0, 0, 1)}))
+        this.brushStrokes.push(new BrushStroke({
+            gl: this.gl, start_postition: vec3.fromValues(0,0,0), color: vec4.fromValues(1, 0, 0, 1)
+        }))
         this.brushStrokes[0].add_voxel(vec3.fromValues(10, 10, 10))
         this.brushStrokes[0].add_voxel(vec3.fromValues(20, 50, 20))
 
@@ -56,13 +60,13 @@ export class BrushingOverlay{
         this.renderer = new BrushShaderProgram(this.gl)
 
         //TODO: put camera looking at the center of the first slice of a dataset by default
-        this.camera.lookAt({target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 5), up_w: vec3.fromValues(0, 1, 0), })
-        window.requestAnimationFrame(this.render)
-
+        this.camera.lookAt({
+            target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 5), up_w: vec3.fromValues(0, 1, 0)
+        })
 
         this.canvas.addEventListener("mousedown", (mouseDownEvent) => {
             let currentBrushStroke = new BrushStroke({
-                start_postition: this.getMouseWorldPosition(mouseDownEvent), color: vec4.fromValues(0, 0, 1, 1)
+                gl: this.gl, start_postition: this.getMouseWorldPosition(mouseDownEvent), color: vec4.fromValues(0, 0, 1, 1)
             })
             this.brushStrokes.push(currentBrushStroke)
 
@@ -76,6 +80,8 @@ export class BrushingOverlay{
             this.canvas.addEventListener("mousemove", scribbleHandler)
             document.addEventListener("mouseup", handlerCleanup)
         })
+
+        window.requestAnimationFrame(this.render)
     }
 
     private getMouseWorldPosition(ev: MouseEvent): vec3{
@@ -88,24 +94,23 @@ export class BrushingOverlay{
             1
         )
         let world_position = vec4.create(); vec4.transformMat4(world_position, device_position, this.device_to_view)
-        console.log(`Device: ${vecToStr(device_position)}   World: ${vecToStr(world_position)}`)
+        // console.log(`Device: ${vecToStr(device_position)}   World: ${vecToStr(world_position)}`)
         return vec3.fromValues(world_position[0], world_position[1], world_position[2])
     }
 
 
     private render = () => {
-        const pixels_per_voxel = 10 // this is essentially "zoom" in ortho perspective and should be user-configurable
         const canvas = <HTMLCanvasElement>this.gl.canvas
         // const aspect = canvas.scrollWidth / canvas.scrollHeight // FIXME: maybe use ScrollWidth and ScrollHeight?
 
         //pixels_per_voxel determines the field of view, which is determined in voxel units
         this.camera.reconfigure({
-            left: -canvas.scrollWidth / pixels_per_voxel / 2,
-            right: canvas.scrollWidth / pixels_per_voxel / 2,
+            left: -canvas.scrollWidth / this.pixels_per_voxel / 2,
+            right: canvas.scrollWidth / this.pixels_per_voxel / 2,
             near: 0,
             far: 1000, // This could be just 1... but oblique views might mess things up since a cube has length 1 * (3 ^ (1/2)) on opposite corners
-            bottom: -canvas.scrollHeight / pixels_per_voxel / 2,
-            top: canvas.scrollHeight / pixels_per_voxel / 2,
+            bottom: -canvas.scrollHeight / this.pixels_per_voxel / 2,
+            top: canvas.scrollHeight / this.pixels_per_voxel / 2,
         })
 
         //this sets the size of the framebuffer. It could end up with a different ratio between height and width when compared to the actual
