@@ -10,7 +10,7 @@ export class BrushingOverlay{
     private canvas: HTMLCanvasElement
     private gl: WebGL2RenderingContext
 
-    private camera: OrthoCamera
+    public readonly camera: OrthoCamera
     private camera_controls: CameraControls
 
 
@@ -42,21 +42,11 @@ export class BrushingOverlay{
         target.appendChild(this.canvas)
 
         this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
-
         this.camera = new OrthoCamera({
             left: -5, right: 5, near: 0, far: 10, bottom: -5, top:  5,
             position: camera_position, orientation: camera_orientation
         })
         this.camera_controls = new CameraControls()
-
-
-        this.brushStrokes.push(new BrushStroke({
-            gl: this.gl, start_postition: vec3.fromValues(0,0,0), color: vec4.fromValues(1, 0, 0, 1)
-        }))
-        this.brushStrokes[0].add_voxel(vec3.fromValues(10, 10, 10))
-        this.brushStrokes[0].add_voxel(vec3.fromValues(20, 50, 20))
-
-
         this.renderer = new BrushShaderProgram(this.gl)
 
         //TODO: put camera looking at the center of the first slice of a dataset by default
@@ -66,7 +56,11 @@ export class BrushingOverlay{
 
         this.canvas.addEventListener("mousedown", (mouseDownEvent) => {
             let currentBrushStroke = new BrushStroke({
-                gl: this.gl, start_postition: this.getMouseWorldPosition(mouseDownEvent), color: vec4.fromValues(0, 0, 1, 1)
+                gl: this.gl,
+                start_postition: this.getMouseWorldPosition(mouseDownEvent),
+                color: vec4.fromValues(0, 0, 1, 1),
+                camera_position: this.camera.position_w,
+                camera_orientation: this.camera.orientation,
             })
             this.brushStrokes.push(currentBrushStroke)
 
@@ -98,6 +92,10 @@ export class BrushingOverlay{
         return vec3.fromValues(world_position[0], world_position[1], world_position[2])
     }
 
+    public snapTo(brush_stroke: BrushStroke){
+        this.camera.moveTo(brush_stroke.camera_position)
+        this.camera.reorient(brush_stroke.camera_orientation)
+    }
 
     private render = () => {
         const canvas = <HTMLCanvasElement>this.gl.canvas
