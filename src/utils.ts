@@ -28,12 +28,23 @@ export function manualLookAt(out: mat4, eye: vec3, center: vec3, up: vec3): mat4
     )
 
     mat4.invert(out, cam_to_world) // out = cam_to_world ^ -1 = world_to_cam
-    return out 
+    return out
 }
 
+// type KnownKeys<T> = {
+//     [K in keyof T]: string extends K ? never : number extends K ? never : K
+// } extends { [_ in keyof T]: infer U } ? U : never;
 
-export function createElement({tagName, parentElement, innerHTML, cssClasses, click}:
-    {tagName:string, parentElement:HTMLElement, innerHTML?:string, cssClasses?:Array<string>, click?(event: any): void}
+export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, click}:{
+    tagName:string,
+    parentElement:HTMLElement,
+    innerHTML?:string,
+    cssClasses?:Array<string>,
+    inlineCss?: Partial<Omit<
+        CSSStyleDeclaration,
+        "getPropertyPriority" | "getPropertyValue" | "item" | "removeProperty" | "setProperty"
+    >>,
+    click?(event: any): void},
 ): HTMLElement{
     const element = document.createElement(tagName);
     parentElement.appendChild(element)
@@ -45,6 +56,9 @@ export function createElement({tagName, parentElement, innerHTML, cssClasses, cl
     })
     if(click !== undefined){
         element.addEventListener('click', click)
+    }
+    for(let key in inlineCss){ //FIXME: remove any
+        (element.style as any)[key] = inlineCss[key]
     }
     return element
 }
