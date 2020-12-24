@@ -1,9 +1,15 @@
-import { BrushingOverlay } from './brushing_overlay'
-import {createElement} from './utils'
+import { BrushingOverlay, BrushingWidget } from './brushing_overlay'
+import { createElement } from './utils'
 
-let container = createElement({tagName: "div", parentElement: document.body})
-container.style.width = "400px"
-container.style.height = "300px"
-container.style.border = "solid 5px purple"
+let dummy_viewer = createElement({tagName: "div", parentElement: document.body, inlineCss: {
+    width: "400px",
+    height: "300px",
+    border: "solid 5px purple",
+}})
 
-new BrushingOverlay({target: container})
+new BrushingWidget({
+    container: document.body,
+    overlay: new BrushingOverlay({
+        target: dummy_viewer
+    })
+})

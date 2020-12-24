@@ -4,17 +4,17 @@ import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
 import { RenderParams } from './gl'
+import { createElement, createInput } from './utils'
 
 
 export class BrushingOverlay{
-    private canvas: HTMLCanvasElement
-    private gl: WebGL2RenderingContext
+    public readonly canvas: HTMLCanvasElement
+    public readonly gl: WebGL2RenderingContext
 
     public readonly camera: OrthoCamera
     private camera_controls: CameraControls
 
 
-    private brushStrokes: Array<BrushStroke> = []
     private renderer : BrushShaderProgram
     private device_to_view = mat4.create();
 
@@ -32,14 +32,13 @@ export class BrushingOverlay{
         if(target.style.position == "static"){
             throw "Can't overlay element with .style.position == 'static'"
         }
-        this.canvas = document.createElement("canvas")
-        this.canvas.style.position = "relative"
-        this.canvas.style.height = "100%"
-        this.canvas.style.width = "100%"
-        this.canvas.style.top = "0"
-        this.canvas.style.left = "0"
-        this.canvas.style.border = "solid 3px orange"
-        target.appendChild(this.canvas)
+        this.canvas = <HTMLCanvasElement>createElement({tagName: "canvas", parentElement: target, inlineCss: {
+            position: "relative",
+            height: "100%",
+            width: "100%",
+            top: "0",
+            left: "0",
+        }})
 
         this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
         this.camera = new OrthoCamera({
@@ -48,37 +47,9 @@ export class BrushingOverlay{
         })
         this.camera_controls = new CameraControls()
         this.renderer = new BrushShaderProgram(this.gl)
-
-        //TODO: put camera looking at the center of the first slice of a dataset by default
-        this.camera.lookAt({
-            target_w: vec3.fromValues(0,0,0), position_w: vec3.fromValues(0, 0, 5), up_w: vec3.fromValues(0, 1, 0)
-        })
-
-        this.canvas.addEventListener("mousedown", (mouseDownEvent) => {
-            let currentBrushStroke = new BrushStroke({
-                gl: this.gl,
-                start_postition: this.getMouseWorldPosition(mouseDownEvent),
-                color: vec4.fromValues(0, 0, 1, 1),
-                camera_position: this.camera.position_w,
-                camera_orientation: this.camera.orientation,
-            })
-            this.brushStrokes.push(currentBrushStroke)
-
-            let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
-                currentBrushStroke.add_voxel(this.getMouseWorldPosition(mouseMoveEvent))
-            }
-            let handlerCleanup = () => {
-                this.canvas.removeEventListener("mousemove", scribbleHandler)
-                document.removeEventListener("mouseup", handlerCleanup)
-            }
-            this.canvas.addEventListener("mousemove", scribbleHandler)
-            document.addEventListener("mouseup", handlerCleanup)
-        })
-
-        window.requestAnimationFrame(this.render)
     }
 
-    private getMouseWorldPosition(ev: MouseEvent): vec3{
+    public getMouseWorldPosition(ev: MouseEvent): vec3{
         this.camera.get_device_to_world_matrix(this.device_to_view)
 
         let device_position = vec4.fromValues(
@@ -92,12 +63,12 @@ export class BrushingOverlay{
         return vec3.fromValues(world_position[0], world_position[1], world_position[2])
     }
 
-    public snapTo(brush_stroke: BrushStroke){
-        this.camera.moveTo(brush_stroke.camera_position)
-        this.camera.reorient(brush_stroke.camera_orientation)
+    public snapTo(camera_position: vec3, camera_orientation: quat){
+        this.camera.moveTo(camera_position)
+        this.camera.reorient(camera_orientation)
     }
 
-    private render = () => {
+    public render = (brushStrokes: Array<BrushStroke>) => {
         const canvas = <HTMLCanvasElement>this.gl.canvas
         // const aspect = canvas.scrollWidth / canvas.scrollHeight // FIXME: maybe use ScrollWidth and ScrollHeight?
 
@@ -124,8 +95,97 @@ export class BrushingOverlay{
         this.camera_controls.updateCamera(this.camera);
         // console.log(`Camera is at ${this.camera.position_w}`)
 
-        this.renderer.render({brush_strokes: this.brushStrokes, camera: this.camera, renderParams: new RenderParams({})})
+        this.renderer.render({brush_strokes: brushStrokes, camera: this.camera, renderParams: new RenderParams({})})
+    }
+}
 
-        window.requestAnimationFrame(this.render)
+export class BrushingWidget{
+    public readonly element: HTMLElement
+    public readonly colorPicker: HTMLInputElement
+    private readonly brushStrokesContainer: HTMLElement
+
+    public currentBrushColor: vec3 = vec3.fromValues(1, 0, 0)
+    private readonly overlay: BrushingOverlay
+    private brushStrokeWidgets: Array<BrushStrokeWidget> = []
+
+    constructor({container, overlay}: {
+        container: HTMLElement,
+        overlay: BrushingOverlay,
+    }){
+        this.element = createElement({tagName: "div", parentElement: container, inlineCss: {
+            width: "300px",
+            height: "300px",
+            border: "solid 2px black",
+        }})
+        createElement({tagName: "span", parentElement: this.element, innerHTML: "Brush Color: "})
+        this.colorPicker = createInput({inputType: "color", parentElement: this.element, value: "#FF0000"})
+        this.colorPicker.addEventListener("change", () => {
+            let channels = this.colorPicker.value.slice(1).match(/../g)!.map(c => parseInt(c, 16) / 255)
+            this.currentBrushColor = vec3.fromValues(channels[0], channels[1], channels[2])
+        })
+        createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
+        this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
+
+        this.overlay = overlay
+        this.overlay.canvas.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
+            let currentBrushStroke = new BrushStroke({
+                gl: this.overlay.gl,
+                start_postition: this.overlay.getMouseWorldPosition(mouseDownEvent),
+                color: this.currentBrushColor,
+                camera_position: this.overlay.camera.position_w,
+                camera_orientation: this.overlay.camera.orientation,
+            })
+            this.addBrushStroke(currentBrushStroke)
+
+            let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
+                currentBrushStroke.add_voxel(this.overlay.getMouseWorldPosition(mouseMoveEvent))
+            }
+            let handlerCleanup = () => {
+                this.overlay.canvas.removeEventListener("mousemove", scribbleHandler)
+                document.removeEventListener("mouseup", handlerCleanup)
+            }
+            this.overlay.canvas.addEventListener("mousemove", scribbleHandler)
+            document.addEventListener("mouseup", handlerCleanup)
+        })
+
+        let render = () => {
+            this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke))
+            window.requestAnimationFrame(render)
+        }
+
+        window.requestAnimationFrame(render)
+    }
+
+    public addBrushStroke(brushStroke: BrushStroke){
+        let stroke_widget = new BrushStrokeWidget(
+            brushStroke,
+            this.brushStrokesContainer
+        )
+        this.brushStrokeWidgets.push(stroke_widget)
+        stroke_widget.element.addEventListener("click", () => {
+            this.overlay.snapTo(brushStroke.camera_position, brushStroke.camera_orientation)
+        })
+    }
+}
+
+function vec3ToRgb(value: vec3): string{
+    return "rgb(" + value.map((c: number) => Math.floor(c * 255)).join(", ") + ")"
+}
+
+function vec3ToString(value: vec3): string{
+    return `<${value[0].toFixed(1)}, ${value[1].toFixed(1)}, ${value[2].toFixed(1)}>`
+}
+
+export class BrushStrokeWidget{
+    public readonly element: HTMLElement
+    constructor(public readonly brushStroke: BrushStroke, parentElement: HTMLElement){
+        this.element = createElement({
+            tagName: "li",
+            parentElement,
+            innerHTML: vec3ToRgb(brushStroke.color) + ` at ${vec3ToString(brushStroke.getVertRef(0))}`,
+            inlineCss: {
+                color: vec3ToRgb(brushStroke.color)
+            }
+        })
     }
 }

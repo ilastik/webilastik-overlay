@@ -1,4 +1,4 @@
-import { mat4, quat, vec3, vec4 } from "gl-matrix";
+import { mat4, quat, vec3 } from "gl-matrix";
 import { BufferUsageHint, Vec3AttributeBuffer, VertexArrayObject } from "./buffer";
 import { Camera } from "./camera";
 import { RenderParams } from "./gl";
@@ -10,13 +10,13 @@ export class BrushStroke extends LineStrip{
     public camera_position: vec3
     public readonly camera_orientation: quat
     public num_voxels : number
-    public readonly color : vec4
+    public readonly color : vec3
     public readonly positions_buffer: Vec3AttributeBuffer
 
     constructor({gl, start_postition, color, camera_position, camera_orientation}: {
         gl: WebGL2RenderingContext,
         start_postition: vec3,
-        color: vec4,
+        color: vec3,
         camera_position: vec3,
         camera_orientation: quat
     }){
@@ -26,7 +26,7 @@ export class BrushStroke extends LineStrip{
         this.camera_orientation = quat.create(); quat.copy(this.camera_orientation, camera_orientation)
         vec3.copy(this.getVertRef(0), start_postition)
         this.num_voxels = 1
-        this.color = vec4.create(); vec4.copy(this.color, color)
+        this.color = vec3.create(); vec3.copy(this.color, color)
         this.positions_buffer = new Vec3AttributeBuffer(gl, data, BufferUsageHint.DYNAMIC_DRAW)
     }
 
@@ -74,12 +74,12 @@ export class BrushShaderProgram extends ShaderProgram{
         let fragment_shader = new FragmentShader(gl, `
             precision mediump float;
 
-            uniform vec4 u_color;
+            uniform vec3 u_color;
 
             out highp vec4 outf_color;
 
             void main(){
-                outf_color = u_color;
+                outf_color = vec4(u_color, 1);
             }`
         )
 
@@ -114,8 +114,8 @@ export class BrushShaderProgram extends ShaderProgram{
             this.gl.uniformMatrix4fv(uniform_location, false, camera.view_to_device_matrix);
 
             uniform_location = this.gl.getUniformLocation(this.glprogram, "u_color")
-            this.gl.uniform4f(
-                uniform_location, brush_stroke.color[0], brush_stroke.color[1], brush_stroke.color[2], brush_stroke.color[3]
+            this.gl.uniform3f(
+                uniform_location, brush_stroke.color[0], brush_stroke.color[1], brush_stroke.color[2]
             );
 
             //console.log(`Trying to draw ${vao.num_positions} verts`)
