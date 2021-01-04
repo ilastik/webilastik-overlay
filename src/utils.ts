@@ -109,3 +109,35 @@ export function createOption({displayText, value, parentElement}:
     option.value = value
     return option
 }
+
+
+export function getElementContentRect(element: HTMLElement){
+    let clientRect = element.getBoundingClientRect() //with border and padding
+
+    let paddingLeft = parseInt(element.style.paddingLeft) || 0
+    let paddingTop = parseInt(element.style.paddingTop) || 0
+    let paddingRight = parseInt(element.style.paddingRight) || 0
+    let paddingBottom = parseInt(element.style.paddingBottom) || 0
+
+    let borderLeft = parseInt(element.style.borderLeft) || 0
+    let borderTop = parseInt(element.style.borderTop) || 0
+    let borderRight = parseInt(element.style.borderRight) || 0
+    let borderBottom = parseInt(element.style.borderBottom) || 0
+
+    return {
+        width:  clientRect.width  - borderLeft - paddingLeft - paddingRight - borderRight,
+        height: clientRect.height - borderTop - paddingTop - paddingBottom - borderBottom,
+        left:   clientRect.left   + paddingLeft + borderLeft,
+        top:    clientRect.top    + paddingTop + borderTop
+    }
+}
+
+//FIXME: this assumes overlay has no padding or border
+export function coverContents({target, overlay}: {target: HTMLElement, overlay: HTMLElement}){
+    let targetContentRect = getElementContentRect(target);
+    overlay.style.position = "fixed"
+    overlay.style.width =  targetContentRect.width  + "px"
+    overlay.style.height = targetContentRect.height + "px"
+    overlay.style.top =    targetContentRect.top    + "px"
+    overlay.style.left =   targetContentRect.left   + "px"
+}

@@ -10,6 +10,6 @@ let dummy_viewer = createElement({tagName: "div", parentElement: document.body, 
 new BrushingWidget({
     container: document.body,
     overlay: new BrushingOverlay({
-        target: dummy_viewer
+        trackedElement: dummy_viewer
     })
 })

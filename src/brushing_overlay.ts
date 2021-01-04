@@ -4,12 +4,13 @@ import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
 import { RenderParams } from './gl'
-import { createElement, createInput } from './utils'
+import { coverContents, createElement, createInput } from './utils'
 
 
 export class BrushingOverlay{
     public readonly canvas: HTMLCanvasElement
     public readonly gl: WebGL2RenderingContext
+    public readonly trackedElement: HTMLElement
 
     public readonly camera: OrthoCamera
     private camera_controls: CameraControls
@@ -24,21 +25,13 @@ export class BrushingOverlay{
         this.pixels_per_voxel = pixels_per_voxel
     }
 
-    public constructor({target, camera_position, camera_orientation}: {
-        target: HTMLElement,
+    public constructor({trackedElement, camera_position, camera_orientation}: {
+        trackedElement: HTMLElement,
         camera_position?: vec3,
         camera_orientation?: quat
     }){
-        if(target.style.position == "static"){
-            throw "Can't overlay element with .style.position == 'static'"
-        }
-        this.canvas = <HTMLCanvasElement>createElement({tagName: "canvas", parentElement: target, inlineCss: {
-            position: "relative",
-            height: "100%",
-            width: "100%",
-            top: "0",
-            left: "0",
-        }})
+        this.trackedElement = trackedElement
+        this.canvas = <HTMLCanvasElement>createElement({tagName: "canvas", parentElement: trackedElement.parentElement || document.body})
 
         this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
         this.camera = new OrthoCamera({
@@ -70,6 +63,7 @@ export class BrushingOverlay{
 
     public render = (brushStrokes: Array<BrushStroke>) => {
         const canvas = <HTMLCanvasElement>this.gl.canvas
+        coverContents({target: this.trackedElement, overlay: canvas})
         // const aspect = canvas.scrollWidth / canvas.scrollHeight // FIXME: maybe use ScrollWidth and ScrollHeight?
 
         //pixels_per_voxel determines the field of view, which is determined in voxel units
