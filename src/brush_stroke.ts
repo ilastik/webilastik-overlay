@@ -24,10 +24,10 @@ export class BrushStroke extends LineStrip{
         super(data)
         this.camera_position = vec3.create(); vec3.copy(this.camera_position, camera_position)
         this.camera_orientation = quat.create(); quat.copy(this.camera_orientation, camera_orientation)
-        vec3.copy(this.getVertRef(0), start_postition)
-        this.num_voxels = 1
+        this.num_voxels = 0
         this.color = vec3.create(); vec3.copy(this.color, color)
         this.positions_buffer = new Vec3AttributeBuffer(gl, data, BufferUsageHint.DYNAMIC_DRAW)
+        this.add_voxel(start_postition)
     }
 
     private getLastVoxelRef() : vec3{
