@@ -1,7 +1,7 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 import { BufferUsageHint, Vec3AttributeBuffer, VertexArrayObject } from "./buffer";
 import { Camera } from "./camera";
-import { RenderParams } from "./gl";
+import { DrawingMode, RenderParams } from "./gl";
 import { FragmentShader, ShaderProgram, VertexShader } from "./shader";
 import { LineStrip } from "./vertex_primitives";
 
@@ -119,7 +119,7 @@ export class BrushShaderProgram extends ShaderProgram{
             );
 
             //console.log(`Trying to draw ${vao.num_positions} verts`)
-            this.gl.drawArrays(this.gl.LINE_STRIP, 0, brush_stroke.num_voxels)
+            this.gl.drawArrays(brush_stroke.num_voxels == 1 ? DrawingMode.POINTS : DrawingMode.LINE_STRIP, 0, brush_stroke.num_voxels)
         }
 
     }

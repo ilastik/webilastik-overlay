@@ -2,6 +2,16 @@ import { vec4 } from "gl-matrix"
 
 export type BinaryArray = ArrayBufferView & {length: number}
 
+export enum DrawingMode{
+    POINTS = WebGL2RenderingContext.POINTS,
+    LINE_STRIP = WebGL2RenderingContext.LINE_STRIP,
+    LINE_LOOP = WebGL2RenderingContext.LINE_LOOP,
+    LINES = WebGL2RenderingContext.LINES,
+    TRIANGLE_STRIP = WebGL2RenderingContext.TRIANGLE_STRIP,
+    TRIANGLE_FAN = WebGL2RenderingContext.TRIANGLE_FAN,
+    TRIANGLES = WebGL2RenderingContext.TRIANGLES,
+}
+
 export enum AttributeElementType{
     BYTE = WebGL2RenderingContext.BYTE,
     SHORT = WebGL2RenderingContext.SHORT,
