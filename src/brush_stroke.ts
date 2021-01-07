@@ -5,6 +5,24 @@ import { DrawingMode, RenderParams } from "./gl";
 import { FragmentShader, ShaderProgram, VertexShader } from "./shader";
 import { LineStrip } from "./vertex_primitives";
 
+export class VoxelShape{
+    public readonly proportions: vec3 = vec3.create()
+    public readonly voxelToWorldMatrix: mat4 = mat4.create()
+    public readonly worldToVoxelMatrix: mat4 = mat4.create()
+    constructor({proportions=vec3.fromValues(1, 1, 1)}: {
+        proportions?: vec3, //set to arbitrary proportions if your voxels are anisotropic
+    }){
+        proportions.forEach((v: number) => {
+            if(v == 0 || !Number.isFinite(v)){
+                throw `Bad voxel proportions: ${proportions}`
+            }
+        })
+        let minAxis = Math.min(...proportions)
+        vec3.scale(this.proportions, proportions, 1/minAxis)
+        mat4.fromScaling(this.voxelToWorldMatrix, this.proportions)
+        mat4.invert(this.worldToVoxelMatrix, this.voxelToWorldMatrix)
+    }
+}
 
 export class BrushStroke extends LineStrip{
     public camera_position: vec3
@@ -63,11 +81,12 @@ export class BrushShaderProgram extends ShaderProgram{
         let vertex_shader = new VertexShader(gl, `
             in vec3 a_position;
 
+            uniform mat4 u_voxel_to_world;
             uniform mat4 u_world_to_view;
             uniform mat4 u_view_to_device;
 
                 void main(){
-                    gl_Position = u_view_to_device * u_world_to_view * vec4(a_position, 1);
+                    gl_Position = u_view_to_device * u_world_to_view * u_voxel_to_world * vec4(a_position, 1);
                 }`
         )
 
@@ -91,10 +110,12 @@ export class BrushShaderProgram extends ShaderProgram{
     public render({
         brush_strokes,
         camera,
+        voxelShape,
         renderParams=new RenderParams({})
     }: {
         brush_strokes: Array<BrushStroke>,
         camera: Camera,
+        voxelShape: VoxelShape,
         renderParams?: RenderParams
     }){
         renderParams.use(this.gl)
@@ -107,7 +128,10 @@ export class BrushShaderProgram extends ShaderProgram{
             brush_stroke.positions_buffer.useWithAttribute({vao:this.vao, location: positions_location})
             this.vao.bind()
 
-            let uniform_location = this.gl.getUniformLocation(this.glprogram, "u_world_to_view");
+            let uniform_location = this.gl.getUniformLocation(this.glprogram, "u_voxel_to_world");
+            this.gl.uniformMatrix4fv(uniform_location, false, voxelShape.voxelToWorldMatrix);
+
+            uniform_location = this.gl.getUniformLocation(this.glprogram, "u_world_to_view");
             this.gl.uniformMatrix4fv(uniform_location, false, this.u_world_to_view);
 
             uniform_location = this.gl.getUniformLocation(this.glprogram, "u_view_to_device");
