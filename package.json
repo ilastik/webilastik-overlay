@@ -1,19 +1,23 @@
 {
-  "name": "webgl_tests",
+  "name": "webilastik-overlay",
   "version": "1.0.0",
-  "description": "some wegl junk code",
-  "browser": "main.js",
+  "description": "lastik web frontend overlay",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
   "scripts": {
-    "build": "rm -fv build/* && npx tsc --noEmit && npx esbuild src/main.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js"
+    "clean": "rm -rfv build/*",
+    "build": "npm run clean && npx tsc",
+    "bundle": "npm run build && npx esbuild src/main.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js"
   },
+  "files": ["./build/**/*", "./src/**/*"],
   "author": "Tomaz Vieira",
   "license": "ISC",
   "devDependencies": {
     "esbuild": "^0.8.18",
     "typescript": "^4.1.2"
-  },
-  "dependencies": {
-    "@types/gl-matrix": "^3.2.0",
-    "gl-matrix": "^3.3.0"
+},
+"dependencies": {
+    "gl-matrix": "^3.3.0",
+    "@types/gl-matrix": "^3.2.0"
   }
 }
