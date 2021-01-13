@@ -123,7 +123,7 @@ export class BrushingWidget{
     public readonly colorPicker: HTMLInputElement
     private readonly brushStrokesContainer: HTMLElement
 
-    public currentBrushColor: vec3 = vec3.fromValues(1, 0, 0)
+    public currentBrushColor: vec3
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
 
@@ -137,11 +137,13 @@ export class BrushingWidget{
             border: "solid 2px black",
         }})
         createElement({tagName: "span", parentElement: this.element, innerHTML: "Brush Color: "})
-        this.colorPicker = createInput({inputType: "color", parentElement: this.element, value: "#FF0000"})
-        this.colorPicker.addEventListener("change", () => {
+        this.colorPicker = createInput({inputType: "color", parentElement: this.element, value: "#00ff00"})
+        let updateColor =  () => {
             let channels = this.colorPicker.value.slice(1).match(/../g)!.map(c => parseInt(c, 16) / 255)
             this.currentBrushColor = vec3.fromValues(channels[0], channels[1], channels[2])
-        })
+        }
+        this.colorPicker.addEventListener("change", updateColor)
+        updateColor()
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
 
