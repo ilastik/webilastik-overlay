@@ -3,8 +3,8 @@ import { BrushShaderProgram, BrushStroke, VoxelShape } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
-import { RenderParams } from './gl'
-import { coverContents, createElement, createInput } from './utils'
+import { ClearConfig, RenderParams } from './gl'
+import { coverContents, createElement, createInput, insertAfter } from './utils'
 
 
 export class BrushingOverlay{
@@ -37,7 +37,9 @@ export class BrushingOverlay{
         this.voxelShape = voxelShape
         this.setZoom(pixelsPerVoxel)
         this.trackedElement = trackedElement
-        this.canvas = <HTMLCanvasElement>createElement({tagName: "canvas", parentElement: trackedElement.parentElement || document.body})
+        this.canvas = document.createElement("canvas"); //<HTMLCanvasElement>createElement({tagName: "canvas", parentElement: trackedElement.parentElement || document.body})
+        insertAfter({reference: trackedElement, new_element: this.canvas})
+        this.canvas.style.zIndex = trackedElement.style.zIndex
 
         this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
         this.camera = new OrthoCamera({

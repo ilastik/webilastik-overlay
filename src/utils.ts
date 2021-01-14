@@ -63,6 +63,25 @@ export function createElement({tagName, parentElement, innerHTML, cssClasses, in
     return element
 }
 
+export function insertAfter({reference, new_element}: {reference: HTMLElement, new_element: HTMLElement}){
+    if(!reference.parentNode){
+        throw `Element ${reference} has no parent node!`
+    }
+    let parent = reference.parentNode
+    let found = false
+    for(let child of parent.children){
+        if(found){
+            parent.insertBefore(new_element, child)
+            return
+        }
+        if(child == reference){
+            found = true
+        }
+    }
+    //refenrece was the last child
+    parent.appendChild(new_element)
+}
+
 export function createImage({src, parentElement, cssClasses, click}:
     {src:string, parentElement:HTMLElement, cssClasses?:Array<string>, click?(event: any): void}
 ): HTMLImageElement{
