@@ -1,4 +1,5 @@
 import { vec3 } from "gl-matrix";
+import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
 import { FrontFace } from "./gl";
 
 export enum DrawingMode{
@@ -54,13 +55,7 @@ export class Triangle extends VertexArray{
     }
 
     public static fromVerts(p0: vec3, p1: vec3, p2: vec3, frontFace: FrontFace = FrontFace.CCW): Triangle{
-        let arr : Float32Array
-        if(frontFace == FrontFace.CCW){
-            arr = new Float32Array([...p0, ...p1, ...p2])
-        }else{
-            arr = new Float32Array([...p2, ...p1, ...p0])
-        }
-        return new Triangle(arr)
+        return new Triangle(new Float32Array([...p0, ...p1, ...p2]), frontFace)
     }
 
     public get p0(): vec3{
@@ -89,11 +84,25 @@ export class Triangle extends VertexArray{
 }
 
 export abstract class VertexPrimitive extends VertexArray{
+    private positionsBuffer?: Vec3AttributeBuffer
+
     public abstract getDrawingMode() : DrawingMode;
     public abstract getNormals(frontFace: FrontFace): Float32Array
+
+    public getPositionsBuffer(gl: WebGL2RenderingContext, hint: BufferUsageHint): Vec3AttributeBuffer{
+        if(this.positionsBuffer === undefined){
+            this.positionsBuffer = new Vec3AttributeBuffer(gl, this.data, hint)
+        }
+        return this.positionsBuffer
+    }
+
+    public deletePositionsBuffer(){
+        this.positionsBuffer!.destroy()
+        this.positionsBuffer = undefined
+    }
 }
 
-export class TriangleArray extends VertexArray{
+export class TriangleArray extends VertexPrimitive{
     public readonly vertexOrder: FrontFace
     public readonly numTriangles: number
 
@@ -106,14 +115,12 @@ export class TriangleArray extends VertexArray{
         this.numTriangles = this.numVerts / 3
     }
 
-
     public static fromIndividualTriangles(individualTriangles: Array<Triangle>, vertexOrder: FrontFace = FrontFace.CCW): TriangleArray{
-        let arr = new Float32Array(individualTriangles[0].data.length * individualTriangles.length)
-        let tri_array = new TriangleArray(arr, vertexOrder)
+        let arr = new Float32Array(3  * 3 * individualTriangles.length) //3 vec3 per triangle
         individualTriangles.forEach((tri, index) => {
             arr.set(tri.data, tri.data.length * index)
         })
-        return tri_array
+        return new TriangleArray(arr, vertexOrder)
     }
 
     public getDrawingMode(): DrawingMode{
@@ -121,11 +128,11 @@ export class TriangleArray extends VertexArray{
     }
 
     public getNormals() : Float32Array{
-        let out = new Float32Array(this.numTriangles * 3)
+        let out = new Float32Array(this.numTriangles * 3) //one vec3 per triangle
         for(let i=0; i<this.numTriangles; i++){
             getNormal(
-                out.subarray(i*3, (i+1) * 3),
-                this.data.subarray(i * 9, (i+1) * 9),
+                out.subarray(i*3, (i+1) * 3), //one vec3 per triangle
+                this.data.subarray(i * 9, (i+1) * 9), //3 vec3 per triangle
                 this.vertexOrder
             )
         }

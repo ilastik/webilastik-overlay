@@ -1,4 +1,5 @@
 import { mat4, quat, ReadonlyVec3, vec3 } from "gl-matrix";
+import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
 import { FrontFace } from "./gl";
 import { Triangle, TriangleArray, VertexPrimitive } from "./vertex_primitives";
 
@@ -63,17 +64,24 @@ export class MeshObject{
         mat4.fromRotationTranslationScale(out, this.orientation, this.position, this.scale)
         return out
     }
+
+    public getPositionsBuffer(gl: WebGL2RenderingContext, hint: BufferUsageHint):  Vec3AttributeBuffer{
+        return this.vertices.getPositionsBuffer(gl, hint)
+    }
 }
 
 export class Cube extends MeshObject{
-    constructor(params: {
+    constructor({gl, position, sideLength=1, orientation}: {
         gl: WebGL2RenderingContext,
         position? : vec3,
-        scale?: vec3,
+        sideLength?: number,
         orientation?: quat,
     }){
         super({
-            ...params,
+            gl,
+            position,
+            scale: vec3.fromValues(sideLength/2, sideLength/2, sideLength/2),
+            orientation,
             vertices: TriangleArray.fromIndividualTriangles([
                 ...Cube.frontFace(),
                 ...Cube.backFace(),
