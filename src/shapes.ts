@@ -1,6 +1,5 @@
 import { mat4, quat, ReadonlyVec3, vec3 } from "gl-matrix";
 import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
-import { FrontFace } from "./gl";
 import { Triangle, TriangleArray, VertexPrimitive } from "./vertex_primitives";
 
 
@@ -88,7 +87,7 @@ export class Cube extends MeshObject{
                 ...Cube.rightFace(),
                 ...Cube.leftFace(),
                 ...Cube.topface(),
-                ...Cube.backFace()
+                ...Cube.bottomFace()
             ])
         })
     }
@@ -110,16 +109,14 @@ export class Cube extends MeshObject{
     public static frontFace() : [Triangle, Triangle]{
         return [
             Triangle.fromVerts(
-                vert(X.LEFT,  Y.TOP,    Z.FRONT),
-                vert(X.LEFT,  Y.BOTTOM, Z.FRONT),
                 vert(X.RIGHT, Y.BOTTOM, Z.FRONT),
-                FrontFace.CW //verts are being given clockwise
+                vert(X.LEFT,  Y.BOTTOM, Z.FRONT),
+                vert(X.LEFT,  Y.TOP,    Z.FRONT),
             ),
             Triangle.fromVerts(
-                vert(X.LEFT,  Y.TOP,    Z.FRONT),
-                vert(X.RIGHT, Y.BOTTOM, Z.FRONT),
                 vert(X.RIGHT, Y.TOP,    Z.FRONT),
-                FrontFace.CW //verts are being given clockwise
+                vert(X.RIGHT, Y.BOTTOM, Z.FRONT),
+                vert(X.LEFT,  Y.TOP,    Z.FRONT),
             ),
         ]
     }
@@ -140,16 +137,14 @@ export class Cube extends MeshObject{
     public static leftFace(): [Triangle, Triangle]{
         return [
             Triangle.fromVerts(
-                vert(X.LEFT, Y.TOP,    Z.BACK),
-                vert(X.LEFT, Y.BOTTOM, Z.BACK),
                 vert(X.LEFT, Y.BOTTOM, Z.FRONT),
-                FrontFace.CW // verts are being given clockwise
+                vert(X.LEFT, Y.BOTTOM, Z.BACK),
+                vert(X.LEFT, Y.TOP,    Z.BACK),
             ),
             Triangle.fromVerts(
-                vert(X.LEFT, Y.TOP,    Z.BACK),
-                vert(X.LEFT, Y.BOTTOM, Z.FRONT),
                 vert(X.LEFT, Y.TOP,    Z.FRONT),
-                FrontFace.CW // verts are being given clockwise
+                vert(X.LEFT, Y.BOTTOM, Z.FRONT),
+                vert(X.LEFT, Y.TOP,    Z.BACK),
             )
         ]
     }
@@ -167,19 +162,17 @@ export class Cube extends MeshObject{
             ),
         ]
     }
-    public static bottomface(): [Triangle, Triangle]{
+    public static bottomFace(): [Triangle, Triangle]{
         return [
             Triangle.fromVerts(
-                vert(X.LEFT,  Y.BOTTOM, Z.FRONT),
-                vert(X.LEFT,  Y.BOTTOM, Z.BACK),
                 vert(X.RIGHT, Y.BOTTOM, Z.BACK),
-                FrontFace.CW // verts are being given clockwise
+                vert(X.LEFT, Y.BOTTOM, Z.BACK),
+                vert(X.LEFT, Y.BOTTOM, Z.FRONT),
             ),
             Triangle.fromVerts(
-                vert(X.LEFT,  Y.BOTTOM, Z.FRONT),
                 vert(X.RIGHT, Y.BOTTOM, Z.BACK),
+                vert(X.LEFT, Y.BOTTOM, Z.FRONT),
                 vert(X.RIGHT, Y.BOTTOM, Z.FRONT),
-                FrontFace.CW // verts are being given clockwise
             ),
         ]
     }
