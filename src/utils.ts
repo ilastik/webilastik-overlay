@@ -160,3 +160,40 @@ export function coverContents({target, overlay}: {target: HTMLElement, overlay: 
     overlay.style.top =    targetContentRect.top    + "px"
     overlay.style.left =   targetContentRect.left   + "px"
 }
+
+
+
+export function vec3ToRgb(value: vec3): string{
+    return "rgb(" + value.map((c: number) => Math.floor(c * 255)).join(", ") + ")"
+}
+
+export function vec3ToString(value: vec3): string{
+    return `<x: ${value[0].toFixed(1)}, y: ${value[1].toFixed(1)}, z: ${value[2].toFixed(1)}>`
+}
+
+function float_to_s(num: number){
+    let base = "      "
+    let out = num.toFixed(3)
+    let leading_zeros =  base.slice(0, base.length - out.length)
+    return leading_zeros + out
+}
+
+export function m4_to_s(m: mat4) : string{
+    let columns = [
+      m.slice(0,  4),
+      m.slice(4,  8),
+      m.slice(8,  12),
+      m.slice(12,  16)
+    ]
+
+    let lines = []
+    for(var line_idx of [0,1,2,3]){
+        let line = []
+        for(var col of columns){
+            line.push(float_to_s(col[line_idx]))
+        }
+        lines.push(line)
+    }
+    let comma_sep_lines = lines.map((line) => line.join(", "))
+    return comma_sep_lines.join("\n")
+}
