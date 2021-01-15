@@ -54,9 +54,9 @@ export class BrushStroke extends LineStrip{
 
     public add_voxel(voxel: vec3){
         let rounded_centered_voxel = vec3.fromValues(
-            Math.floor(voxel[0]) + 0.5,
-            Math.floor(voxel[1]) + 0.5,
-            Math.floor(voxel[2]) + 0.5
+            Math.floor(voxel[0]),
+            Math.floor(voxel[1]),
+            Math.floor(voxel[2])
         )
         if(vec3.equals(this.getLastVoxelRef(), rounded_centered_voxel)){
             return

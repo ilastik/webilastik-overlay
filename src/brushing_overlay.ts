@@ -1,10 +1,12 @@
 import { mat4, quat, vec3 } from 'gl-matrix'
-import { BrushShaderProgram, BrushStroke, VoxelShape } from './brush_stroke'
+import { BrushelBoxRenderer } from './brush_boxes_renderer'
+// import { BrushShaderProgram } from './brush_stroke'
+import { BrushStroke, VoxelShape } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
-import { ClearConfig, RenderParams } from './gl'
-import { coverContents, createElement, createInput, insertAfter } from './utils'
+import { RenderParams } from './gl'
+import { coverContents, createElement, createInput, insertAfter, vec3ToRgb, vec3ToString } from './utils'
 
 
 export class BrushingOverlay{
@@ -17,7 +19,8 @@ export class BrushingOverlay{
 
     private camera_controls: CameraControls
     private pixelsPerVoxel: number
-    private renderer : BrushShaderProgram
+    // private renderer : BrushShaderProgram
+    private renderer : BrushelBoxRenderer
     private device_to_view = mat4.create();
 
 
@@ -47,7 +50,8 @@ export class BrushingOverlay{
             position: camera_position, orientation: camera_orientation
         })
         this.camera_controls = new CameraControls()
-        this.renderer = new BrushShaderProgram(this.gl)
+        // this.renderer = new BrushShaderProgram(this.gl)
+        this.renderer = new BrushelBoxRenderer(this.gl)
     }
 
     public setZoom(pixelsPerVoxel: number){
@@ -60,7 +64,7 @@ export class BrushingOverlay{
            -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2),
             0, //FIXME: make sure this is compatible with camera near/far configs
         )
-        // console.log(`DevicePosition: ${out}`)
+        // console.log(`DevicePosition: ${vec3ToString(out)}`)
         return out
     }
 
@@ -68,14 +72,14 @@ export class BrushingOverlay{
         this.camera.get_device_to_world_matrix(this.device_to_view)
         let device_position = this.getMouseDevicePosition(ev)
         let out = vec3.create(); vec3.transformMat4(out, device_position, this.device_to_view)
-        // console.log(`WorldPosition: ${out}`)
+        // console.log(`WorldPosition: ${vec3ToString(out)}`)
         return out
     }
 
     public getMouseVoxelPosition(ev: MouseEvent): vec3{
         let world_position = this.getMouseWorldPosition(ev)
         let out = vec3.create(); vec3.transformMat4(out, world_position, this.voxelShape.worldToVoxelMatrix)
-        // console.log(`VoxelPosition: ${out} ======================`)
+        // console.log(`VoxelPosition: ${vec3ToString(out)} ======================`)
         return out
     }
 
@@ -189,14 +193,6 @@ export class BrushingWidget{
             this.overlay.snapTo(brushStroke.camera_position, brushStroke.camera_orientation)
         })
     }
-}
-
-function vec3ToRgb(value: vec3): string{
-    return "rgb(" + value.map((c: number) => Math.floor(c * 255)).join(", ") + ")"
-}
-
-function vec3ToString(value: vec3): string{
-    return `<${value[0].toFixed(1)}, ${value[1].toFixed(1)}, ${value[2].toFixed(1)}>`
 }
 
 export class BrushStrokeWidget{
