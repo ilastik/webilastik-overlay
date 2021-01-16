@@ -168,7 +168,7 @@ export function vec3ToRgb(value: vec3): string{
 }
 
 export function vec3ToString(value: vec3): string{
-    return `<x: ${value[0].toFixed(1)}, y: ${value[1].toFixed(1)}, z: ${value[2].toFixed(1)}>`
+    return `[x: ${value[0].toFixed(1)}, y: ${value[1].toFixed(1)}, z: ${value[2].toFixed(1)}]`
 }
 
 function float_to_s(num: number){
