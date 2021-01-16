@@ -15,7 +15,7 @@ export class Shader{
         if (!success){
             let error_log = gl.getShaderInfoLog(glshader);
             gl.deleteShader(glshader);
-            throw error_log + "\n\n" + source
+            throw error_log + "\n\n" + source.split("\n").map((code_line, line_index) => `${line_index + 1}: ${code_line}`).join("\n")
         }
         this.raw = glshader
     }
