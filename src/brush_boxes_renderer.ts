@@ -40,8 +40,11 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out vec3 v_color;
 
                 void main(){
-                    vec3 vert_pos_w = u_voxel_shape * (a_vert_pos_vx + u_offset_vx + vec3(0.5, 0.5, 0.5));
+                    vec3 box_center_w = u_voxel_shape * (u_offset_vx + vec3(0.5, 0.5, 0.5));
+
+                    vec3 vert_pos_w = u_voxel_shape * a_vert_pos_vx + box_center_w;
                     vec4 vert_pos_c = u_world_to_clip * vec4(vert_pos_w, 1);
+
 
                     gl_Position = vert_pos_c;
                     v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
