@@ -4,18 +4,18 @@ import { Triangle, TriangleArray, VertexPrimitive } from "./vertex_primitives";
 
 
 enum X{
-    RIGHT = 1,
-    LEFT = -1,
+    RIGHT = 0.5,
+    LEFT = -0.5,
 }
 
 enum Y{
-    TOP = 1,
-    BOTTOM = -1,
+    TOP = 0.5,
+    BOTTOM = -0.5,
 }
 
 enum Z{
-    BACK = 1,
-    FRONT = -1, //forwards is -z like in the camera
+    BACK = 0.5,
+    FRONT = -0.5, //forwards is -z like in the camera
 }
 
 function vert(x: X, y: Y, z: Z): vec3{
@@ -79,7 +79,7 @@ export class Cube extends MeshObject{
         super({
             gl,
             position,
-            scale: vec3.fromValues(sideLength/2, sideLength/2, sideLength/2),
+            scale: vec3.fromValues(sideLength, sideLength, sideLength),
             orientation,
             vertices: TriangleArray.fromIndividualTriangles([
                 ...Cube.frontFace(),

@@ -1,4 +1,4 @@
-import { mat4, vec3 } from "gl-matrix"
+import { mat4 } from "gl-matrix"
 import { BrushStroke, VoxelShape } from "."
 import { BufferUsageHint, VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
@@ -23,7 +23,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 uniform vec3 u_offset_v; //as stored in the brush stroke
 
-                uniform mat4 u_object_to_voxel;
+                uniform vec3 u_voxel_shape;
                 uniform mat4 u_voxel_to_world;
                 uniform mat4 u_world_to_view;
                 uniform mat4 u_view_to_clip;
@@ -35,8 +35,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out vec3 v_color;
 
                 void main(){
-                    vec4 position_v = (u_object_to_voxel * vec4(a_position_o, 1)) + vec4(u_offset_v, 0);
-                    gl_Position = u_view_to_clip * u_world_to_view * u_voxel_to_world * position_v;
+                    vec3 position_w = u_voxel_shape * (a_position_o + u_offset_v + vec3(0.5, 0.5, 0.5));
+                    gl_Position = u_view_to_clip * u_world_to_view * vec4(position_w, 1);
                     v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
                 }
             `),
@@ -54,7 +54,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 }
             `)
         )
-        this.box = new Cube({gl, sideLength: 1, position: vec3.fromValues(0.5, 0.5, 0.5)})
+        this.box = new Cube({gl})
         this.vao = new VertexArrayObject(gl) //FIXME: cleanup the vao and box buffer (but vao autodelets on GC anyway...)
     }
 
@@ -78,11 +78,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
         })
 
         //m converts box to a 1x1x1 box centered at 0.5, in voxel coords
-        this.gl.uniformMatrix4fv(this.getUniformLocation("u_object_to_voxel").raw, false, this.box.object_to_world_matrix);
-
-        this.gl.uniformMatrix4fv(this.getUniformLocation("u_voxel_to_world").raw, false, voxelShape.voxelToWorldMatrix);
-        // console.log("u_voxel_to_world")
-        // console.log(m4_to_s(voxelShape.voxelToWorldMatrix))
+        this.gl.uniform3fv(this.getUniformLocation("u_voxel_shape").raw, voxelShape.proportions);
 
         this.gl.uniformMatrix4fv(this.getUniformLocation("u_world_to_view").raw, false, camera.world_to_view);
 
