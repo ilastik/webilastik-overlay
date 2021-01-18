@@ -19,10 +19,17 @@ export class BrushelBoxRenderer extends ShaderProgram{
             new VertexShader(gl, `
                 //vertex shader to render a single voxel of the brush stroke. Use instanced rendering to render the whole stroke
 
-                in vec3 a_position_o; //box vertex
+                vec3 project(vec3 v, vec3 onto){
+                    float proj_length = dot(v, normalize(onto));
+                    return normalize(onto) * proj_length;
+                }
+                vec3 projectOntoPlane(vec3 v, vec3 planeNormal){
+                    return v - project(v, planeNormal);
+                }
 
-                uniform vec3 u_offset_v; //as stored in the brush stroke
+                in vec3 a_vert_pos_vx; //box vertex
 
+                uniform vec3 u_offset_vx; //as stored in the brush stroke
                 uniform vec3 u_voxel_shape;
                 uniform mat4 u_voxel_to_world;
                 uniform mat4 u_world_to_view;
@@ -35,8 +42,10 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out vec3 v_color;
 
                 void main(){
-                    vec3 position_w = u_voxel_shape * (a_position_o + u_offset_v + vec3(0.5, 0.5, 0.5));
-                    gl_Position = u_view_to_clip * u_world_to_view * vec4(position_w, 1);
+                    vec3 vert_pos_w = u_voxel_shape * (a_vert_pos_vx + u_offset_vx + vec3(0.5, 0.5, 0.5));
+                    vec4 vert_pos_c = u_view_to_clip * u_world_to_view * vec4(vert_pos_w, 1);
+
+                    gl_Position = vert_pos_c;
                     v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
                 }
             `),
@@ -74,7 +83,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
         this.vao.bind()
 
         this.box.getPositionsBuffer(this.gl, BufferUsageHint.STATIC_DRAW).useWithAttribute({
-            vao: this.vao, location: this.getAttribLocation("a_position_o")
+            vao: this.vao, location: this.getAttribLocation("a_vert_pos_vx")
         })
 
         //m converts box to a 1x1x1 box centered at 0.5, in voxel coords
@@ -87,9 +96,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
         // console.log(m4_to_s(camera.view_to_clip))
 
         for(let brush_stroke of brush_strokes){
-            let u_offset_v = brush_stroke.getVertRef(0)
-            this.gl.uniform3fv(this.getUniformLocation("u_offset_v").raw, u_offset_v)
-            // console.log(`u_offset_v: ${vec3ToString(u_offset_v)}`)
+            this.gl.uniform3fv(this.getUniformLocation("u_offset_vx").raw, brush_stroke.getVertRef(0))
+            // console.log(`u_offset_vx: ${vec3ToString(u_offset_vx)}`)
 
             // this.gl.uniform3f(this.getUniformLocation("u_color").raw, brush_stroke.color[0], brush_stroke.color[1], brush_stroke.color[2]);
 
