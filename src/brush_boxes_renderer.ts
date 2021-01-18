@@ -28,29 +28,29 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 uniform mat4 u_world_to_view;
                 uniform mat4 u_view_to_device;
 
-                // vec3 face_colors[6] = vec3[](
-                //     vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1),
-                //     vec3(1, 1, 0), vec3(0, 1, 1), vec3(1, 0, 1)
-                // );
-                // out vec3 v_color;
+                vec3 face_colors[6] = vec3[](
+                    vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1),
+                    vec3(1, 1, 0), vec3(0, 1, 1), vec3(1, 0, 1)
+                );
+                out vec3 v_color;
 
                 void main(){
                     vec4 position_v = (u_object_to_voxel * vec4(a_position_o, 1)) + vec4(u_offset_v, 0);
                     gl_Position = u_view_to_device * u_world_to_view * u_voxel_to_world * position_v;
-                    // v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
+                    v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
                 }
             `),
             new FragmentShader(gl, `
                 precision mediump float;
 
-                uniform vec3 u_color;
-                // in vec3 v_color;
+                // uniform vec3 u_color;
+                in vec3 v_color;
 
                 out highp vec4 outf_color;
 
                 void main(){
-                    outf_color = vec4(u_color, 1);
-                    // outf_color = vec4(v_color, 1);
+                    // outf_color = vec4(u_color, 1);
+                    outf_color = vec4(v_color, 1);
                 }
             `)
         )
@@ -96,7 +96,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
             this.gl.uniform3f(this.getUniformLocation("u_offset_v").raw, u_offset_v[0], u_offset_v[1], u_offset_v[2])
             // console.log(`u_offset_v: ${vec3ToString(u_offset_v)}`)
 
-            this.gl.uniform3f(this.getUniformLocation("u_color").raw, brush_stroke.color[0], brush_stroke.color[1], brush_stroke.color[2]);
+            // this.gl.uniform3f(this.getUniformLocation("u_color").raw, brush_stroke.color[0], brush_stroke.color[1], brush_stroke.color[2]);
 
             //console.log(`Trying to draw ${vao.num_positions} verts`)
             this.gl.drawArrays(this.box.vertices.getDrawingMode(), 0, this.box.vertices.numVerts)

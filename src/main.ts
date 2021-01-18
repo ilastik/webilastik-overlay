@@ -13,7 +13,7 @@ new BrushingWidget({
     container: document.body,
     overlay: new BrushingOverlay({
         trackedElement: dummy_viewer,
-        voxelShape: new VoxelShape({proportions: vec3.fromValues(1,4,1)}),
-        pixelsPerVoxel: 10,
+        voxelShape: new VoxelShape({proportions: vec3.fromValues(1,1,1)}),
+        pixelsPerVoxel: 50,
     })
 })

@@ -5,7 +5,7 @@ import { BrushStroke, VoxelShape } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
-import { RenderParams } from './gl'
+import { CullConfig, CullFace, RenderParams } from './gl'
 import { coverContents, createElement, createInput, insertAfter, vec3ToRgb, vec3ToString } from './utils'
 
 
@@ -114,13 +114,18 @@ export class BrushingOverlay{
         //tells webgl where to render stuff ((0,0)) and how to scale units into pixels
         this.gl.viewport(0, 0, canvas.scrollWidth, canvas.scrollHeight); //FIXME: shuold aspect play a role here?
         this.camera_controls.updateCamera(this.camera);
-        // console.log(`Camera is at ${this.camera.position_w}`)
+        // console.log(`Camera is at position vec3.fromValues(${this.camera.position_w}) , quat.fromvalues(${this.camera.orientation})`)
 
         this.renderer.render({
             brush_strokes: brushStrokes,
             camera: this.camera,
             voxelShape: this.voxelShape,
-            renderParams: new RenderParams({})})
+            renderParams: new RenderParams({
+                cullConfig: new CullConfig({
+                    enable: false,
+                    face: CullFace.FRONT
+                })
+            })})
     }
 }
 
@@ -138,7 +143,7 @@ export class BrushingWidget{
         overlay: BrushingOverlay,
     }){
         this.element = createElement({tagName: "div", parentElement: container, inlineCss: {
-            width: "300px",
+            width: "600px",
             height: "300px",
             border: "solid 2px black",
         }})
@@ -179,6 +184,21 @@ export class BrushingWidget{
             this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke))
             window.requestAnimationFrame(render)
         }
+
+
+
+        let b = new BrushStroke({
+            gl: this.overlay.gl,
+            start_postition: vec3.fromValues(0.0, -2.0, -500.0), // -500 must change if we change near/far planes
+            color: this.currentBrushColor,
+            camera_position: this.overlay.camera.position_w,
+            camera_orientation: this.overlay.camera.orientation,
+        })
+        this.addBrushStroke(b)
+
+        this.overlay.snapTo(
+            vec3.fromValues(-245.4079132080078,156.02586364746094,-113.78730773925781) , quat.fromValues(-0.1680363416671753,-0.27016597986221313,-0.012405166402459145,0.947955846786499)
+        )
 
         window.requestAnimationFrame(render)
     }
