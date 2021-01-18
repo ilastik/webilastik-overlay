@@ -33,6 +33,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 uniform vec3 u_voxel_shape;
                 uniform mat4 u_world_to_clip;
 
+                out vec4 v_box_center_c;
+
                 vec3 face_colors[6] = vec3[](
                     vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1),
                     vec3(1, 1, 0), vec3(0, 1, 1), vec3(1, 0, 1)
@@ -41,6 +43,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 void main(){
                     vec3 box_center_w = u_voxel_shape * (u_offset_vx + vec3(0.5, 0.5, 0.5));
+                    v_box_center_c = u_world_to_clip * vec4(box_center_w, 1);
 
                     vec3 vert_pos_w = u_voxel_shape * a_vert_pos_vx + box_center_w;
                     vec4 vert_pos_c = u_world_to_clip * vec4(vert_pos_w, 1);
@@ -53,6 +56,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
             new FragmentShader(gl, `
                 precision mediump float;
 
+                in vec4 v_box_center_c;
                 // uniform vec3 u_color;
                 in vec3 v_color;
 
@@ -60,7 +64,13 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 void main(){
                     // outf_color = vec4(u_color, 1);
-                    outf_color = vec4(v_color, 1);
+                    vec3 color = v_color;
+                    if(v_box_center_c.z < 0.0){
+                        color = mix(color, vec3(1,1,1), 0.5); //make brighter when in front of slicing plane
+                    }else{
+                        color = mix(color, vec3(0,0,0), 0.5); //make darker when behind slicing plane
+                    }
+                    outf_color = vec4(color, 1);
                 }
             `)
         )
