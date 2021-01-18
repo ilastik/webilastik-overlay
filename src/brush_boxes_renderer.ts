@@ -31,7 +31,6 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 uniform vec3 u_offset_vx; //as stored in the brush stroke
                 uniform vec3 u_voxel_shape;
-                uniform mat4 u_voxel_to_world;
                 uniform mat4 u_world_to_view;
                 uniform mat4 u_view_to_clip;
 
