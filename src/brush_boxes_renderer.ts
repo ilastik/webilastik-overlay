@@ -31,8 +31,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 uniform vec3 u_offset_vx; //as stored in the brush stroke
                 uniform vec3 u_voxel_shape;
-                uniform mat4 u_world_to_view;
-                uniform mat4 u_view_to_clip;
+                uniform mat4 u_world_to_clip;
 
                 vec3 face_colors[6] = vec3[](
                     vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1),
@@ -42,7 +41,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 void main(){
                     vec3 vert_pos_w = u_voxel_shape * (a_vert_pos_vx + u_offset_vx + vec3(0.5, 0.5, 0.5));
-                    vec4 vert_pos_c = u_view_to_clip * u_world_to_view * vec4(vert_pos_w, 1);
+                    vec4 vert_pos_c = u_world_to_clip * vec4(vert_pos_w, 1);
 
                     gl_Position = vert_pos_c;
                     v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
@@ -85,14 +84,9 @@ export class BrushelBoxRenderer extends ShaderProgram{
             vao: this.vao, location: this.getAttribLocation("a_vert_pos_vx")
         })
 
-        //m converts box to a 1x1x1 box centered at 0.5, in voxel coords
         this.gl.uniform3fv(this.getUniformLocation("u_voxel_shape").raw, voxelShape.proportions);
 
-        this.gl.uniformMatrix4fv(this.getUniformLocation("u_world_to_view").raw, false, camera.world_to_view);
-
-        this.gl.uniformMatrix4fv(this.getUniformLocation("u_view_to_clip").raw, false, camera.view_to_clip);
-        // console.log("u_view_to_clip")
-        // console.log(m4_to_s(camera.view_to_clip))
+        this.gl.uniformMatrix4fv(this.getUniformLocation("u_world_to_clip").raw, false, camera.world_to_clip);
 
         for(let brush_stroke of brush_strokes){
             this.gl.uniform3fv(this.getUniformLocation("u_offset_vx").raw, brush_stroke.getVertRef(0))
