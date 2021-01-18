@@ -92,7 +92,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
         for(let brush_stroke of brush_strokes){
             let u_offset_v = brush_stroke.getVertRef(0)
-            this.gl.uniform3f(this.getUniformLocation("u_offset_v").raw, u_offset_v[0], u_offset_v[1], u_offset_v[2])
+            this.gl.uniform3fv(this.getUniformLocation("u_offset_v").raw, u_offset_v)
             // console.log(`u_offset_v: ${vec3ToString(u_offset_v)}`)
 
             // this.gl.uniform3f(this.getUniformLocation("u_color").raw, brush_stroke.color[0], brush_stroke.color[1], brush_stroke.color[2]);
