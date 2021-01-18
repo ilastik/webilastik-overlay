@@ -8,12 +8,16 @@ export const      up_c = vec3.fromValues( 0,  1,  0);
 export abstract class Camera{
     position_w: vec3
     orientation: quat
-    view_to_device_matrix: mat4
 
-    public constructor({position, orientation, view_to_device_matrix}: {
+    view_to_clip: mat4 = mat4.create()
+    world_to_view: mat4 = mat4.create()
+    view_to_world: mat4 = mat4.create()
+    world_to_clip: mat4 = mat4.create()
+    clip_to_world: mat4 = mat4.create()
+
+    public constructor({position, orientation}: {
         position?: vec3,
         orientation?: quat,
-        view_to_device_matrix: mat4
     }){
         this.position_w = vec3.create();
         if(position !== undefined){
@@ -23,35 +27,30 @@ export abstract class Camera{
         if(orientation !== undefined){
             quat.copy(this.orientation, orientation)
         }
-        this.view_to_device_matrix = mat4.create(); mat4.copy(this.view_to_device_matrix, view_to_device_matrix)
+        this.refreshMatrices()
     }
 
-    public get_view_to_world_matrix(out: mat4): mat4{
-        return mat4.fromRotationTranslation(out, this.orientation, this.position_w)
-    }
-
-    public get_world_to_view_matrix(out: mat4): mat4{
-        this.get_view_to_world_matrix(out)
-        return mat4.invert(out, out)
-    }
-
-    public get_device_to_world_matrix(out: mat4){
-        this.get_world_to_view_matrix(out) // out = world_to_view
-        mat4.multiply(out, this.view_to_device_matrix, out) // out = world_to_device
-        mat4.invert(out, out) // out = device_to_world
+    protected refreshMatrices(){
+        mat4.fromRotationTranslation(this.view_to_world, this.orientation, this.position_w)
+        mat4.invert(this.world_to_view, this.view_to_world)
+        mat4.multiply(this.world_to_clip, this.view_to_clip, this.world_to_view)
+        mat4.invert(this.clip_to_world, this.world_to_clip)
     }
 
     public reorient(orientation: quat){
         quat.copy(this.orientation, orientation)
+        this.refreshMatrices()
     }
 
     public moveTo(position: vec3){
         vec3.copy(this.position_w, position)
+        this.refreshMatrices()
     }
 
     public move(delta_c: ReadonlyVec3){
         let delta_w = vec3.create(); vec3.transformQuat(delta_w, delta_c, this.orientation);
         vec3.add(this.position_w, this.position_w, delta_w)
+        this.refreshMatrices()
     }
 
     public lookAt({target_w, up_w=vec3.fromValues(0,1,0), position_w}: {
@@ -67,36 +66,43 @@ export abstract class Camera{
         let rotation_matrix = mat3.create(); mat3.fromMat4(rotation_matrix, view_to_world);
         quat.fromMat3(this.orientation, rotation_matrix); quat.normalize(this.orientation, this.orientation)
         vec3.copy(this.position_w, position_w)
+        this.refreshMatrices()
     }
 
     public tiltUp(angle_rads: number){
         quat.rotateX(this.orientation, this.orientation, angle_rads)
         quat.normalize(this.orientation, this.orientation)
+        this.refreshMatrices()
     }
 
     public rotateLeft(angle_rads: number){
         quat.rotateY(this.orientation, this.orientation, angle_rads)
         quat.normalize(this.orientation, this.orientation)
+        this.refreshMatrices()
     }
 }
 
-export class PerspectiveCamera extends Camera{
-    fovy: number
-    aspect: number
-    near: number
-    far: number
-    constructor({fovy=1, aspect=1, near=0.1, far=1000, position,  orientation}: {
-        fovy?: number,
-        aspect?: number,
-        near?: number,
-        far?: number,
-        position?: vec3,
-        orientation?: quat
-    }){
-        let view_to_device_matrix = mat4.create(); mat4.perspective(view_to_device_matrix, fovy, aspect, near, far)
-        super({position, orientation, view_to_device_matrix})
-    }
-}
+// export class PerspectiveCamera extends Camera{
+//     fovy: number
+//     aspect: number
+//     near: number
+//     far: number
+//     constructor({fovy=1, aspect=1, near=0.1, far=1000, position,  orientation}: {
+//         fovy?: number,
+//         aspect?: number,
+//         near?: number,
+//         far?: number,
+//         position?: vec3,
+//         orientation?: quat
+//     }){
+//         let view_to_clip = mat4.create(); mat4.perspective(view_to_clip, fovy, aspect, near, far)
+//         super({position, orientation, view_to_clip})
+//     }
+
+//     protected refreshViewToClip(): mat4{
+//         return mat4.perspective(this.view_to_clip, fovy, aspect, near, far)
+//     }
+// }
 
 export class OrthoCamera extends Camera{
     constructor({left, right, bottom, top, near, far, position,  orientation}: {
@@ -109,8 +115,8 @@ export class OrthoCamera extends Camera{
         position?: vec3,
         orientation?: quat
     }){
-        let view_to_device_matrix = mat4.create(); mat4.ortho(view_to_device_matrix, left, right, bottom, top, near, far)
-        super({position, orientation, view_to_device_matrix})
+        super({position, orientation})
+        this.reconfigure({left, right, bottom, top, near, far})
     }
 
     public reconfigure({left, right, bottom, top, near, far}: {
@@ -121,6 +127,7 @@ export class OrthoCamera extends Camera{
         near: number,
         far: number,
     }){
-        mat4.ortho(this.view_to_device_matrix, left, right, bottom, top, near, far)
+        mat4.ortho(this.view_to_clip, left, right, bottom, top, near, far)
+        this.refreshMatrices()
     }
 }

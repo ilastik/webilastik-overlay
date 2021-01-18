@@ -26,7 +26,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 uniform mat4 u_object_to_voxel;
                 uniform mat4 u_voxel_to_world;
                 uniform mat4 u_world_to_view;
-                uniform mat4 u_view_to_device;
+                uniform mat4 u_view_to_clip;
 
                 vec3 face_colors[6] = vec3[](
                     vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1),
@@ -36,7 +36,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 void main(){
                     vec4 position_v = (u_object_to_voxel * vec4(a_position_o, 1)) + vec4(u_offset_v, 0);
-                    gl_Position = u_view_to_device * u_world_to_view * u_voxel_to_world * position_v;
+                    gl_Position = u_view_to_clip * u_world_to_view * u_voxel_to_world * position_v;
                     v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
                 }
             `),
@@ -84,12 +84,11 @@ export class BrushelBoxRenderer extends ShaderProgram{
         // console.log("u_voxel_to_world")
         // console.log(m4_to_s(voxelShape.voxelToWorldMatrix))
 
-        camera.get_world_to_view_matrix(this.u_world_to_view)
-        this.gl.uniformMatrix4fv(this.getUniformLocation("u_world_to_view").raw, false, this.u_world_to_view);
+        this.gl.uniformMatrix4fv(this.getUniformLocation("u_world_to_view").raw, false, camera.world_to_view);
 
-        this.gl.uniformMatrix4fv(this.getUniformLocation("u_view_to_device").raw, false, camera.view_to_device_matrix);
-        // console.log("u_view_to_device")
-        // console.log(m4_to_s(camera.view_to_device_matrix))
+        this.gl.uniformMatrix4fv(this.getUniformLocation("u_view_to_clip").raw, false, camera.view_to_clip);
+        // console.log("u_view_to_clip")
+        // console.log(m4_to_s(camera.view_to_clip))
 
         for(let brush_stroke of brush_strokes){
             let u_offset_v = brush_stroke.getVertRef(0)

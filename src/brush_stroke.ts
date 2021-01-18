@@ -3,6 +3,7 @@ import { BufferUsageHint, Vec3AttributeBuffer, VertexArrayObject } from "./buffe
 import { Camera } from "./camera";
 import { DrawingMode, RenderParams } from "./gl";
 import { FragmentShader, ShaderProgram, VertexShader } from "./shader";
+// import { vec3ToString } from "./utils";
 import { LineStrip } from "./vertex_primitives";
 
 export class VoxelShape{
@@ -61,6 +62,7 @@ export class BrushStroke extends LineStrip{
         if(vec3.equals(this.getLastVoxelRef(), rounded_centered_voxel)){
             return
         }
+        // console.log(`Added voxel ${vec3ToString(rounded_centered_voxel)} to brush stroke`)
         vec3.copy(this.getVertRef(this.num_voxels), rounded_centered_voxel)
         this.positions_buffer.populate({
             dstByteOffset: this.num_voxels * voxel.length * Float32Array.BYTES_PER_ELEMENT,
@@ -121,8 +123,6 @@ export class BrushShaderProgram extends ShaderProgram{
         renderParams.use(this.gl)
         this.use()
 
-        camera.get_world_to_view_matrix(this.u_world_to_view)
-
         for(let brush_stroke of brush_strokes){
             let positions_location = this.getAttribLocation("a_position")
             brush_stroke.positions_buffer.useWithAttribute({vao:this.vao, location: positions_location})
@@ -132,10 +132,10 @@ export class BrushShaderProgram extends ShaderProgram{
             this.gl.uniformMatrix4fv(uniform_location, false, voxelShape.voxelToWorldMatrix);
 
             uniform_location = this.gl.getUniformLocation(this.glprogram, "u_world_to_view");
-            this.gl.uniformMatrix4fv(uniform_location, false, this.u_world_to_view);
+            this.gl.uniformMatrix4fv(uniform_location, false, camera.world_to_view);
 
             uniform_location = this.gl.getUniformLocation(this.glprogram, "u_view_to_device");
-            this.gl.uniformMatrix4fv(uniform_location, false, camera.view_to_device_matrix);
+            this.gl.uniformMatrix4fv(uniform_location, false, camera.view_to_clip);
 
             uniform_location = this.gl.getUniformLocation(this.glprogram, "u_color")
             this.gl.uniform3f(

@@ -1,4 +1,4 @@
-import { mat4, quat, vec3 } from 'gl-matrix'
+import { quat, vec3 } from 'gl-matrix'
 import { BrushelBoxRenderer } from './brush_boxes_renderer'
 // import { BrushShaderProgram } from './brush_stroke'
 import { BrushStroke, VoxelShape } from './brush_stroke'
@@ -21,8 +21,6 @@ export class BrushingOverlay{
     private pixelsPerVoxel: number
     // private renderer : BrushShaderProgram
     private renderer : BrushelBoxRenderer
-    private device_to_view = mat4.create();
-
 
     public constructor({
         trackedElement,
@@ -58,29 +56,28 @@ export class BrushingOverlay{
         this.pixelsPerVoxel = pixelsPerVoxel
     }
 
-    public getMouseDevicePosition(ev: MouseEvent): vec3{
-        let out = vec3.fromValues(
+    public getMouseClipPosition(ev: MouseEvent): vec3{
+        let position_c = vec3.fromValues(
             (ev.offsetX - (this.canvas.scrollWidth / 2)) / (this.canvas.scrollWidth / 2),
            -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2),
             0, //FIXME: make sure this is compatible with camera near/far configs
         )
-        // console.log(`DevicePosition: ${vec3ToString(out)}`)
-        return out
+        // console.log(`DevicePosition: ${vec3ToString(position_c)}`)
+        return position_c
     }
 
     public getMouseWorldPosition(ev: MouseEvent): vec3{
-        this.camera.get_device_to_world_matrix(this.device_to_view)
-        let device_position = this.getMouseDevicePosition(ev)
-        let out = vec3.create(); vec3.transformMat4(out, device_position, this.device_to_view)
-        // console.log(`WorldPosition: ${vec3ToString(out)}`)
-        return out
+        let position_c = this.getMouseClipPosition(ev)
+        let position_w = vec3.create(); vec3.transformMat4(position_w, position_c, this.camera.clip_to_world)
+        // console.log(`WorldPosition: ${vec3ToString(position_w)}`)
+        return position_w
     }
 
     public getMouseVoxelPosition(ev: MouseEvent): vec3{
-        let world_position = this.getMouseWorldPosition(ev)
-        let out = vec3.create(); vec3.transformMat4(out, world_position, this.voxelShape.worldToVoxelMatrix)
-        // console.log(`VoxelPosition: ${vec3ToString(out)} ======================`)
-        return out
+        let position_w = this.getMouseWorldPosition(ev)
+        let position_vx = vec3.create(); vec3.transformMat4(position_vx, position_w, this.voxelShape.worldToVoxelMatrix)
+        // console.log(`VoxelPosition: ${vec3ToString(position_vx)} ======================`)
+        return position_vx
     }
 
     public snapTo(camera_position: vec3, camera_orientation: quat){
