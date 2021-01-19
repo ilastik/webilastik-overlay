@@ -6,7 +6,7 @@ import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
 import { CullConfig, CullFace, RenderParams } from './gl'
-import { coverContents, createElement, createInput, insertAfter, vec3ToRgb, vec3ToString } from './utils'
+import { coverContents, createElement, createInput, insertAfter, vec3ToRgb, vecToString } from './utils'
 
 
 export class BrushingOverlay{
@@ -62,21 +62,21 @@ export class BrushingOverlay{
            -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2),
             0, //FIXME: make sure this is compatible with camera near/far configs
         )
-        // console.log(`DevicePosition: ${vec3ToString(position_c)}`)
+        // console.log(`DevicePosition: ${vecToString(position_c)}`)
         return position_c
     }
 
     public getMouseWorldPosition(ev: MouseEvent): vec3{
         let position_c = this.getMouseClipPosition(ev)
         let position_w = vec3.create(); vec3.transformMat4(position_w, position_c, this.camera.clip_to_world)
-        // console.log(`WorldPosition: ${vec3ToString(position_w)}`)
+        // console.log(`WorldPosition: ${vecToString(position_w)}`)
         return position_w
     }
 
     public getMouseVoxelPosition(ev: MouseEvent): vec3{
         let position_w = this.getMouseWorldPosition(ev)
         let position_vx = vec3.create(); vec3.transformMat4(position_vx, position_w, this.voxelShape.worldToVoxelMatrix)
-        // console.log(`VoxelPosition: ${vec3ToString(position_vx)} ======================`)
+        // console.log(`VoxelPosition: ${vecToString(position_vx)} ======================`)
         return position_vx
     }
 
@@ -95,7 +95,7 @@ export class BrushingOverlay{
             left: -canvas.scrollWidth / this.pixelsPerVoxel / 2,
             right: canvas.scrollWidth / this.pixelsPerVoxel / 2,
             near: 0,
-            far: 1000, // This could be just 1... but oblique views might mess things up since a cube has length 1 * (3 ^ (1/2)) on opposite corners
+            far: 10, // This could be just 1... but oblique views might mess things up since a cube has length 1 * (3 ^ (1/2)) on opposite corners
             bottom: -canvas.scrollHeight / this.pixelsPerVoxel / 2,
             top: canvas.scrollHeight / this.pixelsPerVoxel / 2,
         })
@@ -111,7 +111,7 @@ export class BrushingOverlay{
         //tells webgl where to render stuff ((0,0)) and how to scale units into pixels
         this.gl.viewport(0, 0, canvas.scrollWidth, canvas.scrollHeight); //FIXME: shuold aspect play a role here?
         this.camera_controls.updateCamera(this.camera);
-        // console.log(`Camera is at position vec3.fromValues(${this.camera.position_w}) , quat.fromvalues(${this.camera.orientation})`)
+        // console.log(`Camera is at position vec3.fromValues(${this.camera.position_w}) , quat.fromValues(${this.camera.orientation})`)
 
         this.renderer.render({
             brush_strokes: brushStrokes,
@@ -186,7 +186,7 @@ export class BrushingWidget{
 
         let b = new BrushStroke({
             gl: this.overlay.gl,
-            start_postition: vec3.fromValues(0.0, -2.0, -500.0), // -500 must change if we change near/far planes
+            start_postition: vec3.fromValues( 0, 0, -5), // -5 must change if we change near/far planes
             color: this.currentBrushColor,
             camera_position: this.overlay.camera.position_w,
             camera_orientation: this.overlay.camera.orientation,
@@ -194,7 +194,7 @@ export class BrushingWidget{
         this.addBrushStroke(b)
 
         this.overlay.snapTo(
-            vec3.fromValues(-245.4079132080078,156.02586364746094,-113.78730773925781) , quat.fromValues(-0.1680363416671753,-0.27016597986221313,-0.012405166402459145,0.947955846786499)
+            vec3.fromValues(-1.920530915260315,1.859545350074768,-0.9153885841369629) , quat.fromValues(-0.1379847377538681,-0.282972127199173,-0.0411764457821846,0.9482570886611938)
         )
 
         window.requestAnimationFrame(render)
@@ -218,7 +218,7 @@ export class BrushStrokeWidget{
         this.element = createElement({
             tagName: "li",
             parentElement,
-            innerHTML: vec3ToRgb(brushStroke.color) + ` at ${vec3ToString(brushStroke.getVertRef(0))}`,
+            innerHTML: vec3ToRgb(brushStroke.color) + ` at ${vecToString(brushStroke.getVertRef(0))}`,
             inlineCss: {
                 color: vec3ToRgb(brushStroke.color)
             }

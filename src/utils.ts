@@ -167,8 +167,11 @@ export function vec3ToRgb(value: vec3): string{
     return "rgb(" + value.map((c: number) => Math.floor(c * 255)).join(", ") + ")"
 }
 
-export function vec3ToString(value: vec3): string{
-    return `[x: ${value[0].toFixed(1)}, y: ${value[1].toFixed(1)}, z: ${value[2].toFixed(1)}]`
+export function vecToString(value: Float32Array | Array<number>): string{
+    let axisNames = "xyzw";
+    return "[" +
+        Array.from(value).map((value, idx) => axisNames[idx] + ": " + value.toFixed(5)).join(", ") +
+    "]"
 }
 
 function float_to_s(num: number){
