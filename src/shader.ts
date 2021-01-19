@@ -1,3 +1,5 @@
+import { vec3, mat4, mat3 } from "gl-matrix"
+
 export enum ShaderType{
     FRAGMENT_SHADER = WebGL2RenderingContext.FRAGMENT_SHADER,
     VERTEX_SHADER = WebGL2RenderingContext.VERTEX_SHADER,
@@ -73,6 +75,19 @@ export class ShaderProgram{
     public getUniformLocation(name: string): UniformLocation{
         return new UniformLocation(name, this.gl.getUniformLocation(this.glprogram, name))
     }
+
+    public uniform3fv(name: string, value: vec3){
+        this.gl.uniform3fv(this.getUniformLocation(name).raw, value);
+    }
+
+    public uniformMatrix4fv(name: string, value: mat4){
+        this.gl.uniformMatrix4fv(this.getUniformLocation(name).raw, false, value);
+    }
+
+    public uniformMatrix3fv(name: string, value: mat3){
+        this.gl.uniformMatrix3fv(this.getUniformLocation(name).raw, false, value);
+    }
+
 
     public use(){
         this.gl.useProgram(this.glprogram)
