@@ -62,7 +62,7 @@ export class BrushStroke extends LineStrip{
         if(vec3.equals(this.getLastVoxelRef(), rounded_centered_voxel)){
             return
         }
-        // console.log(`Added voxel ${vec3ToString(rounded_centered_voxel)} to brush stroke`)
+        // console.log(`Added voxel ${vecToString(rounded_centered_voxel)} to brush stroke`)
         vec3.copy(this.getVertRef(this.num_voxels), rounded_centered_voxel)
         this.positions_buffer.populate({
             dstByteOffset: this.num_voxels * voxel.length * Float32Array.BYTES_PER_ELEMENT,
