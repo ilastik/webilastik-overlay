@@ -127,7 +127,6 @@ export abstract class VertexAttributeBuffer extends Buffer<Float32Array>{
             /*stride=*/0,
             /*offset=*/byteOffset
         )
-        this.unbind()
     }
 }
 
@@ -138,6 +137,16 @@ export class Vec3AttributeBuffer extends VertexAttributeBuffer{
         location: AttributeLocation,
     }){
         this.vertexAttribPointer({vao, location, numComponents: 3, elementType: AttributeElementType.FLOAT, normalize: false})
+    }
+
+    public useAsInstacedAttribute({vao, location, attributeDivisor=1}:{
+        vao: VertexArrayObject,
+        location: AttributeLocation,
+        attributeDivisor?: number //number of instances that will pass between updates of the generic attribute.
+    }){
+        this.useWithAttribute({vao, location})
+        this.bind()
+        this.gl.vertexAttribDivisor(location.raw, attributeDivisor);
     }
 }
 

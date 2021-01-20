@@ -23,8 +23,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 precision mediump float;
 
                 in vec3 a_vert_pos_o; //box vertex
+                in vec3 a_offset_w;
 
-                uniform vec3 u_offset_w;
                 uniform vec3 u_voxel_shape_w;
                 uniform mat4 u_world_to_clip;
                 uniform mat3 u_clip_to_world;
@@ -38,9 +38,10 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out vec3 v_color;
 
                 void main(){
-                    vec4 box_center_c = u_world_to_clip * vec4(u_offset_w, 1);
+                    vec3 offset_w = (a_offset_w + vec3(0.5, 0.5, 0.5)) * u_voxel_shape_w;
+                    vec4 box_center_c = u_world_to_clip * vec4(offset_w, 1);
 
-                    vec3 vert_pos_w = u_voxel_shape_w * a_vert_pos_o + u_offset_w;
+                    vec3 vert_pos_w = u_voxel_shape_w * a_vert_pos_o + offset_w;
                     vec4 vert_pos_c = u_world_to_clip * vec4(vert_pos_w, 1);
                     vec3 vert_pos_proj_on_slc_plane_c = vec3(vert_pos_c.xy, 0);
                     vec3 dist_vert_proj_to_box_center_c = vert_pos_proj_on_slc_plane_c - box_center_c.xyz;
@@ -56,7 +57,6 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 uniform  vec3 u_voxel_shape_w;
 
-                in vec4 v_box_center_c;
                 in vec3 v_color;
                 in vec3 v_dist_vert_proj_to_box_center_w;
 
@@ -106,13 +106,15 @@ export class BrushelBoxRenderer extends ShaderProgram{
         let u_clip_to_world = mat3.create(); mat3.fromMat4(u_clip_to_world, camera.clip_to_world)
         this.uniformMatrix3fv("u_clip_to_world", u_clip_to_world)
 
+        let a_offset_w_location = this.getAttribLocation("a_offset_w");
         for(let brush_stroke of brush_strokes){
-            let u_offset_w = vec3.clone(brush_stroke.getVertRef(0));
-            vec3.add(u_offset_w, u_offset_w, vec3.fromValues(0.5, 0.5, 0.5)); // +0.5 so box is centered in the middle of the grid cell
-            vec3.mul(u_offset_w, u_offset_w, u_voxel_shape_w)
-            this.uniform3fv("u_offset_w", u_offset_w)
-
-            this.gl.drawArrays(this.box.vertices.getDrawingMode(), 0, this.box.vertices.numVerts)
+            brush_stroke.positions_buffer.useAsInstacedAttribute({vao: this.vao, location: a_offset_w_location, attributeDivisor: 1})
+            this.gl.drawArraysInstanced(
+                /*mode=*/this.box.vertices.getDrawingMode(),
+                /*first=*/0,
+                /*count=*/this.box.vertices.numVerts,
+                /*instanceCount=*/brush_stroke.num_voxels
+            );
         }
     }
 }
