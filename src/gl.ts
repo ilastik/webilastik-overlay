@@ -74,6 +74,14 @@ export enum BlendFactor{
     SRC_ALPHA_SATURATE = WebGL2RenderingContext.SRC_ALPHA_SATURATE,
 }
 
+export enum BlendEquation{
+    FUNC_ADD = WebGL2RenderingContext.FUNC_ADD,
+    FUNC_SUBTRACT = WebGL2RenderingContext.FUNC_SUBTRACT,
+    FUNC_REVERSE_SUBTRACT = WebGL2RenderingContext.FUNC_REVERSE_SUBTRACT,
+    MIN = WebGL2RenderingContext.MIN,
+    MAX = WebGL2RenderingContext.MAX,
+}
+
 export enum DepthFunc{
     NEVER = WebGL2RenderingContext.NEVER,
     LESS = WebGL2RenderingContext.LESS,
@@ -166,22 +174,27 @@ export class StencilConfig{
 export class BlendingConfig{
     sfactor: BlendFactor
     dfactor: BlendFactor
+    equation: BlendEquation
     color?: vec4
     enable: boolean
 
-    constructor({sfactor=BlendFactor.SRC_ALPHA, dfactor=BlendFactor.ONE_MINUS_SRC_ALPHA, color, enable=true}:{
+    constructor({
+        sfactor=BlendFactor.SRC_ALPHA, dfactor=BlendFactor.ONE_MINUS_SRC_ALPHA, equation=BlendEquation.FUNC_ADD, color, enable=true
+    }:{
         sfactor?: BlendFactor,
         dfactor?: BlendFactor,
+        equation?: BlendEquation,
         color?: vec4,
         enable?: boolean
     }){
-        this.sfactor=sfactor; this.dfactor=dfactor; this.color=color; this.enable=enable
+        this.sfactor=sfactor; this.dfactor=dfactor; this.equation=equation; this.color=color; this.enable=enable
     }
 
     public use(gl: WebGL2RenderingContext){
         if(this.enable){
             gl.enable(gl.BLEND)
             gl.blendFunc(this.sfactor, this.dfactor)
+            gl.blendEquation(this.equation)
         }else{
             gl.disable(gl.BLEND)
         }
