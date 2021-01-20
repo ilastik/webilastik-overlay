@@ -5,7 +5,7 @@ import { BrushStroke, VoxelShape } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
-import { CullConfig, CullFace, RenderParams } from './gl'
+import { RenderParams } from './gl'
 import { coverContents, createElement, createInput, insertAfter, vec3ToRgb, vecToString } from './utils'
 
 
@@ -117,12 +117,8 @@ export class BrushingOverlay{
             brush_strokes: brushStrokes,
             camera: this.camera,
             voxelShape: this.voxelShape,
-            renderParams: new RenderParams({
-                cullConfig: new CullConfig({
-                    enable: false,
-                    face: CullFace.FRONT
-                })
-            })})
+            renderParams: new RenderParams({})
+        })
     }
 }
 
