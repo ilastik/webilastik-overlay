@@ -1,4 +1,4 @@
-import { mat3, mat4, vec3, vec4 } from "gl-matrix"
+import { mat3, mat4, vec3 } from "gl-matrix"
 import { BrushStroke, VoxelShape } from "."
 import { BufferUsageHint, VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
@@ -49,9 +49,6 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                     gl_Position = vert_pos_c;
                     v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
-                    if(gl_VertexID == 6){
-                        v_color = vec3(1, 0, 0);
-                    }
                 }
             `),
             new FragmentShader(gl, `
@@ -102,14 +99,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
             vao: this.vao, location: this.getAttribLocation("a_vert_pos_o")
         })
 
-
-
         let u_voxel_shape_w = vec3.clone(voxelShape.proportions);
         this.uniform3fv("u_voxel_shape_w", u_voxel_shape_w);
-
-        let m3 = mat3.create(); mat3.fromMat4(m3, camera.world_to_clip)
-        // let u_voxel_shape_c = vec3.create(); vec3.transformMat3(u_voxel_shape_c, u_voxel_shape_w, m3);
-        // this.uniform3fv("u_voxel_shape_c", u_voxel_shape_c);
 
         let u_offset_w = vec3.clone(brush_stroke.getVertRef(0));
         vec3.add(u_offset_w, u_offset_w, vec3.fromValues(0.5, 0.5, 0.5)); // +0.5 so box is centered in the middle of the grid cell
@@ -119,37 +110,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
         let u_world_to_clip = mat4.clone(camera.world_to_clip);
         this.uniformMatrix4fv("u_world_to_clip", u_world_to_clip);
 
-
-        let v_box_center_c = vec4.create();
-        vec4.transformMat4(v_box_center_c, vec4.fromValues(u_offset_w[0], u_offset_w[1], u_offset_w[2], 1), u_world_to_clip);
-
-
-        let a_vert_pos_o = vec3.clone(this.box.vertices.getVertRef(6));
-        let vert_pos_w = vec3.create();
-            vec3.mul(vert_pos_w, u_voxel_shape_w, a_vert_pos_o);
-            vec3.add(vert_pos_w, vert_pos_w, u_offset_w);
-        let vert_pos_c = vec4.create();
-            vec4.transformMat4(vert_pos_c, vec4.fromValues(vert_pos_w[0], vert_pos_w[1], vert_pos_w[2], 1), u_world_to_clip);
-        let vert_pos_proj_on_slc_plane_c = vec3.fromValues(vert_pos_c[0], vert_pos_c[1], 0);
-        let v_dist_vert_proj_to_box_center_c = vec3.fromValues(
-            /*Math.abs(*/vert_pos_proj_on_slc_plane_c[0] - v_box_center_c[0],//),
-            /*Math.abs(*/vert_pos_proj_on_slc_plane_c[1] - v_box_center_c[1],//),
-            /*Math.abs(*/vert_pos_proj_on_slc_plane_c[2] - v_box_center_c[2],//),
-        );
-
         let u_clip_to_world = mat3.create(); mat3.fromMat4(u_clip_to_world, camera.clip_to_world)
         this.uniformMatrix3fv("u_clip_to_world", u_clip_to_world)
-        let dist_w = vec3.create(); vec3.transformMat3(dist_w, v_dist_vert_proj_to_box_center_c, u_clip_to_world)
-
-
-        // console.log(`vert_pos_c: ${vecToString(vert_pos_c)}`)
-        // console.log(`v_box_center_c: ${vecToString(v_box_center_c)}`)
-        // console.log(`vert_pos_proj_on_slc_plane_c: ${vecToString(vert_pos_proj_on_slc_plane_c)}`)
-        // console.log(`v_dist_vert_proj_to_box_center_c: ${vecToString(v_dist_vert_proj_to_box_center_c)}`)
-        // console.log(`dist_w: ${vecToString(dist_w)}`)
-        // // console.log(`u_voxel_shape_c: ${vecToString(u_voxel_shape_c)}`)
-        // console.log("--------------------------------------------------------------")
-
 
         this.gl.drawArrays(this.box.vertices.getDrawingMode(), 0, this.box.vertices.numVerts)
     }
