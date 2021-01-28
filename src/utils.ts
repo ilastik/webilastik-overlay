@@ -35,15 +35,17 @@ export function manualLookAt(out: mat4, eye: vec3, center: vec3, up: vec3): mat4
 //     [K in keyof T]: string extends K ? never : number extends K ? never : K
 // } extends { [_ in keyof T]: infer U } ? U : never;
 
+export type InlineCss = Partial<Omit<
+    CSSStyleDeclaration,
+    "getPropertyPriority" | "getPropertyValue" | "item" | "removeProperty" | "setProperty"
+>>
+
 export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, click}:{
     tagName:string,
     parentElement:HTMLElement,
     innerHTML?:string,
     cssClasses?:Array<string>,
-    inlineCss?: Partial<Omit<
-        CSSStyleDeclaration,
-        "getPropertyPriority" | "getPropertyValue" | "item" | "removeProperty" | "setProperty"
-    >>,
+    inlineCss?: InlineCss,
     click?(event: any): void},
 ): HTMLElement{
     const element = document.createElement(tagName);
