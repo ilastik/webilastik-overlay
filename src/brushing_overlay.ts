@@ -59,7 +59,7 @@ export class BrushingOverlay{
     public getMouseClipPosition(ev: MouseEvent): vec3{
         let position_c = vec3.fromValues(
             (ev.offsetX - (this.canvas.scrollWidth / 2)) / (this.canvas.scrollWidth / 2),
-           -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2),
+           -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2), //viewport +y points up, but mouse events have +y pointing down
             0, //FIXME: make sure this is compatible with camera near/far configs
         )
         // console.log(`DevicePosition: ${vecToString(position_c)}`)
