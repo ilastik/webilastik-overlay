@@ -92,10 +92,17 @@ export function createImage({src, parentElement, cssClasses, click}:
     return image
 }
 
-export function createInput({inputType, parentElement, value, name, disabled=false, click} :
-    {inputType: string, parentElement:HTMLElement, value?:string, name?:string, disabled?:boolean, click?(event: any): void}
-): HTMLInputElement{
-    const input = <HTMLInputElement>createElement({tagName:'input', parentElement, click})
+export function createInput({inputType, parentElement, value, name, disabled=false, cssClasses, inlineCss, click} :
+    {inputType: string,
+    parentElement:HTMLElement,
+    value?:string,
+    name?:string,
+    disabled?:boolean,
+    cssClasses? : Array<string>,
+    inlineCss?: InlineCss,
+    click?(event: any): void
+}): HTMLInputElement{
+    const input = <HTMLInputElement>createElement({tagName:'input', parentElement, cssClasses, inlineCss, click})
     input.type = inputType;
     if(value !== undefined){
         input.value = value
