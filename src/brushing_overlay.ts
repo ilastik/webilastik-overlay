@@ -1,12 +1,12 @@
-import { quat, vec3 } from 'gl-matrix'
+import { mat4, quat, vec3 } from 'gl-matrix'
 import { BrushelBoxRenderer } from './brush_boxes_renderer'
 // import { BrushShaderProgram } from './brush_stroke'
-import { BrushStroke, VoxelShape } from './brush_stroke'
+import { BrushStroke } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { CameraControls } from './controls'
-import { RenderParams } from './gl'
-import { coverContents, createElement, createInput, insertAfter, vec3ToRgb, vecToString } from './utils'
+import { ClearConfig, RenderParams } from './gl'
+import { coverContents, createElement, createInput, InlineCss, insertAfter, vec3ToRgb, vecToString } from './utils'
 
 
 export class BrushingOverlay{
@@ -15,7 +15,8 @@ export class BrushingOverlay{
     public readonly trackedElement: HTMLElement
 
     public readonly camera: OrthoCamera
-    public readonly voxelShape: VoxelShape
+    public readonly voxelToWorld: mat4
+    public readonly worldToVoxel: mat4
 
     private camera_controls: CameraControls
     private pixelsPerVoxel: number
@@ -26,16 +27,17 @@ export class BrushingOverlay{
         trackedElement,
         camera_position,
         camera_orientation,
-        voxelShape,
+        voxelToWorld,
         pixelsPerVoxel,
     }: {
         trackedElement: HTMLElement, //element over which the overlay will always be
         camera_position?: vec3, //camera position in world coordinates
         camera_orientation?: quat,
-        voxelShape: VoxelShape,
+        voxelToWorld: mat4,
         pixelsPerVoxel: number //orthogonal zoom; how many pixels (the smallest dimension of) the voxel should occupy on screen
     }){
-        this.voxelShape = voxelShape
+        this.voxelToWorld = mat4.create(); mat4.copy(this.voxelToWorld, voxelToWorld);
+        this.worldToVoxel = mat4.create(); mat4.invert(this.worldToVoxel, voxelToWorld);
         this.setZoom(pixelsPerVoxel)
         this.trackedElement = trackedElement
         this.canvas = document.createElement("canvas"); //<HTMLCanvasElement>createElement({tagName: "canvas", parentElement: trackedElement.parentElement || document.body})
@@ -116,7 +118,7 @@ export class BrushingOverlay{
         this.renderer.render({
             brush_strokes: brushStrokes,
             camera: this.camera,
-            voxelShape: this.voxelShape,
+            voxelToWorld: this.voxelToWorld,
             renderParams: new RenderParams({})
         })
     }

@@ -1,5 +1,5 @@
-import { mat3, mat4, vec3 } from "gl-matrix"
-import { BrushStroke, VoxelShape } from "."
+import { mat3, mat4 } from "gl-matrix"
+import { BrushStroke } from "."
 import { BufferUsageHint, VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
 import { RenderParams } from "./gl"
@@ -22,10 +22,10 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 //vertex shader to render a single voxel of the brush stroke. Use instanced rendering to render the whole stroke
                 precision mediump float;
 
-                in vec3 a_vert_pos_o; //box vertex
-                in vec3 a_offset_w;
+                in vec3 a_vert_pos_o; //box vertex, different for every vertex
+                in vec3 a_offset_vx; //voxel coordinates (cube)
 
-                uniform vec3 u_voxel_shape_w;
+                uniform mat4 u_voxel_to_world;
                 uniform mat4 u_world_to_clip;
                 uniform mat3 u_clip_to_world;
 
@@ -38,11 +38,14 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out vec3 v_color;
 
                 void main(){
-                    vec3 offset_w = (a_offset_w + vec3(0.5, 0.5, 0.5)) * u_voxel_shape_w;
-                    vec4 box_center_c = u_world_to_clip * vec4(offset_w, 1);
+                    vec3 box_center_vx = a_offset_vx + vec3(0.5, 0.5, 0.5); // 0.5 -> center of the voxel
+                    vec4 box_center_w = u_voxel_to_world * vec4(box_center_vx, 1.0);
+                    vec4 box_center_c = u_world_to_clip * box_center_w;
 
-                    vec3 vert_pos_w = u_voxel_shape_w * a_vert_pos_o + offset_w;
-                    vec4 vert_pos_c = u_world_to_clip * vec4(vert_pos_w, 1);
+                    vec3 vert_pos_vx = a_vert_pos_o + box_center_vx;
+                    vec4 vert_pos_w = u_voxel_to_world * vec4(vert_pos_vx, 1.0);
+                    vec4 vert_pos_c = u_world_to_clip * vert_pos_w;
+
                     vec3 vert_pos_proj_on_slc_plane_c = vec3(vert_pos_c.xy, 0);
                     vec3 dist_vert_proj_to_box_center_c = vert_pos_proj_on_slc_plane_c - box_center_c.xyz;
                     v_dist_vert_proj_to_box_center_w = u_clip_to_world * dist_vert_proj_to_box_center_c;
@@ -55,7 +58,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
             new FragmentShader(gl, `
                 precision mediump float;
 
-                uniform  vec3 u_voxel_shape_w;
+                uniform mat4 u_voxel_to_world;
 
                 in vec3 v_color;
                 in vec3 v_dist_vert_proj_to_box_center_w;
@@ -64,9 +67,10 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out highp vec4 outf_color;
 
                 void main(){
+                    vec4 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)); // w=0 because this is a distance, not a point
                     vec3 color = v_color;
                     if(all(lessThan(
-                        abs(v_dist_vert_proj_to_box_center_w), u_voxel_shape_w / 2.0  //if projection onto slicing plane is still inside box
+                        abs(v_dist_vert_proj_to_box_center_w), voxel_shape_w.xyz / 2.0  //if projection onto slicing plane is still inside box
                     ))){
                         color = mix(color, vec3(1,1,1), 0.5); //increase brightness
                     }
@@ -81,12 +85,12 @@ export class BrushelBoxRenderer extends ShaderProgram{
     public render({
         brush_strokes,
         camera,
-        voxelShape,
+        voxelToWorld,
         renderParams=new RenderParams({})
     }: {
         brush_strokes: Array<BrushStroke>,
         camera: Camera,
-        voxelShape: VoxelShape,
+        voxelToWorld: mat4,
         renderParams?: RenderParams
     }){
         renderParams.use(this.gl)
@@ -97,8 +101,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
             vao: this.vao, location: this.getAttribLocation("a_vert_pos_o")
         })
 
-        let u_voxel_shape_w = vec3.clone(voxelShape.proportions);
-        this.uniform3fv("u_voxel_shape_w", u_voxel_shape_w);
+        let u_voxel_to_world = mat4.clone(voxelToWorld);
+        this.uniformMatrix4fv("u_voxel_to_world", u_voxel_to_world);
 
         let u_world_to_clip = mat4.clone(camera.world_to_clip);
         this.uniformMatrix4fv("u_world_to_clip", u_world_to_clip);
@@ -106,10 +110,10 @@ export class BrushelBoxRenderer extends ShaderProgram{
         let u_clip_to_world = mat3.create(); mat3.fromMat4(u_clip_to_world, camera.clip_to_world)
         this.uniformMatrix3fv("u_clip_to_world", u_clip_to_world)
 
-        let a_offset_w_location = this.getAttribLocation("a_offset_w");
+        let a_offset_vx_location = this.getAttribLocation("a_offset_vx");
         for(let brush_stroke of brush_strokes){
-            brush_stroke.positions_buffer.useAsInstacedAttribute({vao: this.vao, location: a_offset_w_location, attributeDivisor: 1})
-            this.gl.drawArraysInstanced(
+            brush_stroke.positions_buffer.useAsInstacedAttribute({vao: this.vao, location: a_offset_vx_location, attributeDivisor: 1})
+            this.gl.drawArraysInstanced( //instance-draw a bunch of cubes, one cube for each voxel in the brush stroke
                 /*mode=*/this.box.vertices.getDrawingMode(),
                 /*first=*/0,
                 /*count=*/this.box.vertices.numVerts,
