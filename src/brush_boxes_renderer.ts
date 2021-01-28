@@ -38,13 +38,14 @@ export class BrushelBoxRenderer extends ShaderProgram{
                 out vec3 v_color;
 
                 void main(){
+                    vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)).xyz;
+
                     vec3 box_center_vx = a_offset_vx + vec3(0.5, 0.5, 0.5); // 0.5 -> center of the voxel
                     vec4 box_center_w = u_voxel_to_world * vec4(box_center_vx, 1.0);
                     vec4 box_center_c = u_world_to_clip * box_center_w;
 
-                    vec3 vert_pos_vx = a_vert_pos_o + box_center_vx;
-                    vec4 vert_pos_w = u_voxel_to_world * vec4(vert_pos_vx, 1.0);
-                    vec4 vert_pos_c = u_world_to_clip * vert_pos_w;
+                    vec3 vert_pos_w = (a_vert_pos_o * voxel_shape_w) + box_center_w.xyz; //apply voxel_to_world just to the offset so faces don't flip
+                    vec4 vert_pos_c = u_world_to_clip * vec4(vert_pos_w, 1.0);
 
                     vec3 vert_pos_proj_on_slc_plane_c = vec3(vert_pos_c.xy, 0);
                     vec3 dist_vert_proj_to_box_center_c = vert_pos_proj_on_slc_plane_c - box_center_c.xyz;
