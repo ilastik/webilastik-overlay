@@ -6,8 +6,8 @@ export const      up_c = vec3.fromValues( 0,  1,  0);
 
 
 export abstract class Camera{
-    position_w: vec3
-    orientation: quat
+    position_w: vec3 = vec3.create()
+    orientation: quat = quat.create()
 
     view_to_clip: mat4 = mat4.create()
     world_to_view: mat4 = mat4.create()
@@ -19,11 +19,9 @@ export abstract class Camera{
         position?: vec3,
         orientation?: quat,
     }){
-        this.position_w = vec3.create();
         if(position !== undefined){
             vec3.copy(this.position_w, position)
         }
-        this.orientation = quat.create()
         if(orientation !== undefined){
             quat.copy(this.orientation, orientation)
         }
@@ -47,8 +45,8 @@ export abstract class Camera{
         this.refreshMatrices()
     }
 
-    public move(delta_c: ReadonlyVec3){
-        let delta_w = vec3.create(); vec3.transformQuat(delta_w, delta_c, this.orientation);
+    public moveInViewSpace(delta_v: ReadonlyVec3){
+        let delta_w = vec3.create(); vec3.transformQuat(delta_w, delta_v, this.orientation);
         vec3.add(this.position_w, this.position_w, delta_w)
         this.refreshMatrices()
     }
@@ -105,6 +103,17 @@ export abstract class Camera{
 // }
 
 export class OrthoCamera extends Camera{
+    private _near : number
+    private _far: number
+
+    public get near() : number{
+        return this._near
+    }
+
+    public get far() : number{
+        return this._far
+    }
+
     constructor({left, right, bottom, top, near, far, position,  orientation}: {
         left: number,
         right: number,
@@ -127,6 +136,8 @@ export class OrthoCamera extends Camera{
         near: number,
         far: number,
     }){
+        this._near = near
+        this._far = far
         mat4.ortho(this.view_to_clip, left, right, bottom, top, near, far)
         this.refreshMatrices()
     }
