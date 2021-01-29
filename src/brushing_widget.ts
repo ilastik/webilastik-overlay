@@ -40,9 +40,11 @@ export class BrushingWidget{
         this.colorPicker.addEventListener("change", updateColor)
         updateColor()
 
-        new ToggleButton({parentElement: this.element, value: "🖌", onClick: (checked: boolean) => {
-            this.overlay.canvas.style.pointerEvents = checked ? "auto" : "none"
-        }})
+        let enableBrushing = (enable: boolean) => {
+            this.overlay.canvas.style.pointerEvents = enable ? "auto" : "none"
+        }
+        new ToggleButton({parentElement: this.element, value: "🖌", onClick: enableBrushing})
+        enableBrushing(false)
 
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})

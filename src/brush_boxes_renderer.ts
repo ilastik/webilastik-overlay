@@ -9,13 +9,11 @@ import { Cube } from "./shapes"
 
 
 export class BrushelBoxRenderer extends ShaderProgram{
-    u_world_to_view : mat4 = mat4.create()
-    box : Cube
-    vao: VertexArrayObject
+    readonly box : Cube
+    readonly vao: VertexArrayObject
+    readonly debugColors: boolean
 
-
-
-    constructor(gl: WebGL2RenderingContext){
+    constructor({gl, debugColors=false}: {gl: WebGL2RenderingContext, debugColors?: boolean}){
         super(
             gl,
             new VertexShader(gl, `
@@ -35,7 +33,8 @@ export class BrushelBoxRenderer extends ShaderProgram{
                     vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1),
                     vec3(1, 1, 0), vec3(0, 1, 1), vec3(1, 0, 1)
                 );
-                out vec3 v_color;
+
+                ${debugColors ? `out vec3 color;` : ``}
 
                 void main(){
                     vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)).xyz;
@@ -53,7 +52,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
 
                     gl_Position = vert_pos_c;
-                    v_color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri
+                    ${debugColors ? 'color = face_colors[int(floor(float(gl_VertexID) / 6.0))]; //2 tris per side, 3 verts per tri' : ''}
                 }
             `),
             new FragmentShader(gl, `
@@ -61,7 +60,7 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 uniform mat4 u_voxel_to_world;
 
-                in vec3 v_color;
+                ${debugColors ? `in` : `uniform`} vec3 color;
                 in vec3 v_dist_vert_proj_to_box_center_w;
 
 
@@ -69,16 +68,17 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
                 void main(){
                     vec4 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)); // w=0 because this is a distance, not a point
-                    vec3 color = v_color;
+                    vec3 out_color = color;
                     if(all(lessThan(
                         abs(v_dist_vert_proj_to_box_center_w), voxel_shape_w.xyz / 2.0  //if projection onto slicing plane is still inside box
                     ))){
-                        color = mix(color, vec3(1,1,1), 0.5); //increase brightness
+                        out_color = mix(out_color, vec3(1,1,1), 0.5); //increase brightness
                     }
-                    outf_color = vec4(color, 1);
+                    outf_color = vec4(out_color, 1);
                 }
             `)
         )
+        this.debugColors = debugColors
         this.box = new Cube({gl})
         this.vao = new VertexArrayObject(gl) //FIXME: cleanup the vao and box buffer (but vao autodelets on GC anyway...)
     }
@@ -113,6 +113,9 @@ export class BrushelBoxRenderer extends ShaderProgram{
 
         let a_offset_vx_location = this.getAttribLocation("a_offset_vx");
         for(let brush_stroke of brush_strokes){
+            if(!this.debugColors){
+                this.uniform3fv("color", brush_stroke.color)
+            }
             brush_stroke.positions_buffer.useAsInstacedAttribute({vao: this.vao, location: a_offset_vx_location, attributeDivisor: 1})
             this.gl.drawArraysInstanced( //instance-draw a bunch of cubes, one cube for each voxel in the brush stroke
                 /*mode=*/this.box.vertices.getDrawingMode(),

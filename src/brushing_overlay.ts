@@ -50,7 +50,7 @@ export class BrushingOverlay{
             position: camera_position, orientation: camera_orientation
         })
         this.camera_controls = new CameraControls()
-        this.renderer = new BrushelBoxRenderer(this.gl)
+        this.renderer = new BrushelBoxRenderer({gl: this.gl, debugColors: false})
     }
 
     public setZoom(pixelsPerVoxel: number){
