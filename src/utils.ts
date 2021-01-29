@@ -40,14 +40,25 @@ export type InlineCss = Partial<Omit<
     "getPropertyPriority" | "getPropertyValue" | "item" | "removeProperty" | "setProperty"
 >>
 
-export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, onClick}:{
+export interface CreateElementParams{
     tagName:string,
     parentElement:HTMLElement,
     innerHTML?:string,
     cssClasses?:Array<string>,
     inlineCss?: InlineCss,
     onClick?: (event: MouseEvent) => void,
-}): HTMLElement{
+}
+
+
+export interface CreateInputParams extends Omit<CreateElementParams, "tagName">{
+    inputType: string,
+    parentElement:HTMLElement,
+    value?:string,
+    name?:string,
+    disabled?:boolean,
+}
+
+export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, onClick}: CreateElementParams): HTMLElement{
     const element = document.createElement(tagName);
     parentElement.appendChild(element)
     if(innerHTML !== undefined){
@@ -92,25 +103,17 @@ export function createImage({src, parentElement, cssClasses, onClick}:
     return image
 }
 
-export function createInput({inputType, parentElement, value, name, disabled=false, cssClasses, inlineCss, onClick} :
-    {inputType: string,
-    parentElement:HTMLElement,
-    value?:string,
-    name?:string,
-    disabled?:boolean,
-    cssClasses? : Array<string>,
-    inlineCss?: InlineCss,
-    onClick?: (event: any) => void
-}): HTMLInputElement{
-    const input = <HTMLInputElement>createElement({tagName:'input', parentElement, cssClasses, inlineCss, onClick})
-    input.type = inputType;
-    if(value !== undefined){
-        input.value = value
+
+export function createInput(params : CreateInputParams): HTMLInputElement{
+    const input = <HTMLInputElement>createElement({tagName:'input', ...params})
+    input.type = params.inputType;
+    if(params.value !== undefined){
+        input.value = params.value
     }
-    if(name !== undefined){
-        input.name = name
+    if(params.name !== undefined){
+        input.name = params.name
     }
-    input.disabled = disabled
+    input.disabled = params.disabled ? true : false
     return input
 }
 
@@ -178,12 +181,10 @@ export function vec3ToRgb(value: vec3): string{
 
 export function vecToString(value: Float32Array | Array<number>): string{
     let axisNames = "xyzw";
-    return "[" +
-        Array.from(value).map((value, idx) => {
-            const value_str = value >= 0 ? " " + value.toFixed(3) : value.toFixed(3);
-            return axisNames[idx] + ": " + value_str
-        }).join(", ") +
-    "]"
+    return Array.from(value).map((value, idx) => {
+        const value_str = value >= 0 ? " " + value.toFixed(3) : value.toFixed(3);
+        return axisNames[idx] + ": " + value_str
+    }).join(", ")
 }
 
 function float_to_s(num: number){
@@ -211,4 +212,16 @@ export function m4_to_s(m: mat4) : string{
     }
     let comma_sep_lines = lines.map((line) => line.join(", "))
     return comma_sep_lines.join("\n")
+}
+
+export function hexColorToVec3(color: string): vec3{
+    let channels = color.slice(1).match(/../g)!.map(c => parseInt(c, 16) / 255)
+    return vec3.fromValues(channels[0], channels[1], channels[2])
+}
+
+export function vec3ToHexColor(color: vec3): string{
+    return "#" + Array.from(color).map((val) => {
+        const val_str = Math.round(val * 255).toString(16)
+        return val_str.length < 2 ? "0" + val_str : val_str
+    }).join("")
 }
