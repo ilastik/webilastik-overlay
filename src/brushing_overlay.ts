@@ -36,8 +36,8 @@ export class BrushingOverlay{
         voxelToWorld: mat4,
         pixelsPerVoxel: number //orthogonal zoom; how many pixels (the smallest dimension of) the voxel should occupy on screen
     }){
-        this.voxelToWorld = mat4.create(); mat4.copy(this.voxelToWorld, voxelToWorld);
-        this.worldToVoxel = mat4.create(); mat4.invert(this.worldToVoxel, voxelToWorld);
+        this.voxelToWorld = mat4.clone(voxelToWorld);
+        this.worldToVoxel = mat4.invert(mat4.create(), voxelToWorld);
         this.setZoom(pixelsPerVoxel)
         this.trackedElement = trackedElement
         this.canvas = document.createElement("canvas"); //<HTMLCanvasElement>createElement({tagName: "canvas", parentElement: trackedElement.parentElement || document.body})
@@ -46,11 +46,10 @@ export class BrushingOverlay{
 
         this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
         this.camera = new OrthoCamera({
-            left: -5, right: 5, near: 0, far: 10, bottom: -5, top:  5,
+            left: -1, right: 1, near: 0, far: 1, bottom: -1, top:  1, //all these params are meaningless; they are overwritten every frame
             position: camera_position, orientation: camera_orientation
         })
         this.camera_controls = new CameraControls()
-        // this.renderer = new BrushShaderProgram(this.gl)
         this.renderer = new BrushelBoxRenderer(this.gl)
     }
 
@@ -64,20 +63,21 @@ export class BrushingOverlay{
            -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2), //viewport +y points up, but mouse events have +y pointing down
             0, //FIXME: make sure this is compatible with camera near/far configs
         )
-        // console.log(`DevicePosition: ${vecToString(position_c)}`)
+        // console.log(`ev.offsetY: ${ev.offsetY}`)
+        // console.log(`ClipPosition: ${vecToString(position_c)}`)
         return position_c
     }
 
     public getMouseWorldPosition(ev: MouseEvent): vec3{
         let position_c = this.getMouseClipPosition(ev)
-        let position_w = vec3.create(); vec3.transformMat4(position_w, position_c, this.camera.clip_to_world)
+        let position_w = vec3.transformMat4(vec3.create(), position_c, this.camera.clip_to_world)
         // console.log(`WorldPosition: ${vecToString(position_w)}`)
         return position_w
     }
 
     public getMouseVoxelPosition(ev: MouseEvent): vec3{
         let position_w = this.getMouseWorldPosition(ev)
-        let position_vx = vec3.create(); vec3.transformMat4(position_vx, position_w, this.voxelShape.worldToVoxelMatrix)
+        let position_vx = vec3.transformMat4(vec3.create(), position_w, this.worldToVoxel)
         // console.log(`VoxelPosition: ${vecToString(position_vx)} ======================`)
         return position_vx
     }
@@ -90,9 +90,8 @@ export class BrushingOverlay{
     public render = (brushStrokes: Array<BrushStroke>) => {
         const canvas = <HTMLCanvasElement>this.gl.canvas
         coverContents({target: this.trackedElement, overlay: canvas})
-        // const aspect = canvas.scrollWidth / canvas.scrollHeight // FIXME: maybe use ScrollWidth and ScrollHeight?
 
-        //pixelsPerVoxel determines the field of view
+        //left, right, top, bottom, near and far are measured in voxels; pixelsPerVoxel determines the field of view
         this.camera.reconfigure({
             left: -canvas.scrollWidth / this.pixelsPerVoxel / 2,
             right: canvas.scrollWidth / this.pixelsPerVoxel / 2,
@@ -102,24 +101,20 @@ export class BrushingOverlay{
             top: canvas.scrollHeight / this.pixelsPerVoxel / 2,
         })
 
-        //this sets the size of the framebuffer. It could end up with a different ratio between height and width when compared to the actual
-        //displayed canvas. Still, the aspect ratio of the image should be correct because the Camera is setup using the canvas aspect.
-        // Worst case scenario: pixel density in x will be different from pixeol density in y, but proportions of the rendered image
-        //will still be correct
-
-        //set the actual amount of pixels with which to render
         canvas.width = canvas.scrollWidth
         canvas.height = canvas.scrollHeight
-        //tells webgl where to render stuff ((0,0)) and how to scale units into pixels
         this.gl.viewport(0, 0, canvas.scrollWidth, canvas.scrollHeight); //FIXME: shuold aspect play a role here?
         this.camera_controls.updateCamera(this.camera);
-        // console.log(`Camera is at position vec3.fromValues(${this.camera.position_w}) , quat.fromValues(${this.camera.orientation})`)
 
         this.renderer.render({
             brush_strokes: brushStrokes,
             camera: this.camera,
             voxelToWorld: this.voxelToWorld,
-            renderParams: new RenderParams({})
+            renderParams: new RenderParams({
+                clearConfig: new ClearConfig({
+                    a: 0.0,
+                })
+            })
         })
     }
 }
@@ -133,16 +128,37 @@ export class BrushingWidget{
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
 
-    constructor({container, overlay}: {
+    private lastMouseMoveEvent: MouseEvent = new MouseEvent("mousemove")
+
+    constructor({container, overlay, inlineCss}: {
         container: HTMLElement,
         overlay: BrushingOverlay,
+        inlineCss?: InlineCss
     }){
-        this.element = createElement({tagName: "div", parentElement: container, inlineCss: {
-            width: "600px",
-            height: "300px",
+        this.overlay = overlay
+        this.element = createElement({tagName: "div", parentElement: container, inlineCss: inlineCss || {
+            display: "table",
             border: "solid 2px black",
         }})
-        createElement({tagName: "span", parentElement: this.element, innerHTML: "Brush Color: "})
+
+        let cameraPositionContainer = createElement({tagName: "div", parentElement: this.element, inlineCss: {fontFamily: "monospace"}})
+            createElement({tagName: "h2", parentElement: cameraPositionContainer, innerHTML: "Camera Position"})
+
+                createElement({tagName: "label", parentElement:cameraPositionContainer, innerHTML: "world: "})
+                const camera_pos_world_display = createInput({inputType: "text", parentElement: cameraPositionContainer})
+
+                createElement({tagName: "label", parentElement:cameraPositionContainer, innerHTML: "voxel: "})
+                const camera_pos_voxel_display = createInput({inputType: "text", parentElement: cameraPositionContainer})
+
+            createElement({tagName: "h2", parentElement: cameraPositionContainer, innerHTML: "Cursor Position"})
+
+                createElement({tagName: "label", parentElement:cameraPositionContainer, innerHTML: "world: "})
+                const mouse_pos_world_display = createInput({inputType: "text", parentElement: cameraPositionContainer})
+
+                createElement({tagName: "label", parentElement:cameraPositionContainer, innerHTML: "voxel: "})
+                const mouse_pos_voxel_display = createInput({inputType: "text", parentElement: cameraPositionContainer})
+
+        createElement({tagName: "label", parentElement: this.element, innerHTML: "Brush Color: "})
         this.colorPicker = createInput({inputType: "color", parentElement: this.element, value: "#00ff00"})
         let updateColor =  () => {
             let channels = this.colorPicker.value.slice(1).match(/../g)!.map(c => parseInt(c, 16) / 255)
@@ -150,10 +166,10 @@ export class BrushingWidget{
         }
         this.colorPicker.addEventListener("change", updateColor)
         updateColor()
+
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
 
-        this.overlay = overlay
         this.overlay.canvas.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
             let currentBrushStroke = new BrushStroke({
                 gl: this.overlay.gl,
@@ -167,6 +183,7 @@ export class BrushingWidget{
             let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
                 currentBrushStroke.add_voxel(this.overlay.getMouseVoxelPosition(mouseMoveEvent))
             }
+
             let handlerCleanup = () => {
                 this.overlay.canvas.removeEventListener("mousemove", scribbleHandler)
                 document.removeEventListener("mouseup", handlerCleanup)
@@ -175,51 +192,59 @@ export class BrushingWidget{
             document.addEventListener("mouseup", handlerCleanup)
         })
 
+        this.overlay.canvas.addEventListener("mousemove", (mouseMoveEvent: MouseEvent) => {
+            this.lastMouseMoveEvent = mouseMoveEvent //store the event so the mouse displays refresh even without moving the mouse
+        })
+
         let render = () => {
             this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke))
+
+            const camera_pos_w = this.overlay.camera.position_w;
+            camera_pos_world_display.value = vecToString(camera_pos_w)
+            camera_pos_voxel_display.value = vecToString(vec3.transformMat4(vec3.create(), camera_pos_w, this.overlay.worldToVoxel))
+
+            const mouseWorldPosition = this.overlay.getMouseWorldPosition(this.lastMouseMoveEvent)
+            mouse_pos_world_display.value = vecToString(mouseWorldPosition)
+            const mouseVoxelPosition = this.overlay.getMouseVoxelPosition(this.lastMouseMoveEvent)
+            mouse_pos_voxel_display.value = vecToString(mouseVoxelPosition)
+
             window.requestAnimationFrame(render)
         }
-
-
-
-        let b = new BrushStroke({
-            gl: this.overlay.gl,
-            start_postition: vec3.fromValues( 0, 0, -5), // -5 must change if we change near/far planes
-            color: this.currentBrushColor,
-            camera_position: this.overlay.camera.position_w,
-            camera_orientation: this.overlay.camera.orientation,
-        })
-        this.addBrushStroke(b)
-
-        this.overlay.snapTo(
-            vec3.fromValues(-1.920530915260315,1.859545350074768,-0.9153885841369629) , quat.fromValues(-0.1379847377538681,-0.282972127199173,-0.0411764457821846,0.9482570886611938)
-        )
 
         window.requestAnimationFrame(render)
     }
 
     public addBrushStroke(brushStroke: BrushStroke){
-        let stroke_widget = new BrushStrokeWidget(
-            brushStroke,
-            this.brushStrokesContainer
+        this.brushStrokeWidgets.push(
+            new BrushStrokeWidget({
+                brushStroke,
+                parentElement: this.brushStrokesContainer,
+                onClick: () => {
+                    this.overlay.snapTo(brushStroke.camera_position, brushStroke.camera_orientation)
+                }
+            })
         )
-        this.brushStrokeWidgets.push(stroke_widget)
-        stroke_widget.element.addEventListener("click", () => {
-            this.overlay.snapTo(brushStroke.camera_position, brushStroke.camera_orientation)
-        })
     }
 }
 
 export class BrushStrokeWidget{
     public readonly element: HTMLElement
-    constructor(public readonly brushStroke: BrushStroke, parentElement: HTMLElement){
+    public readonly brushStroke: BrushStroke
+
+    constructor({brushStroke, parentElement, onClick}:{
+        brushStroke: BrushStroke,
+        parentElement: HTMLElement,
+        onClick? : (event: MouseEvent) => void,
+    }){
+        this.brushStroke = brushStroke
         this.element = createElement({
             tagName: "li",
             parentElement,
             innerHTML: vec3ToRgb(brushStroke.color) + ` at ${vecToString(brushStroke.getVertRef(0))}`,
             inlineCss: {
                 color: vec3ToRgb(brushStroke.color)
-            }
+            },
+            onClick: onClick
         })
     }
 }

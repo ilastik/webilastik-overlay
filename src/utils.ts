@@ -40,14 +40,14 @@ export type InlineCss = Partial<Omit<
     "getPropertyPriority" | "getPropertyValue" | "item" | "removeProperty" | "setProperty"
 >>
 
-export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, click}:{
+export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, onClick}:{
     tagName:string,
     parentElement:HTMLElement,
     innerHTML?:string,
     cssClasses?:Array<string>,
     inlineCss?: InlineCss,
-    click?(event: any): void},
-): HTMLElement{
+    onClick?: (event: MouseEvent) => void,
+}): HTMLElement{
     const element = document.createElement(tagName);
     parentElement.appendChild(element)
     if(innerHTML !== undefined){
@@ -56,8 +56,8 @@ export function createElement({tagName, parentElement, innerHTML, cssClasses, in
     (cssClasses || []).forEach(klass => {
         element.classList.add(klass)
     })
-    if(click !== undefined){
-        element.addEventListener('click', click)
+    if(onClick !== undefined){
+        element.addEventListener('click', onClick)
     }
     for(let key in inlineCss){ //FIXME: remove any
         (element.style as any)[key] = inlineCss[key]
@@ -84,15 +84,15 @@ export function insertAfter({reference, new_element}: {reference: HTMLElement, n
     parent.appendChild(new_element)
 }
 
-export function createImage({src, parentElement, cssClasses, click}:
-    {src:string, parentElement:HTMLElement, cssClasses?:Array<string>, click?(event: any): void}
+export function createImage({src, parentElement, cssClasses, onClick}:
+    {src:string, parentElement:HTMLElement, cssClasses?:Array<string>, onClick?: (event: MouseEvent) => void}
 ): HTMLImageElement{
-    const image = <HTMLImageElement>createElement({tagName: 'img', cssClasses, parentElement, click});
+    const image = <HTMLImageElement>createElement({tagName: 'img', cssClasses, parentElement, onClick});
     image.src = src
     return image
 }
 
-export function createInput({inputType, parentElement, value, name, disabled=false, cssClasses, inlineCss, click} :
+export function createInput({inputType, parentElement, value, name, disabled=false, cssClasses, inlineCss, onClick} :
     {inputType: string,
     parentElement:HTMLElement,
     value?:string,
@@ -100,9 +100,9 @@ export function createInput({inputType, parentElement, value, name, disabled=fal
     disabled?:boolean,
     cssClasses? : Array<string>,
     inlineCss?: InlineCss,
-    click?(event: any): void
+    onClick?: (event: any) => void
 }): HTMLInputElement{
-    const input = <HTMLInputElement>createElement({tagName:'input', parentElement, cssClasses, inlineCss, click})
+    const input = <HTMLInputElement>createElement({tagName:'input', parentElement, cssClasses, inlineCss, onClick})
     input.type = inputType;
     if(value !== undefined){
         input.value = value
@@ -114,13 +114,13 @@ export function createInput({inputType, parentElement, value, name, disabled=fal
     return input
 }
 
-export function createSelect({parentElement, values, name, click}:
-    {parentElement:HTMLElement, values?: Map<string, string>, name?:string, click?(event: any): void}
+export function createSelect({parentElement, values, name, onClick}:
+    {parentElement:HTMLElement, values?: Map<string, string>, name?:string, onClick?: (event: MouseEvent) => void}
 ): HTMLSelectElement{
     const select = <HTMLSelectElement>createElement({tagName: 'select', parentElement})
     if(values !== undefined){
         values.forEach((displayValue:string, value:string) => {
-            let option = <HTMLInputElement>createElement({tagName: 'option', innerHTML: displayValue, parentElement: select, click})
+            let option = <HTMLInputElement>createElement({tagName: 'option', innerHTML: displayValue, parentElement: select, onClick})
             option.value = value
         })
     }
@@ -179,7 +179,10 @@ export function vec3ToRgb(value: vec3): string{
 export function vecToString(value: Float32Array | Array<number>): string{
     let axisNames = "xyzw";
     return "[" +
-        Array.from(value).map((value, idx) => axisNames[idx] + ": " + value.toFixed(5)).join(", ") +
+        Array.from(value).map((value, idx) => {
+            const value_str = value >= 0 ? " " + value.toFixed(3) : value.toFixed(3);
+            return axisNames[idx] + ": " + value_str
+        }).join(", ") +
     "]"
 }
 
