@@ -1,6 +1,7 @@
 import { vec3 } from "gl-matrix"
 import { BrushingOverlay, BrushStroke } from "."
-import { createElement, createInput, CreateInputParams, hexColorToVec3, InlineCss, vec3ToHexColor, vec3ToRgb, vecToString } from "./utils"
+import { createElement, createInput, hexColorToVec3, InlineCss, vec3ToHexColor, vec3ToRgb, vecToString } from "./utils"
+import { ToggleButton, VecDisplayWidget } from "./widgets"
 
 export class BrushingWidget{
     public readonly element: HTMLElement
@@ -38,6 +39,10 @@ export class BrushingWidget{
         }
         this.colorPicker.addEventListener("change", updateColor)
         updateColor()
+
+        new ToggleButton({parentElement: this.element, value: "🖌", onClick: (checked: boolean) => {
+            this.overlay.canvas.style.pointerEvents = checked ? "auto" : "none"
+        }})
 
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
@@ -100,36 +105,6 @@ export class BrushingWidget{
                 }
             })
         )
-    }
-}
-
-export class VecDisplayWidget{
-    public readonly element: HTMLElement;
-    private readonly inputElement : HTMLInputElement
-    private _value?: Float32Array | Array<number>
-    constructor(params: {
-        label?: string,
-        value?: Float32Array
-    } & Omit<CreateInputParams, "value" | "inputType" | "disabled">){
-        this.element = createElement({
-            tagName: "p", ...params, cssClasses: (params.cssClasses || []).concat(["VecDisplayWidget"])
-        })
-        if(params.label){
-            createElement({tagName: "label", innerHTML: params.label, parentElement: this.element, cssClasses: ["VecDisplayWidget_input"]})
-        }
-        this.inputElement = createInput({inputType: "text", parentElement: this.element, disabled: true})
-        if(params.value){
-            this.value = params.value
-        }
-    }
-
-    public set value(val: Float32Array | Array<number> | undefined){
-        this._value = val ? new Float32Array(val) : undefined;
-        this.inputElement.value = val ? vecToString(val) : ""
-    }
-
-    public get value(): Float32Array | Array<number> | undefined {
-        return this._value ? new Float32Array(this._value) : undefined
     }
 }
 

@@ -70,10 +70,14 @@ export function createElement({tagName, parentElement, innerHTML, cssClasses, in
     if(onClick !== undefined){
         element.addEventListener('click', onClick)
     }
+    applyInlineCss(element, inlineCss)
+    return element
+}
+
+export function applyInlineCss(element: HTMLElement, inlineCss: InlineCss){
     for(let key in inlineCss){ //FIXME: remove any
         (element.style as any)[key] = inlineCss[key]
     }
-    return element
 }
 
 export function insertAfter({reference, new_element}: {reference: HTMLElement, new_element: HTMLElement}){
