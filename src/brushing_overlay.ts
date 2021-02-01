@@ -36,6 +36,10 @@ export class BrushingOverlay{
         voxelToWorld: mat4,
         pixelsPerVoxel: number //orthogonal zoom; how many pixels (the smallest dimension of) the voxel should occupy on screen
     }){
+        const voxel_proportions = mat4.getScaling(vec3.create(), voxelToWorld).map((value: number) => Math.abs(value))
+        if(Math.min(...voxel_proportions) != 1){
+            throw `Bad voxelToWorld matrix; One dimension of a voxel should be 1 (or -1) so as not to change the meaning of pixelsPerVoxel`
+        }
         this.voxelToWorld = mat4.clone(voxelToWorld);
         this.worldToVoxel = mat4.invert(mat4.create(), voxelToWorld);
         this.setZoom(pixelsPerVoxel)
@@ -54,6 +58,9 @@ export class BrushingOverlay{
     }
 
     public setZoom(pixelsPerVoxel: number){
+        if(pixelsPerVoxel <= 0){
+            throw `pixelsPerVoxel must be positive. If you want to flip the direction of voxels, do so in voxelToWorld`
+        }
         this.pixelsPerVoxel = pixelsPerVoxel
     }
 
@@ -61,7 +68,7 @@ export class BrushingOverlay{
         let position_c = vec3.fromValues(
             (ev.offsetX - (this.canvas.scrollWidth / 2)) / (this.canvas.scrollWidth / 2),
            -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2), //viewport +y points up, but mouse events have +y pointing down
-            0, //FIXME: make sure this is compatible with camera near/far configs
+            0, //Assume slicing plane is in the MIDDLE of clip space, which is also the camera's position if near and far are oposite values
         )
         // console.log(`ev.offsetY: ${ev.offsetY}`)
         // console.log(`ClipPosition: ${vecToString(position_c)}`)
@@ -91,14 +98,18 @@ export class BrushingOverlay{
         const canvas = <HTMLCanvasElement>this.gl.canvas
         coverContents({target: this.trackedElement, overlay: canvas})
 
-        //left, right, top, bottom, near and far are measured in voxels; pixelsPerVoxel determines the field of view
+        //* left, right, top, bottom, near and far are measured in voxels; pixelsPerVoxel determines the zoom/field of view;
+        //* near and far have to be such that a voxel in any orientation would fit between them;
+        const voxel_diagonal_length = vec3.length(mat4.getScaling(vec3.create(), this.voxelToWorld))
+        const canvas_width_in_voxels = canvas.scrollWidth / this.pixelsPerVoxel
+        const canvas_height_in_voxels = canvas.scrollHeight / this.pixelsPerVoxel
         this.camera.reconfigure({
-            left: -canvas.scrollWidth / this.pixelsPerVoxel / 2,
-            right: canvas.scrollWidth / this.pixelsPerVoxel / 2,
-            near: 0,
-            far: 10, // This could be just 1... but oblique views might mess things up since a cube has length 1 * (3 ^ (1/2)) on opposite corners
-            bottom: -canvas.scrollHeight / this.pixelsPerVoxel / 2,
-            top: canvas.scrollHeight / this.pixelsPerVoxel / 2,
+            left: -canvas_width_in_voxels / 2,
+            right: canvas_width_in_voxels / 2,
+            near: -voxel_diagonal_length,
+            far: voxel_diagonal_length,
+            bottom: -canvas_height_in_voxels / 2,
+            top: canvas_height_in_voxels / 2,
         })
 
         canvas.width = canvas.scrollWidth
