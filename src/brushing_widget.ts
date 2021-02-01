@@ -1,6 +1,8 @@
 import { vec3 } from "gl-matrix"
 import { BrushingOverlay, BrushStroke } from "."
-import { createElement, createInput, InlineCss, vec3ToRgb, vecToString } from "./utils"
+import { BrushelBoxRenderer } from "./brush_boxes_renderer"
+import { BrushRenderer } from "./brush_renderer"
+import { createElement, createInput, createSelect, InlineCss, vec3ToRgb, vecToString } from "./utils"
 import { ToggleButton, Vec3ColorPicker, VecDisplayWidget } from "./widgets"
 
 export class BrushingWidget{
@@ -9,6 +11,7 @@ export class BrushingWidget{
 
     public readonly colorPicker: Vec3ColorPicker
     public readonly brushingEnabler: ToggleButton
+    public readonly rendererDropdown: RendererDropdown
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
 
@@ -23,6 +26,19 @@ export class BrushingWidget{
     }){
         this.overlay = overlay
         this.element = createElement({tagName: "div", parentElement, inlineCss, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
+
+        const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
+            createElement({tagName: "label", innerHTML: "Rendering style: ", parentElement: rendererControlsContainer})
+            this.rendererDropdown = new RendererDropdown({
+                parentElement: rendererControlsContainer,
+                options: new Map<string, BrushRenderer>([
+                    ["Boxes", new BrushelBoxRenderer({gl: overlay.gl})],
+                    ["Boxes (debug colors)", new BrushelBoxRenderer({gl: overlay.gl, debugColors: true})],
+                ]),
+                onChange: (new_renderer: BrushRenderer) => {
+                    overlay.setRenderer(new_renderer)
+                }
+            })
 
         let cameraPositionContainer = createElement({tagName: "div", parentElement: this.element})
             createElement({tagName: "h2", parentElement: cameraPositionContainer, innerHTML: "Camera Position"})
@@ -140,5 +156,38 @@ export class BrushStrokeWidget{
                 cursor: "pointer"
             }
         })
+    }
+}
+
+export class RendererDropdown{
+    private renderer: BrushRenderer
+    private onChange?: (new_renderer: BrushRenderer) => void;
+
+    constructor({parentElement, options, onChange}:{
+        parentElement: HTMLElement,
+        options: Map<string, BrushRenderer>,
+        onChange?: (new_renderer: BrushRenderer) => void,
+    }){
+        this.onChange = onChange;
+        let values = new Map<string, string>();
+        options.forEach((_, key) => values.set(key, key))
+        const select = createSelect({parentElement, values})
+        select.addEventListener("change", () => {
+            this.setRenderer(options.get(select.value)!)
+        })
+
+        this.renderer = this.setRenderer(options.values().next().value)
+    }
+
+    public setRenderer(renderer: BrushRenderer): BrushRenderer{
+        this.renderer = renderer
+        if(this.onChange){
+            this.onChange(renderer)
+        }
+        return renderer
+    }
+
+    public getRenderer(): BrushRenderer{
+        return this.renderer
     }
 }

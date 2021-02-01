@@ -19,6 +19,10 @@ export class VertexArrayObject{
         this.gl.bindVertexArray(null);
     }
 
+    public delete(){
+        this.gl.deleteVertexArray(this.glAttributeObject)
+    }
+
     protected vertexAttribPointer<Arr extends BinaryArray>({buffer, location, byteOffset=0, normalize, numComponents, elementType}:{
         buffer: Buffer<Arr>,
         location: AttributeLocation,

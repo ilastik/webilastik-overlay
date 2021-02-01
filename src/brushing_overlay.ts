@@ -1,5 +1,6 @@
 import { mat4, quat, vec3 } from 'gl-matrix'
 import { BrushelBoxRenderer } from './brush_boxes_renderer'
+import { BrushRenderer } from './brush_renderer'
 // import { BrushShaderProgram } from './brush_stroke'
 import { BrushStroke } from './brush_stroke'
 import { OrthoCamera } from './camera'
@@ -21,7 +22,7 @@ export class BrushingOverlay{
     private camera_controls: CameraControls
     private pixelsPerVoxel: number
     // private renderer : BrushShaderProgram
-    private renderer : BrushelBoxRenderer
+    private renderer : BrushRenderer
 
     public constructor({
         trackedElement,
@@ -29,12 +30,14 @@ export class BrushingOverlay{
         camera_orientation,
         voxelToWorld,
         pixelsPerVoxel,
+        renderer
     }: {
         trackedElement: HTMLElement, //element over which the overlay will always be
         camera_position?: vec3, //camera position in world coordinates
         camera_orientation?: quat,
         voxelToWorld: mat4,
-        pixelsPerVoxel: number //orthogonal zoom; how many pixels (the smallest dimension of) the voxel should occupy on screen
+        pixelsPerVoxel: number, //orthogonal zoom; how many pixels (the smallest dimension of) the voxel should occupy on screen
+        renderer?: BrushRenderer,
     }){
         const voxel_proportions = mat4.getScaling(vec3.create(), voxelToWorld).map((value: number) => Math.abs(value))
         if(Math.min(...voxel_proportions) != 1){
@@ -54,7 +57,11 @@ export class BrushingOverlay{
             position: camera_position, orientation: camera_orientation
         })
         this.camera_controls = new CameraControls()
-        this.renderer = new BrushelBoxRenderer({gl: this.gl, debugColors: false})
+        this.renderer = renderer || new BrushelBoxRenderer({gl: this.gl, debugColors: false})
+    }
+
+    public setRenderer(renderer: BrushRenderer){
+        this.renderer = renderer
     }
 
     public setZoom(pixelsPerVoxel: number): number{

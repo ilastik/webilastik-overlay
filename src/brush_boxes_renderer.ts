@@ -1,5 +1,6 @@
 import { mat3, mat4 } from "gl-matrix"
 import { BrushStroke } from "."
+import { BrushRenderer } from "./brush_renderer"
 import { BufferUsageHint, VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
 import { RenderParams } from "./gl"
@@ -8,7 +9,7 @@ import { Cube } from "./shapes"
 // import { m4_to_s, vecToString } from "./utils"
 
 
-export class BrushelBoxRenderer extends ShaderProgram{
+export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
     readonly box : Cube
     readonly vao: VertexArrayObject
     readonly debugColors: boolean
@@ -81,6 +82,10 @@ export class BrushelBoxRenderer extends ShaderProgram{
         this.debugColors = debugColors
         this.box = new Cube({gl})
         this.vao = new VertexArrayObject(gl) //FIXME: cleanup the vao and box buffer (but vao autodelets on GC anyway...)
+    }
+
+    public destroy(){
+        this.vao.delete()
     }
 
     public render({
