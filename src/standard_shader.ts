@@ -102,7 +102,6 @@ export class StandardVAO extends VertexArrayObject{
     public readonly a_normal_buffer: Vec3AttributeBuffer
     public readonly num_positions: number
  //   public readonly vertex_indices_buffer: VertexIndicesBuffer
-    program: StandardShaderProgram
     constructor({gl, a_position_data, a_normal_data, /*vertex_indices*/}: {
         gl: WebGL2RenderingContext,
         a_position_data: Float32Array,

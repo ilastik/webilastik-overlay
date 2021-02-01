@@ -42,7 +42,7 @@ export class BrushingOverlay{
         }
         this.voxelToWorld = mat4.clone(voxelToWorld);
         this.worldToVoxel = mat4.invert(mat4.create(), voxelToWorld);
-        this.setZoom(pixelsPerVoxel)
+        this.pixelsPerVoxel = this.setZoom(pixelsPerVoxel); //strict initialization
         this.trackedElement = trackedElement
         this.canvas = document.createElement("canvas"); //<HTMLCanvasElement>createElement({tagName: "canvas", parentElement: trackedElement.parentElement || document.body})
         insertAfter({reference: trackedElement, new_element: this.canvas})
@@ -57,11 +57,12 @@ export class BrushingOverlay{
         this.renderer = new BrushelBoxRenderer({gl: this.gl, debugColors: false})
     }
 
-    public setZoom(pixelsPerVoxel: number){
+    public setZoom(pixelsPerVoxel: number): number{
         if(pixelsPerVoxel <= 0){
             throw `pixelsPerVoxel must be positive. If you want to flip the direction of voxels, do so in voxelToWorld`
         }
         this.pixelsPerVoxel = pixelsPerVoxel
+        return pixelsPerVoxel
     }
 
     public getMouseClipPosition(ev: MouseEvent): vec3{

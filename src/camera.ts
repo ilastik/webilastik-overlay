@@ -125,6 +125,8 @@ export class OrthoCamera extends Camera{
         orientation?: quat
     }){
         super({position, orientation})
+        this._near = near
+        this._far = far
         this.reconfigure({left, right, bottom, top, near, far})
     }
 

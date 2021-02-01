@@ -67,14 +67,14 @@ export class ToggleButton{
         this.element = createElement({tagName: "span", parentElement, innerHTML: value, onClick: () => {
             this.setChecked(!this.checked);
         }})
-        this.setChecked(checked)
+        this.checked = this.setChecked(checked) //strictPropertyInitialization
     }
 
     public getChecked(): boolean{
         return this.checked
     }
 
-    public setChecked(value: boolean){
+    public setChecked(value: boolean): boolean{
         this.checked = value
         const styling = this.checked ? this.checkedCssOrClasses : this.uncheckedCssOrClasses
         if(styling instanceof Array){
@@ -85,6 +85,7 @@ export class ToggleButton{
         if(this.onChange){
             this.onChange(value)
         }
+        return value
     }
 }
 

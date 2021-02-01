@@ -9,7 +9,7 @@ export class Shader{
     public readonly raw: WebGLShader
     public readonly source: string
     constructor(public readonly gl: WebGL2RenderingContext, source: string, shader_type: ShaderType){
-        this.source, source = "#version 300 es\n" + source
+        this.source = source = "#version 300 es\n" + source
         let glshader = gl.createShader(shader_type)! //FIXME check this?
         gl.shaderSource(glshader, source)
         gl.compileShader(glshader)
