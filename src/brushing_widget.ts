@@ -1,24 +1,25 @@
 import { vec3 } from "gl-matrix"
 import { BrushingOverlay, BrushStroke } from "."
-import { createElement, createInput, hexColorToVec3, InlineCss, vec3ToHexColor, vec3ToRgb, vecToString } from "./utils"
-import { ToggleButton, VecDisplayWidget } from "./widgets"
+import { createElement, createInput, InlineCss, vec3ToRgb, vecToString } from "./utils"
+import { ToggleButton, Vec3ColorPicker, VecDisplayWidget } from "./widgets"
 
 export class BrushingWidget{
     public readonly element: HTMLElement
-    public readonly colorPicker: HTMLInputElement
     private readonly brushStrokesContainer: HTMLElement
 
-    public currentBrushColor: vec3
+    public readonly colorPicker: Vec3ColorPicker
+    public readonly brushingEnabler: ToggleButton
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
 
     private lastMouseMoveEvent: MouseEvent = new MouseEvent("mousemove")
 
-    constructor({overlay, parentElement, inlineCss, cssClasses}: {
+    constructor({overlay, parentElement, inlineCss, cssClasses, brushingEnabled=false}: {
         overlay: BrushingOverlay,
         parentElement: HTMLElement,
         inlineCss?: InlineCss,
-        cssClasses?: Array<string>
+        cssClasses?: Array<string>,
+        brushingEnabled?: boolean,
     }){
         this.overlay = overlay
         this.element = createElement({tagName: "div", parentElement, inlineCss, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
@@ -32,19 +33,11 @@ export class BrushingWidget{
             const mouse_pos_world_display = new VecDisplayWidget({label: "world: ", parentElement: cameraPositionContainer})
             const mouse_pos_voxel_display = new VecDisplayWidget({label: "voxel: ", parentElement: cameraPositionContainer})
 
-        createElement({tagName: "label", parentElement: this.element, innerHTML: "Brush Color: "})
-        this.colorPicker = createInput({inputType: "color", parentElement: this.element, value: "#00ff00"})
-        let updateColor =  () => {
-            this.currentBrushColor = hexColorToVec3(this.colorPicker.value)
-        }
-        this.colorPicker.addEventListener("change", updateColor)
-        updateColor()
-
-        let enableBrushing = (enable: boolean) => {
+        createElement({tagName: "label", innerHTML: "Brushing: ", parentElement: this.element})
+        this.brushingEnabler = new ToggleButton({parentElement: this.element, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
             this.overlay.canvas.style.pointerEvents = enable ? "auto" : "none"
-        }
-        new ToggleButton({parentElement: this.element, value: "🖌", onClick: enableBrushing})
-        enableBrushing(false)
+        }})
+        this.colorPicker = new Vec3ColorPicker({parentElement: this.element})
 
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
@@ -53,7 +46,7 @@ export class BrushingWidget{
             let currentBrushStroke = new BrushStroke({
                 gl: this.overlay.gl,
                 start_postition: this.overlay.getMouseVoxelPosition(mouseDownEvent),
-                color: this.currentBrushColor,
+                color: this.colorPicker.getColor(),
                 camera_position: this.overlay.camera.position_w,
                 camera_orientation: this.overlay.camera.orientation,
             })
@@ -102,8 +95,7 @@ export class BrushingWidget{
                     this.overlay.snapTo(brushStroke.camera_position, brushStroke.camera_orientation)
                 },
                 onColorClicked: (color: vec3) => {
-                    this.colorPicker.value = vec3ToHexColor(color)
-                    this.currentBrushColor = color;
+                    this.colorPicker.setColor(color);
                 }
             })
         )

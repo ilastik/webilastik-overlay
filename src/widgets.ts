@@ -1,4 +1,5 @@
-import { CreateInputParams, createElement, createInput, vecToString, InlineCss, applyInlineCss } from "./utils";
+import { vec3 } from "gl-matrix";
+import { CreateInputParams, createElement, createInput, vecToString, InlineCss, applyInlineCss, hexColorToVec3, vec3ToHexColor } from "./utils";
 
 export class VecDisplayWidget{
     public readonly element: HTMLElement;
@@ -32,19 +33,15 @@ export class VecDisplayWidget{
 
 export class ToggleButton{
     public readonly element: HTMLElement
-    private _checked = false
+    private readonly checkedCssOrClasses: InlineCss | string[]
+    private readonly uncheckedCssOrClasses: InlineCss | string[]
+    private checked: boolean
+    private readonly onChange?: (new_value: boolean) => void;
 
-    public get checked(): boolean{
-        return this._checked
-    }
-
-    public set checked(value: boolean){
-        this._checked = value
-    }
     constructor({
         value,
         parentElement,
-        onClick,
+        onChange,
         checkedCssOrClasses={
             borderStyle: "inset",
             backgroundColor: "rgba(0,0,0, 0.1)",
@@ -55,28 +52,71 @@ export class ToggleButton{
             backgroundColor: "rgba(0,0,0, 0.0)",
             userSelect: "none",
         },
+        checked=false,
     }:{
         value: string,
         parentElement: HTMLElement,
+        onChange?: (checked: boolean) => void,
         checkedCssOrClasses?: InlineCss | string[],
         uncheckedCssOrClasses?: InlineCss | string[],
-        onClick?: (checked: boolean) => void
+        checked?: boolean,
     }){
-        const updateStyle = () => {
-            const styling = this.checked ? checkedCssOrClasses : uncheckedCssOrClasses
-            if(styling instanceof Array){
-                this.element.classList.add(...styling)
-            }else{
-                applyInlineCss(this.element, styling)
-            }
-        }
+        this.onChange = onChange
+        this.checkedCssOrClasses = checkedCssOrClasses
+        this.uncheckedCssOrClasses = uncheckedCssOrClasses
         this.element = createElement({tagName: "span", parentElement, innerHTML: value, onClick: () => {
-            this.checked = !this.checked;
-            updateStyle()
-            if(onClick){
-                onClick(this.checked)
-            }
+            this.setChecked(!this.checked);
         }})
-        updateStyle()
+        this.setChecked(checked)
+    }
+
+    public getChecked(): boolean{
+        return this.checked
+    }
+
+    public setChecked(value: boolean){
+        this.checked = value
+        const styling = this.checked ? this.checkedCssOrClasses : this.uncheckedCssOrClasses
+        if(styling instanceof Array){
+            this.element.classList.add(...styling)
+        }else{
+            applyInlineCss(this.element, styling)
+        }
+        if(this.onChange){
+            this.onChange(value)
+        }
+    }
+}
+
+
+export class Vec3ColorPicker{
+    private color: vec3 = vec3.create();
+    private onChange?: (new_color: vec3) => void;
+
+    constructor({parentElement, onChange, color=vec3.fromValues(0, 1, 0), label}:{
+        parentElement: HTMLElement,
+        onChange?: (color: vec3) => void,
+        color?: vec3,
+        label?: string
+    }){
+        this.color = vec3.clone(color)
+        this.onChange = onChange
+        if(label != undefined){
+            parentElement = createElement({tagName: "p", parentElement})
+            createElement({tagName: "label", innerHTML: label, parentElement})
+        }
+        const picker = createInput({inputType: "color", parentElement, value: vec3ToHexColor(color)})
+        picker.addEventListener("change", () => {this.setColor(picker.value)})
+    }
+
+    public getColor() : vec3{
+        return vec3.clone(this.color)
+    }
+
+    public setColor(value: string | vec3){
+        this.color = typeof value == "string" ? hexColorToVec3(value) : vec3.clone(value)
+        if(this.onChange){
+            this.onChange(this.color)
+        }
     }
 }
