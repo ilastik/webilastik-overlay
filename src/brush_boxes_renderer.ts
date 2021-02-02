@@ -70,9 +70,9 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
                 out highp vec4 outf_color;
 
                 void main(){
-                    vec4 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)); // w=0 because this is a distance, not a point
-                    if(all(lessThan(
-                        abs(v_dist_vert_proj_to_box_center_w), voxel_shape_w.xyz / 2.0  //if projection onto slicing plane is still inside box
+                    vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)).xyz; // w=0 because this is a distance, not a point
+                    if(all(lessThanEqual(
+                        abs(v_dist_vert_proj_to_box_center_w), voxel_shape_w / 2.0  //if projection onto slicing plane is still inside box
                     ))){
                         ${highlightCrossSection ?
                             'outf_color = vec4(mix(color, vec3(1,1,1), 0.5), 1); //increase brightness'
