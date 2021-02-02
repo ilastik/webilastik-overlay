@@ -1,4 +1,4 @@
-import { vec3, mat4 } from "gl-matrix";
+import { vec3, mat4, vec4 } from "gl-matrix";
 
 export function project(out: vec3, v: vec3, onto: vec3){
     // a . b = |a| * |b| * cos(alpha)
@@ -228,4 +228,42 @@ export function vec3ToHexColor(color: vec3): string{
         const val_str = Math.round(val * 255).toString(16)
         return val_str.length < 2 ? "0" + val_str : val_str
     }).join("")
+}
+
+export function vec3to4(v: vec3, w: number): vec4{
+    return vec4.fromValues(v[0], v[1], v[2], w)
+}
+
+export function vec4to3(v: vec4): vec3{
+    return vec3.fromValues(v[0], v[1], v[2])
+}
+
+export function vec3c(x: number, y: number, z: number): vec3{
+    return vec3.fromValues(x,y,z)
+}
+
+
+export function vec4c(x: number, y: number, z: number, w: number): vec4{
+    return vec4.fromValues(x,y,z, w)
+}
+
+export function vec3abs(v: vec3): vec3{
+    return vec3c(Math.abs(v[0]), Math.abs(v[1]), Math.abs(v[2]))
+}
+
+export function vec4abs(v: vec4): vec4{
+    return vec4c(Math.abs(v[0]), Math.abs(v[1]), Math.abs(v[2]), Math.abs(v[3]))
+}
+
+export function all(arr: Array<boolean>): boolean{
+    for(let v of arr){
+        if(!v){
+            return false
+        }
+    }
+    return true
+}
+
+export function lessThan<T extends vec3 | vec4>(a: T, b: T) : Array<boolean>{
+    return Array.from(a).map((value, index) => value < b[index])
 }
