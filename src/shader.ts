@@ -26,15 +26,12 @@ export class Shader{
 export class FragmentShader extends Shader{
     constructor(gl: WebGL2RenderingContext, source: string){
         super(gl, source, ShaderType.FRAGMENT_SHADER)
-        console.log(`FRAGMENT SHADER:\n${source}`)
     }
 }
 
 export class VertexShader extends Shader{
     constructor(gl: WebGL2RenderingContext, source: string){
         super(gl, source, ShaderType.VERTEX_SHADER)
-        console.log(`VERTEX SHADER:\n${source}`)
-
     }
 }
 
