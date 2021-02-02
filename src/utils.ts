@@ -183,10 +183,10 @@ export function vec3ToRgb(value: vec3): string{
     return "rgb(" + value.map((c: number) => Math.floor(c * 255)).join(", ") + ")"
 }
 
-export function vecToString(value: Float32Array | Array<number>): string{
+export function vecToString(value: Float32Array | Array<number>, decimals: number = 3): string{
     let axisNames = "xyzw";
     return Array.from(value).map((value, idx) => {
-        const value_str = value >= 0 ? " " + value.toFixed(3) : value.toFixed(3);
+        const value_str = value >= 0 ? " " + value.toFixed(decimals) : value.toFixed(decimals);
         return axisNames[idx] + ": " + value_str
     }).join(", ")
 }

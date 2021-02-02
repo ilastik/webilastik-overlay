@@ -151,7 +151,7 @@ export class BrushStrokeWidget{
         createElement({
             parentElement: this.element,
             tagName: "span",
-            innerHTML: ` at voxel ${vecToString(brushStroke.getVertRef(0))}`,
+            innerHTML: ` at voxel ${vecToString(brushStroke.getVertRef(0), 0)}`,
             onClick: onLabelClicked,
             inlineCss: {
                 cursor: "pointer"
