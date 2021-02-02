@@ -1,6 +1,7 @@
 import { vec3 } from "gl-matrix"
 import { BrushingOverlay, BrushStroke } from "."
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
+import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
 import { createElement, createInput, createSelect, InlineCss, vec3ToRgb, vecToString } from "./utils"
 import { ToggleButton, Vec3ColorPicker, VecDisplayWidget } from "./widgets"
@@ -39,6 +40,7 @@ export class BrushingWidget{
                 parentElement: rendererControlsContainer,
                 options: new Map<string, BrushRenderer>([
                     ["Boxes - Cross Section)", new BrushelBoxRenderer({gl: overlay.gl, highlightCrossSection: false, onlyCrossSection: true})],
+                    ["Lines", new BrushelLinesRenderer(overlay.gl)],
                     ["Boxes", new BrushelBoxRenderer({gl: overlay.gl, debugColors: false, highlightCrossSection: false, onlyCrossSection: false})],
                     ["Boxes (debug colors)", new BrushelBoxRenderer({gl: overlay.gl, debugColors: true, highlightCrossSection: true, onlyCrossSection: false})],
                 ]),
