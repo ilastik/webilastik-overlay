@@ -91,6 +91,7 @@ export class ToggleButton{
 
 
 export class Vec3ColorPicker{
+    private picker: HTMLInputElement
     private color: vec3 = vec3.create();
     private onChange?: (new_color: vec3) => void;
 
@@ -106,8 +107,9 @@ export class Vec3ColorPicker{
             parentElement = createElement({tagName: "p", parentElement})
             createElement({tagName: "label", innerHTML: label, parentElement})
         }
-        const picker = createInput({inputType: "color", parentElement, value: vec3ToHexColor(color)})
-        picker.addEventListener("change", () => {this.setColor(picker.value)})
+        this.picker = createInput({inputType: "color", parentElement})
+        this.picker.addEventListener("change", () => {this.setColor(this.picker.value)})
+        this.setColor(color)
     }
 
     public getColor() : vec3{
@@ -115,7 +117,13 @@ export class Vec3ColorPicker{
     }
 
     public setColor(value: string | vec3){
-        this.color = typeof value == "string" ? hexColorToVec3(value) : vec3.clone(value)
+        if(typeof value == "string"){
+            this.color =  hexColorToVec3(value)
+            this.picker.value = value
+        }else{
+            this.color = vec3.clone(value)
+            this.picker.value = vec3ToHexColor(value)
+        }
         if(this.onChange){
             this.onChange(this.color)
         }
