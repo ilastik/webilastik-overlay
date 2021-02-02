@@ -14,7 +14,9 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
     readonly vao: VertexArrayObject
     readonly debugColors: boolean
 
-    constructor({gl, debugColors=false}: {gl: WebGL2RenderingContext, debugColors?: boolean}){
+    constructor({gl, debugColors=false, highlightCrossSection, onlyCrossSection}: {
+        gl: WebGL2RenderingContext, debugColors?: boolean, highlightCrossSection: boolean, onlyCrossSection: boolean
+    }){
         super(
             gl,
             new VertexShader(gl, `
@@ -69,13 +71,18 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
 
                 void main(){
                     vec4 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)); // w=0 because this is a distance, not a point
-                    vec3 out_color = color;
                     if(all(lessThan(
                         abs(v_dist_vert_proj_to_box_center_w), voxel_shape_w.xyz / 2.0  //if projection onto slicing plane is still inside box
                     ))){
-                        out_color = mix(out_color, vec3(1,1,1), 0.5); //increase brightness
+                        ${highlightCrossSection ?
+                            'outf_color = vec4(mix(color, vec3(1,1,1), 0.5), 1); //increase brightness'
+                            :
+                            'outf_color = vec4(color, 1);'
+                        }
+
+                    }else{
+                        ${onlyCrossSection ? "discard;" : "outf_color = vec4(color, 1);"}
                     }
-                    outf_color = vec4(out_color, 1);
                 }
             `)
         )

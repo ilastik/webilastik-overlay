@@ -38,8 +38,9 @@ export class BrushingWidget{
             this.rendererDropdown = new RendererDropdown({
                 parentElement: rendererControlsContainer,
                 options: new Map<string, BrushRenderer>([
-                    ["Boxes", new BrushelBoxRenderer({gl: overlay.gl})],
-                    ["Boxes (debug colors)", new BrushelBoxRenderer({gl: overlay.gl, debugColors: true})],
+                    ["Boxes - Cross Section)", new BrushelBoxRenderer({gl: overlay.gl, highlightCrossSection: false, onlyCrossSection: true})],
+                    ["Boxes", new BrushelBoxRenderer({gl: overlay.gl, debugColors: false, highlightCrossSection: false, onlyCrossSection: false})],
+                    ["Boxes (debug colors)", new BrushelBoxRenderer({gl: overlay.gl, debugColors: true, highlightCrossSection: true, onlyCrossSection: false})],
                 ]),
                 onChange: (new_renderer: BrushRenderer) => {
                     overlay.setRenderer(new_renderer)

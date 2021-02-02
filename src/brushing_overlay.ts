@@ -57,7 +57,7 @@ export class BrushingOverlay{
             position: camera_position, orientation: camera_orientation
         })
         this.camera_controls = new CameraControls()
-        this.renderer = renderer || new BrushelBoxRenderer({gl: this.gl, debugColors: false})
+        this.renderer = renderer || new BrushelBoxRenderer({gl: this.gl, highlightCrossSection: false, onlyCrossSection: false})
     }
 
     public setRenderer(renderer: BrushRenderer){
@@ -108,7 +108,7 @@ export class BrushingOverlay{
 
         //* left, right, top, bottom, near and far are measured in voxels; pixelsPerVoxel determines the zoom/field of view;
         //* near and far have to be such that a voxel in any orientation would fit between them;
-        const voxel_diagonal_length = vec3.length(mat4.getScaling(vec3.create(), this.voxelToWorld))
+        const voxel_diagonal_length = 10//vec3.length(mat4.getScaling(vec3.create(), this.voxelToWorld))
         const canvas_width_in_voxels = canvas.scrollWidth / this.pixelsPerVoxel
         const canvas_height_in_voxels = canvas.scrollHeight / this.pixelsPerVoxel
         this.camera.reconfigure({
