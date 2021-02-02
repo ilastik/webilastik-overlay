@@ -27,6 +27,12 @@ export class BrushingWidget{
         this.overlay = overlay
         this.element = createElement({tagName: "div", parentElement, inlineCss, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
 
+        createElement({tagName: "label", innerHTML: "Brushing: ", parentElement: this.element})
+        this.brushingEnabler = new ToggleButton({parentElement: this.element, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
+            this.overlay.canvas.style.pointerEvents = enable ? "auto" : "none"
+        }})
+        this.colorPicker = new Vec3ColorPicker({parentElement: this.element})
+
         const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
             createElement({tagName: "label", innerHTML: "Rendering style: ", parentElement: rendererControlsContainer})
             this.rendererDropdown = new RendererDropdown({
@@ -48,12 +54,6 @@ export class BrushingWidget{
             createElement({tagName: "h2", parentElement: cameraPositionContainer, innerHTML: "Cursor Position"})
             const mouse_pos_world_display = new VecDisplayWidget({label: "world: ", parentElement: cameraPositionContainer})
             const mouse_pos_voxel_display = new VecDisplayWidget({label: "voxel: ", parentElement: cameraPositionContainer})
-
-        createElement({tagName: "label", innerHTML: "Brushing: ", parentElement: this.element})
-        this.brushingEnabler = new ToggleButton({parentElement: this.element, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
-            this.overlay.canvas.style.pointerEvents = enable ? "auto" : "none"
-        }})
-        this.colorPicker = new Vec3ColorPicker({parentElement: this.element})
 
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
