@@ -1,12 +1,6 @@
 import { vec3 } from "gl-matrix";
 import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
-import { FrontFace } from "./gl";
-
-export enum DrawingMode{
-    POINTS = WebGL2RenderingContext.POINTS,
-    TRIANGLES = WebGL2RenderingContext.TRIANGLES,
-    TRIANGLE_STRIP = WebGL2RenderingContext.TRIANGLE_STRIP,
-}
+import { DrawingMode, FrontFace } from "./gl";
 
 export class VertexArray{
     public readonly data: Float32Array
