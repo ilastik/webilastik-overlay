@@ -9,15 +9,17 @@
     "build": "npm run clean && npx tsc",
     "bundle": "npm run build && npx esbuild src/main.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js"
   },
-  "files": ["./build/**/*", "./src/**/*"],
+  "files": [
+    "./build/**/*",
+    "./src/**/*"
+  ],
   "author": "Tomaz Vieira",
   "license": "ISC",
   "devDependencies": {
-    "esbuild": "^0.8.18",
-    "typescript": "^4.1.2"
-},
-"dependencies": {
-    "gl-matrix": "^3.3.0",
-    "@types/gl-matrix": "^3.2.0"
+    "esbuild": "^0.11.15",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.3.0"
   }
 }
