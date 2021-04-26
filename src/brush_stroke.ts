@@ -47,7 +47,6 @@ export class BrushStroke extends VertexArray{
             data: new Float32Array(rounded_centered_voxel)
         })
         this.num_voxels += 1
-        console.log(`Current number of voxels: ${this.num_voxels}`)
     }
 
     public destroy(){

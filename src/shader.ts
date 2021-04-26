@@ -65,7 +65,6 @@ export class ShaderProgram{
             throw error_log
         }
         this.glprogram = program;
-        console.log(`Created program ${this.glprogram}`)
     }
 
     public getAttribLocation(name: string) : AttributeLocation{
