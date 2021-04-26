@@ -17,6 +17,6 @@ new BrushingWidget({
     overlay: new BrushingOverlay({
         trackedElement: dummy_viewer,
         voxelToWorld: voxelToWorld,
-        pixelsPerVoxel: 50,
+        pixelsPerVoxel: 10,
     })
 })

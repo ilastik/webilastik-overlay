@@ -5,9 +5,98 @@ import { BufferUsageHint, VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
 import { RenderParams } from "./gl"
 import { FragmentShader, ShaderProgram, VertexShader } from "./shader"
-import { Cube } from "./shapes"
-// import { m4_to_s, vecToString } from "./utils"
+import { TriangleArray } from "./vertex_primitives"
 
+enum X{
+    RIGHT = 0.5,
+    LEFT = -0.5,
+}
+
+enum Y{
+    TOP = 0.5,
+    BOTTOM = -0.5,
+}
+
+enum Z{
+    BACK = 0.5,
+    FRONT = -0.5, //forwards is -z like in the camera
+}
+
+
+/**
+         +y (top)                            +---------+ (right, top, front)
+        ^                                   /   top   /|
+        |                                  /   face  / |
+        |                                 +---------+  |
+        |   (front)                       |   back  |  |
+        |     -z                          |   face  |  /
+        |   /                             |         | /
+        |  /                              +---------+
+        | /          (left, back, bottom)
+        |/
+        *-------------------> +x (right)
+ */
+
+
+export class Cube extends TriangleArray{
+    constructor(){
+        super(new Float32Array([
+            // front face,
+            X.RIGHT, Y.BOTTOM, Z.FRONT,
+            X.LEFT,  Y.BOTTOM, Z.FRONT,
+            X.LEFT,  Y.TOP,    Z.FRONT,
+
+            X.RIGHT, Y.TOP,    Z.FRONT,
+            X.RIGHT, Y.BOTTOM, Z.FRONT,
+            X.LEFT,  Y.TOP,    Z.FRONT,
+
+            //back face,
+            X.LEFT,  Y.TOP,    Z.BACK,
+            X.LEFT,  Y.BOTTOM, Z.BACK,
+            X.RIGHT, Y.BOTTOM, Z.BACK,
+
+            X.LEFT,  Y.TOP,    Z.BACK,
+            X.RIGHT, Y.BOTTOM, Z.BACK,
+            X.RIGHT, Y.TOP,    Z.BACK,
+
+            // right face,
+            X.RIGHT, Y.TOP,    Z.BACK,
+            X.RIGHT, Y.BOTTOM, Z.BACK,
+            X.RIGHT, Y.BOTTOM, Z.FRONT,
+
+            X.RIGHT, Y.TOP,    Z.BACK,
+            X.RIGHT, Y.BOTTOM, Z.FRONT,
+            X.RIGHT, Y.TOP,    Z.FRONT,
+
+            // left face,
+            X.LEFT, Y.BOTTOM, Z.FRONT,
+            X.LEFT, Y.BOTTOM, Z.BACK,
+            X.LEFT, Y.TOP,    Z.BACK,
+
+            X.LEFT, Y.TOP,    Z.FRONT,
+            X.LEFT, Y.BOTTOM, Z.FRONT,
+            X.LEFT, Y.TOP,    Z.BACK,
+
+            // top face,
+            X.LEFT,  Y.TOP, Z.FRONT,
+            X.LEFT,  Y.TOP, Z.BACK,
+            X.RIGHT, Y.TOP, Z.BACK,
+
+            X.LEFT,  Y.TOP, Z.FRONT,
+            X.RIGHT, Y.TOP, Z.BACK,
+            X.RIGHT, Y.TOP, Z.FRONT,
+
+            // bottom face()
+            X.RIGHT, Y.BOTTOM, Z.BACK,
+            X.LEFT, Y.BOTTOM, Z.BACK,
+            X.LEFT, Y.BOTTOM, Z.FRONT,
+
+            X.RIGHT, Y.BOTTOM, Z.BACK,
+            X.LEFT, Y.BOTTOM, Z.FRONT,
+            X.RIGHT, Y.BOTTOM, Z.FRONT,
+        ]));
+    }
+}
 
 export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
     readonly box : Cube
@@ -87,7 +176,7 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
             `)
         )
         this.debugColors = debugColors
-        this.box = new Cube({gl})
+        this.box = new Cube()
         this.vao = new VertexArrayObject(gl) //FIXME: cleanup the vao and box buffer (but vao autodelets on GC anyway...)
     }
 
@@ -130,9 +219,9 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
             }
             brush_stroke.positions_buffer.useAsInstacedAttribute({vao: this.vao, location: a_offset_vx_location, attributeDivisor: 1})
             this.gl.drawArraysInstanced( //instance-draw a bunch of cubes, one cube for each voxel in the brush stroke
-                /*mode=*/this.box.vertices.getDrawingMode(),
+                /*mode=*/this.box.getDrawingMode(),
                 /*first=*/0,
-                /*count=*/this.box.vertices.numVerts,
+                /*count=*/this.box.numVerts,
                 /*instanceCount=*/brush_stroke.num_voxels
             );
         }
