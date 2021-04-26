@@ -1,9 +1,9 @@
 import { quat, vec3 } from "gl-matrix";
 import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
 // import { vec3ToString } from "./utils";
-import { LineStrip } from "./vertex_primitives";
+import { VertexArray } from "./vertex_primitives";
 
-export class BrushStroke extends LineStrip{
+export class BrushStroke extends VertexArray{
     public camera_position: vec3
     public readonly camera_orientation: quat
     public num_voxels : number
@@ -47,6 +47,7 @@ export class BrushStroke extends LineStrip{
             data: new Float32Array(rounded_centered_voxel)
         })
         this.num_voxels += 1
+        console.log(`Current number of voxels: ${this.num_voxels}`)
     }
 
     public destroy(){

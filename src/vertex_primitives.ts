@@ -133,31 +133,3 @@ export class TriangleArray extends VertexPrimitive{
         return out
     }
 }
-
-export class TriangleStrip extends VertexPrimitive{
-    public readonly vertexOrder: FrontFace
-    public readonly numTriangles: number
-    constructor(arr: Float32Array, vertexOrder: FrontFace = FrontFace.CCW){
-        if(arr.length < 3 * 3){
-            throw `Trying to create a triangle strip with array of ${arr.length} floats`
-        }
-        super(arr)
-        this.vertexOrder = vertexOrder
-        this.numTriangles = this.numVerts - 2 //first tri has 3 verts, every subsequent tri has only 1
-    }
-    public getDrawingMode() : DrawingMode{
-        return DrawingMode.TRIANGLE_STRIP
-    }
-    public getNormals(): Float32Array{
-        throw "Not implemented!"
-    }
-}
-
-export class LineStrip extends VertexArray{
-    constructor(arr: Float32Array){
-        if(arr.length < 3 * 2){
-            throw `Trying to create a line strip with array of ${arr.length} floats`
-        }
-        super(arr)
-    }
-}
