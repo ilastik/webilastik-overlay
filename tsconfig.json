@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "build/",
+    "outDir": "build/cjs",
     "declaration": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,

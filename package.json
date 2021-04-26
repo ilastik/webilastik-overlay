@@ -2,16 +2,16 @@
   "name": "webilastik-overlay",
   "version": "1.0.0",
   "description": "lastik web frontend overlay",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
+  "main": "build/cjs/index.js",
+  "types": "build/cjs/index.d.ts",
   "scripts": {
-    "clean": "rm -rfv build/*",
-    "build": "npm run clean && npx tsc",
-    "bundle": "npm run build && npx esbuild src/main.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js"
+    "build-cjs": "rm -rfv build/cjs && npx tsc --outDir build/cjs --module CommonJS",
+    "build": "npm run build-cjs",
+    "bundle": "npm run build && npx esbuild src/main.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js",
+    "package": "npm run bundle && npm pack"
   },
   "files": [
-    "./build/**/*",
-    "./src/**/*"
+    "build/**/*"
   ],
   "author": "Tomaz Vieira",
   "license": "ISC",
