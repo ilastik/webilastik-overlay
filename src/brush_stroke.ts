@@ -4,22 +4,19 @@ import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
 import { VertexArray } from "./vertex_primitives";
 
 export class BrushStroke extends VertexArray{
-    public camera_position: vec3
     public readonly camera_orientation: quat
     public num_voxels : number
     public readonly color : vec3
     public readonly positions_buffer: Vec3AttributeBuffer
 
-    constructor({gl, start_postition, color, camera_position, camera_orientation}: {
+    constructor({gl, start_postition, color, camera_orientation}: {
         gl: WebGL2RenderingContext,
         start_postition: vec3,
         color: vec3,
-        camera_position: vec3,
         camera_orientation: quat
     }){
         let data = new Float32Array(1024 * 3) // 1024 vec3's
         super(data)
-        this.camera_position = vec3.create(); vec3.copy(this.camera_position, camera_position)
         this.camera_orientation = quat.create(); quat.copy(this.camera_orientation, camera_orientation)
         this.num_voxels = 0
         this.color = vec3.create(); vec3.copy(this.color, color)

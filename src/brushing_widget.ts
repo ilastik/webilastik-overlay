@@ -66,7 +66,6 @@ export class BrushingWidget{
                 gl: this.overlay.gl,
                 start_postition: this.overlay.getMouseVoxelPosition(mouseDownEvent),
                 color: this.colorPicker.getColor(),
-                camera_position: this.overlay.camera.position_w,
                 camera_orientation: this.overlay.camera.orientation,
             })
             this.addBrushStroke(currentBrushStroke)
@@ -111,7 +110,10 @@ export class BrushingWidget{
                 brushStroke,
                 parentElement: this.brushStrokesContainer,
                 onLabelClicked: () => {
-                    this.overlay.snapTo(brushStroke.camera_position, brushStroke.camera_orientation)
+                    this.overlay.snapTo(
+                        vec3.transformMat4(vec3.create(), brushStroke.getVertRef(0), this.overlay.voxelToWorld),
+                        brushStroke.camera_orientation
+                    )
                 },
                 onColorClicked: (color: vec3) => {
                     this.colorPicker.setColor(color);
