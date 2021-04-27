@@ -38,6 +38,9 @@ enum Z{
  */
 
 
+/**
+ * A cube of side 1, centered on 0,0,0
+*/
 export class Cube extends TriangleArray{
     constructor(){
         super(new Float32Array([
