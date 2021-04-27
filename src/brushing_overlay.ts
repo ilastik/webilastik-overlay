@@ -75,8 +75,8 @@ export class BrushingOverlay{
     public getMouseClipPosition(ev: MouseEvent): vec3{
         let position_c = vec3.fromValues(
             (ev.offsetX - (this.canvas.scrollWidth / 2)) / (this.canvas.scrollWidth / 2),
-           -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2), //viewport +y points up, but mouse events have +y pointing down
-            0, //Assume slicing plane is in the MIDDLE of clip space, which is also the camera's position if near and far are oposite values
+           -(ev.offsetY - (this.canvas.scrollHeight / 2)) / (this.canvas.scrollHeight / 2), //gl viewport +y points up, but mouse events have +y pointing down
+            0, //Assume slicing plane is in the MIDDLE of clip space
         )
         // console.log(`ev.offsetY: ${ev.offsetY}`)
         // console.log(`ClipPosition: ${vecToString(position_c)}`)
@@ -106,8 +106,11 @@ export class BrushingOverlay{
         const canvas = <HTMLCanvasElement>this.gl.canvas
         coverContents({target: this.trackedElement, overlay: canvas})
 
-        //* left, right, top, bottom, near and far are measured in voxels; pixelsPerVoxel determines the zoom/field of view;
-        //* near and far have to be such that a voxel in any orientation would fit between them;
+        // - left, right, top, bottom, near and far are measured in world-space-units;
+        //      - 1 world-space-unit is the smallest side of a voxel, as determined by this.voxelToWorld
+        //           - For isotropic data, it's simply 1
+        // - pixelsPerVoxel determines the zoom/field of view;
+        // - near and far have to be such that a voxel in any orientation would fit between them;
         const voxel_diagonal_length = 10//vec3.length(mat4.getScaling(vec3.create(), this.voxelToWorld))
         const canvas_width_in_voxels = canvas.scrollWidth / this.pixelsPerVoxel
         const canvas_height_in_voxels = canvas.scrollHeight / this.pixelsPerVoxel
