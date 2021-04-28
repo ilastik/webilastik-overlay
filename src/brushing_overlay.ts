@@ -5,7 +5,6 @@ import { BrushRenderer } from './brush_renderer'
 import { BrushStroke } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
-import { CameraControls } from './controls'
 import { ClearConfig, RenderParams } from './gl'
 import { coverContents, insertAfter } from './utils'
 
@@ -19,7 +18,6 @@ export class BrushingOverlay{
     public readonly voxelToWorld: mat4
     public readonly worldToVoxel: mat4
 
-    private camera_controls: CameraControls
     private pixelsPerVoxel: number
     // private renderer : BrushShaderProgram
     private renderer : BrushRenderer
@@ -56,7 +54,6 @@ export class BrushingOverlay{
             left: -1, right: 1, near: 0, far: 1, bottom: -1, top:  1, //all these params are meaningless; they are overwritten every frame
             position: camera_position, orientation: camera_orientation
         })
-        this.camera_controls = new CameraControls()
         this.renderer = renderer || new BrushelBoxRenderer({gl: this.gl, highlightCrossSection: false, onlyCrossSection: false})
     }
 
@@ -125,7 +122,6 @@ export class BrushingOverlay{
         canvas.width = canvas.scrollWidth
         canvas.height = canvas.scrollHeight
         this.gl.viewport(0, 0, canvas.scrollWidth, canvas.scrollHeight); //FIXME: shuold aspect play a role here?
-        this.camera_controls.updateCamera(this.camera);
 
         this.renderer.render({
             brush_strokes: brushStrokes,
