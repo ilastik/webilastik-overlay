@@ -94,8 +94,9 @@ export class BrushingOverlay{
         return position_vx
     }
 
-    public snapTo(camera_position: vec3, camera_orientation: quat){
-        this.camera.snapTo(camera_position, camera_orientation)
+    public snapToVoxel(position_v: vec3, camera_orientation: quat){
+        const position_w = vec3.transformMat4(vec3.create(), position_v, this.voxelToWorld)
+        this.camera.snapTo(position_w, camera_orientation)
     }
 
     public render = (brushStrokes: Array<BrushStroke>) => {

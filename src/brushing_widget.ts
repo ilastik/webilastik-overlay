@@ -110,8 +110,8 @@ export class BrushingWidget{
                 brushStroke,
                 parentElement: this.brushStrokesContainer,
                 onLabelClicked: () => {
-                    this.overlay.snapTo(
-                        vec3.transformMat4(vec3.create(), brushStroke.getVertRef(0), this.overlay.voxelToWorld),
+                    this.overlay.snapToVoxel(
+                        brushStroke.getVertRef(0),
                         brushStroke.camera_orientation
                     )
                 },
