@@ -98,8 +98,7 @@ export class BrushingOverlay{
     }
 
     public snapTo(camera_position: vec3, camera_orientation: quat){
-        this.camera.moveTo(camera_position)
-        this.camera.reorient(camera_orientation)
+        this.camera.snapTo(camera_position, camera_orientation)
     }
 
     public render = (brushStrokes: Array<BrushStroke>) => {

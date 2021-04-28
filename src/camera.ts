@@ -45,6 +45,11 @@ export abstract class Camera{
         this.refreshMatrices()
     }
 
+    public snapTo(position: vec3, orientation: quat){
+        this.moveTo(position)
+        this.reorient(orientation)
+    }
+
     public moveInViewSpace(delta_v: ReadonlyVec3){
         let delta_w = vec3.create(); vec3.transformQuat(delta_w, delta_v, this.orientation);
         vec3.add(this.position_w, this.position_w, delta_w)
