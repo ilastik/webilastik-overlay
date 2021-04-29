@@ -3,11 +3,13 @@ import { BrushingOverlay, BrushStroke } from "."
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
-import { createElement, createInput, createSelect, InlineCss, vec3ToRgb, vecToString } from "./utils"
+import { createElement, createInput, createSelect, vec3ToRgb, vecToString } from "./utils"
+import { IViewerDriver } from "./viewer_driver"
 import { ToggleButton, Vec3ColorPicker, VecDisplayWidget } from "./widgets"
 
 export class BrushingWidget{
     public readonly element: HTMLElement
+    public readonly viewer_driver: IViewerDriver
     private readonly brushStrokesContainer: HTMLElement
 
     public readonly colorPicker: Vec3ColorPicker
@@ -18,35 +20,52 @@ export class BrushingWidget{
 
     private lastMouseMoveEvent: MouseEvent = new MouseEvent("mousemove")
 
-    constructor({overlay, parentElement, inlineCss, cssClasses, brushingEnabled=false}: {
-        overlay: BrushingOverlay,
+    constructor({
+        parentElement,
+        tracked_element,
+        viewer_driver,
+        cssClasses,
+        brushingEnabled
+    }: {
         parentElement: HTMLElement,
-        inlineCss?: InlineCss,
+        tracked_element: HTMLElement,
+        viewer_driver: IViewerDriver,
         cssClasses?: Array<string>,
         brushingEnabled?: boolean,
     }){
-        this.overlay = overlay
-        this.element = createElement({tagName: "div", parentElement, inlineCss, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
+        this.viewer_driver = viewer_driver
+        this.element = createElement({tagName: "div", parentElement, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
 
-        createElement({tagName: "label", innerHTML: "Brushing: ", parentElement: this.element})
-        this.brushingEnabler = new ToggleButton({parentElement: this.element, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
+        const brush_toggle_container = createElement({tagName:"p", parentElement: this.element})
+        const brush_color_container = createElement({tagName: "p", parentElement: this.element})
+
+        createElement({tagName: "label", innerHTML: "Brush Color: ", parentElement: brush_color_container})
+        this.colorPicker = new Vec3ColorPicker({parentElement: brush_color_container})
+
+        this.overlay = new BrushingOverlay({
+            trackedElement: tracked_element,
+            viewer_driver,
+            brush_stroke_handler: {
+                getCurrentColor: () => this.colorPicker.getColor(),
+                handleNewBrushStroke: (stroke) => this.addBrushStroke(stroke),
+            },
+        })
+
+        createElement({tagName: "label", innerHTML: "Enable Brushing: ", parentElement: brush_toggle_container})
+        this.brushingEnabler = new ToggleButton({parentElement: brush_toggle_container, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
             this.overlay.canvas.style.pointerEvents = enable ? "auto" : "none"
         }})
-        this.colorPicker = new Vec3ColorPicker({parentElement: this.element})
 
         const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
             createElement({tagName: "label", innerHTML: "Rendering style: ", parentElement: rendererControlsContainer})
             this.rendererDropdown = new RendererDropdown({
                 parentElement: rendererControlsContainer,
                 options: new Map<string, BrushRenderer>([
-                    ["Boxes - Cross Section)", new BrushelBoxRenderer({gl: overlay.gl, highlightCrossSection: false, onlyCrossSection: true})],
-                    ["Lines", new BrushelLinesRenderer(overlay.gl)],
-                    ["Boxes", new BrushelBoxRenderer({gl: overlay.gl, debugColors: false, highlightCrossSection: false, onlyCrossSection: false})],
-                    ["Boxes (debug colors)", new BrushelBoxRenderer({gl: overlay.gl, debugColors: true, highlightCrossSection: true, onlyCrossSection: false})],
-                ]),
-                onChange: (new_renderer: BrushRenderer) => {
-                    overlay.setRenderer(new_renderer)
-                }
+                    ["Boxes - Cross Section)", new BrushelBoxRenderer({gl: this.overlay.gl, highlightCrossSection: false, onlyCrossSection: true})],
+                    ["Lines", new BrushelLinesRenderer(this.overlay.gl)],
+                    ["Boxes", new BrushelBoxRenderer({gl: this.overlay.gl, debugColors: false, highlightCrossSection: false, onlyCrossSection: false})],
+                    ["Boxes (debug colors)", new BrushelBoxRenderer({gl: this.overlay.gl, debugColors: true, highlightCrossSection: true, onlyCrossSection: false})],
+                ])
             })
 
         let cameraPositionContainer = createElement({tagName: "div", parentElement: this.element})
@@ -61,37 +80,16 @@ export class BrushingWidget{
         createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
 
-        this.overlay.canvas.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
-            let currentBrushStroke = new BrushStroke({
-                gl: this.overlay.gl,
-                start_postition: this.overlay.getMouseVoxelPosition(mouseDownEvent),
-                color: this.colorPicker.getColor(),
-                camera_orientation: this.overlay.camera.orientation,
-            })
-            this.addBrushStroke(currentBrushStroke)
-
-            let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
-                currentBrushStroke.add_voxel(this.overlay.getMouseVoxelPosition(mouseMoveEvent))
-            }
-
-            let handlerCleanup = () => {
-                this.overlay.canvas.removeEventListener("mousemove", scribbleHandler)
-                document.removeEventListener("mouseup", handlerCleanup)
-            }
-            this.overlay.canvas.addEventListener("mousemove", scribbleHandler)
-            document.addEventListener("mouseup", handlerCleanup)
-        })
 
         this.overlay.canvas.addEventListener("mousemove", (mouseMoveEvent: MouseEvent) => {
             this.lastMouseMoveEvent = mouseMoveEvent //store the event so the mouse displays refresh even without moving the mouse
         })
 
         let render = () => {
-            this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke))
+            this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke), this.rendererDropdown.getRenderer())
 
-            const camera_pos_w = this.overlay.camera.position_w;
-            camera_pos_world_display.value = camera_pos_w
-            camera_pos_voxel_display.value = vec3.transformMat4(vec3.create(), camera_pos_w, this.overlay.worldToVoxel)
+            camera_pos_world_display.value = this.overlay.camera.position_w
+            camera_pos_voxel_display.value = viewer_driver.getCameraPositionInVoxelSpace()
 
             const mouseWorldPosition = this.overlay.getMouseWorldPosition(this.lastMouseMoveEvent)
             mouse_pos_world_display.value = mouseWorldPosition
@@ -110,10 +108,10 @@ export class BrushingWidget{
                 brushStroke,
                 parentElement: this.brushStrokesContainer,
                 onLabelClicked: () => {
-                    this.overlay.snapToVoxel(
-                        brushStroke.getVertRef(0),
-                        brushStroke.camera_orientation
-                    )
+                    let snapCameraTo = this.viewer_driver.snapCameraTo
+                    if(snapCameraTo){
+                        snapCameraTo(brushStroke.getVertRef(0), brushStroke.camera_orientation)
+                    }
                 },
                 onColorClicked: (color: vec3) => {
                     this.colorPicker.setColor(color);

@@ -50,3 +50,8 @@ export class BrushStroke extends VertexArray{
         this.positions_buffer.destroy()
     }
 }
+
+export interface IBrushStrokeHandler{
+    getCurrentColor: () => vec3,
+    handleNewBrushStroke: (stroke: BrushStroke) => any,
+}

@@ -108,17 +108,6 @@ export abstract class Camera{
 // }
 
 export class OrthoCamera extends Camera{
-    private _near : number
-    private _far: number
-
-    public get near() : number{
-        return this._near
-    }
-
-    public get far() : number{
-        return this._far
-    }
-
     constructor({left, right, bottom, top, near, far, position,  orientation}: {
         left: number,
         right: number,
@@ -130,21 +119,21 @@ export class OrthoCamera extends Camera{
         orientation?: quat
     }){
         super({position, orientation})
-        this._near = near
-        this._far = far
         this.reconfigure({left, right, bottom, top, near, far})
     }
 
-    public reconfigure({left, right, bottom, top, near, far}: {
+    public reconfigure({left, right, bottom, top, near, far, position, orientation}: {
         left: number,
         right: number,
         bottom: number,
         top: number,
         near: number,
         far: number,
+        position?: vec3,
+        orientation?: quat,
     }){
-        this._near = near
-        this._far = far
+        vec3.copy(this.position_w, position || this.position_w)
+        quat.copy(this.orientation, orientation || this.orientation)
         mat4.ortho(this.view_to_clip, left, right, bottom, top, near, far)
         this.refreshMatrices()
     }

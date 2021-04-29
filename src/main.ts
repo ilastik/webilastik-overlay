@@ -1,32 +1,45 @@
-import { mat4, vec3 } from 'gl-matrix'
-import { BrushingOverlay } from './brushing_overlay'
+import { mat4, quat, vec3 } from 'gl-matrix'
 import { BrushingWidget } from './brushing_widget'
-import { CameraControls } from './controls'
+import { FirstPersonCamera } from './controls'
 import { createElement } from './utils'
+import { IViewerDriver } from './viewer_driver'
 
-let dummy_viewer = createElement({tagName: "div", parentElement: document.body, inlineCss: {
-    width: "400px",
-    height: "300px",
-    border: "solid 5px purple",
-    backgroundColor: "black",
-}})
+class DummyViewer{
+    camera: FirstPersonCamera
+    element: HTMLElement
+    voxel_to_world: mat4
+    zoom_in_pixels_per_voxel: number = 10
+    constructor(){
+        this.camera = new FirstPersonCamera({
+            left: -1, right: 1, near: 0, far: 1, bottom: -1, top:  1
+        })
+        this.element = createElement({tagName: "div", parentElement: document.body, inlineCss: {
+            width: "400px",
+            height: "300px",
+            border: "solid 5px purple",
+            backgroundColor: "black",
+        }})
+        this.voxel_to_world = mat4.fromScaling(mat4.create(), vec3.fromValues(1, 1, 1))
+    }
+}
 
-let voxelToWorld = mat4.fromScaling(mat4.create(), vec3.fromValues(1, 1, 1))
+const viewer = new DummyViewer();
+const dummy_viewer_driver : IViewerDriver = {
+    getCameraPositionInVoxelSpace: () => {
+        return vec3.transformMat4(vec3.create(), viewer.camera.position_w, viewer.voxel_to_world)
+    },
+    getCameraOrientation: () => viewer.camera.orientation,
+    getVoxelToWorldMatrix: () => viewer.voxel_to_world,
+    getZoomInPixelsPerVoxel: () => viewer.zoom_in_pixels_per_voxel,
+    snapCameraTo: (voxel_position: vec3, orientation: quat) => {
+        let position_w = vec3.transformMat4(vec3.create(), voxel_position, viewer.voxel_to_world)
+        viewer.camera.snapTo(position_w, orientation)
+    }
+}
 
-let overlay = new BrushingOverlay({
-    trackedElement: dummy_viewer,
-    voxelToWorld: voxelToWorld,
-    pixelsPerVoxel: 10,
-})
 
 new BrushingWidget({
     parentElement: document.body,
-    overlay
+    tracked_element: viewer.element,
+    viewer_driver: dummy_viewer_driver,
 })
-
-const camera_controls = new CameraControls()
-const do_update = () => {
-    camera_controls.updateCamera(overlay.camera)
-    window.requestAnimationFrame(do_update)
-}
-do_update()
