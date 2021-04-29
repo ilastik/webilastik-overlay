@@ -11,3 +11,22 @@ export interface IViewerDriver{
 
     snapCameraTo?: (voxel_position: vec3, orientation: quat) => any;
 }
+
+export class NeuroglancerViewerDriver implements IViewerDriver{
+    constructor(public readonly viewer: any){}
+
+    getVoxelToWorldMatrix = () => mat4.fromScaling(mat4.create(), vec3.fromValues(1, -1, -1))
+
+    getZoomInPixelsPerVoxel = () => 1 / this.viewer.navigationState.zoomFactor.value
+
+    getCameraPositionInVoxelSpace = () => this.viewer.navigationState.pose.position.value as vec3
+
+    getCameraOrientation = () => {
+        let camera_orientation_vx: quat = this.viewer.navigationState.pose.orientation.orientation
+        const rotation_axis_vx = vec3.create();
+        const rotation_rads = quat.getAxisAngle(rotation_axis_vx, camera_orientation_vx)
+        // console.log(`Original quat (voxel?) ${quatToAxisAngleString(viewer.navigationState.pose.orientation.orientation)}`)
+        const rotation_axis_w = vec3.transformMat4(vec3.create(), rotation_axis_vx, this.getVoxelToWorldMatrix());
+        return quat.setAxisAngle(quat.create(), rotation_axis_w, rotation_rads)
+    }
+}
