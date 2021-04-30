@@ -1,4 +1,4 @@
-import { vec3, mat4, vec4 } from "gl-matrix";
+import { vec3, mat4, vec4, quat } from "gl-matrix";
 
 export function project(out: vec3, v: vec3, onto: vec3){
     // a . b = |a| * |b| * cos(alpha)
@@ -163,16 +163,17 @@ export function getElementContentRect(element: HTMLElement){
         width:  clientRect.width  - borderLeft - paddingLeft - paddingRight - borderRight,
         height: clientRect.height - borderTop - paddingTop - paddingBottom - borderBottom,
         left:   clientRect.left   + paddingLeft + borderLeft,
-        top:    clientRect.top    + paddingTop + borderTop
+        //offset from bottom OF THE SCREEN
+        bottom: window.innerHeight - (clientRect.bottom - paddingBottom - borderBottom) //FIXME: horizontal scrollbar?
     }
 }
 
 //FIXME: this assumes overlay has no padding or border
-export function coverContents({target, overlay, offsetLeft=0, offsetTop=0, width, height}: {
+export function coverContents({target, overlay, offsetLeft=0, offsetBottom=0, width, height}: {
     target: HTMLElement,
     overlay: HTMLElement,
     offsetLeft?: number,
-    offsetTop?: number,
+    offsetBottom?: number,
     width?: number,
     height?: number,
 }){
@@ -180,7 +181,7 @@ export function coverContents({target, overlay, offsetLeft=0, offsetTop=0, width
     overlay.style.position = "fixed"
     overlay.style.width =  (width !== undefined ? width : targetContentRect.width)  + "px"
     overlay.style.height = (height !== undefined ? height : targetContentRect.height) + "px"
-    overlay.style.top =    (targetContentRect.top + offsetTop)    + "px"
+    overlay.style.bottom = (targetContentRect.bottom + offsetBottom)    + "px"
     overlay.style.left =   (targetContentRect.left + offsetLeft)   + "px"
 }
 
@@ -273,4 +274,11 @@ export function all(arr: Array<boolean>): boolean{
 
 export function lessThan<T extends vec3 | vec4>(a: T, b: T) : Array<boolean>{
     return Array.from(a).map((value, index) => value < b[index])
+}
+
+export function changeOrientationBase(orientation_current: quat, transform: mat4): quat{
+    const rotation_axis_current = vec3.create();
+    const rotation_rads = quat.getAxisAngle(rotation_axis_current, orientation_current)
+    const rotation_axis_target = vec3.transformMat4(vec3.create(), rotation_axis_current, transform);
+    return quat.setAxisAngle(quat.create(), rotation_axis_target, rotation_rads)
 }
