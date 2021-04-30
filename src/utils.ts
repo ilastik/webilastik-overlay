@@ -168,13 +168,20 @@ export function getElementContentRect(element: HTMLElement){
 }
 
 //FIXME: this assumes overlay has no padding or border
-export function coverContents({target, overlay}: {target: HTMLElement, overlay: HTMLElement}){
+export function coverContents({target, overlay, offsetLeft=0, offsetTop=0, width, height}: {
+    target: HTMLElement,
+    overlay: HTMLElement,
+    offsetLeft?: number,
+    offsetTop?: number,
+    width?: number,
+    height?: number,
+}){
     let targetContentRect = getElementContentRect(target);
     overlay.style.position = "fixed"
-    overlay.style.width =  targetContentRect.width  + "px"
-    overlay.style.height = targetContentRect.height + "px"
-    overlay.style.top =    targetContentRect.top    + "px"
-    overlay.style.left =   targetContentRect.left   + "px"
+    overlay.style.width =  (width !== undefined ? width : targetContentRect.width)  + "px"
+    overlay.style.height = (height !== undefined ? height : targetContentRect.height) + "px"
+    overlay.style.top =    (targetContentRect.top + offsetTop)    + "px"
+    overlay.style.left =   (targetContentRect.left + offsetLeft)   + "px"
 }
 
 
