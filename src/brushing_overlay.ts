@@ -5,7 +5,7 @@ import { BrushStroke, IBrushStrokeHandler } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { ClearConfig, RenderParams, ScissorConfig } from './gl'
-import { changeOrientationBase, coverContents, insertAfter } from './utils'
+import { changeOrientationBase, coverContents, createElement, insertAfter } from './utils'
 import { IViewerDriver, IViewportDriver } from './viewer_driver'
 
 
@@ -28,9 +28,9 @@ export class OverlayViewport{
         this.gl = gl
         this.canvas = this.gl.canvas as HTMLCanvasElement
         this.element = document.createElement("div")
-        // let colors = ["red", "green", "blue", "orange", "green", "purple", "grey", "lime", "olive", "navy"]
-        // this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
-        // this.element.style.filter = "opacity(0.3)"
+        let colors = ["red", "green", "blue", "orange", "green", "purple", "grey", "lime", "olive", "navy"]
+        this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
+        this.element.style.filter = "opacity(0.3)"
         insertAfter({reference: gl.canvas as HTMLElement, new_element: this.element})
 
         new ResizeObserver(this.resize).observe(this.canvas)
@@ -163,36 +163,24 @@ export class OverlayViewport{
 }
 
 export class BrushingOverlay{
-    public readonly canvas: HTMLCanvasElement
+    public readonly element: HTMLCanvasElement
     public readonly gl: WebGL2RenderingContext
-    public readonly trackedElement: HTMLElement
     public readonly viewer_driver
-
 
     private readonly brush_stroke_handler: IBrushStrokeHandler
     private viewports: Array<OverlayViewport>
 
     public constructor({
-        trackedElement,
         viewer_driver,
         brush_stroke_handler,
     }: {
-        trackedElement: HTMLElement, //element over which the overlay will always be
         viewer_driver: IViewerDriver,
         brush_stroke_handler: IBrushStrokeHandler,
     }){
-        this.trackedElement = trackedElement
         this.viewer_driver = viewer_driver
         this.brush_stroke_handler = brush_stroke_handler
-        this.canvas = document.createElement("canvas");
-        insertAfter({reference: trackedElement, new_element: this.canvas})
-        this.canvas.style.zIndex = trackedElement.style.zIndex
-        this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
-        new ResizeObserver(() => {
-            coverContents({target: trackedElement, overlay: this.canvas})
-        }).observe(trackedElement)
-        console.log("Will track this with master overlay: ")
-        console.log(trackedElement)
+        this.element = createElement({tagName: "canvas", parentElement: document.body}) as HTMLCanvasElement;
+        this.gl = this.element.getContext("webgl2", {depth: true, stencil: true})!
         this.viewports = this.viewer_driver.getViewportDrivers().map((viewport_driver) => {
             return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
         })
@@ -209,8 +197,11 @@ export class BrushingOverlay{
     }
 
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {
-        this.canvas.width = this.canvas.scrollWidth
-        this.canvas.height = this.canvas.scrollHeight
+        const trackedElement = this.viewer_driver.getTrackedElement()
+        coverContents({target: trackedElement, overlay: this.element})
+        this.element.style.zIndex = trackedElement.style.zIndex
+        this.element.width = this.element.scrollWidth
+        this.element.height = this.element.scrollHeight
         this.viewports.forEach((viewport) => {
             viewport.render(brushStrokes, renderer)
         })

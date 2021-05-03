@@ -22,7 +22,6 @@ export class BrushingWidget{
 
     constructor({
         parentElement,
-        tracked_element,
         viewer_driver,
         cssClasses,
         brushingEnabled
@@ -43,7 +42,6 @@ export class BrushingWidget{
         this.colorPicker = new Vec3ColorPicker({parentElement: brush_color_container})
 
         this.overlay = new BrushingOverlay({
-            trackedElement: tracked_element,
             viewer_driver,
             brush_stroke_handler: {
                 getCurrentColor: () => this.colorPicker.getColor(),
@@ -53,7 +51,7 @@ export class BrushingWidget{
 
         createElement({tagName: "label", innerHTML: "Enable Brushing: ", parentElement: brush_toggle_container})
         this.brushingEnabler = new ToggleButton({parentElement: brush_toggle_container, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
-            this.overlay.canvas.style.pointerEvents = enable ? "auto" : "none"
+            this.overlay.element.style.pointerEvents = enable ? "auto" : "none"
         }})
 
         const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
