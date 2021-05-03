@@ -5,7 +5,7 @@ import { BrushStroke, IBrushStrokeHandler } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { ClearConfig, RenderParams, ScissorConfig } from './gl'
-import { changeOrientationBase, coverContents, createElement, insertAfter } from './utils'
+import { changeOrientationBase, coverContents, createElement } from './utils'
 import { IViewerDriver, IViewportDriver } from './viewer_driver'
 
 
@@ -27,13 +27,10 @@ export class OverlayViewport{
         this.viewport_driver = viewport_driver
         this.gl = gl
         this.canvas = this.gl.canvas as HTMLCanvasElement
-        this.element = document.createElement("div")
+        this.element = createElement({tagName: "div", parentElement: document.body})
         let colors = ["red", "green", "blue", "orange", "green", "purple", "grey", "lime", "olive", "navy"]
         this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
         this.element.style.filter = "opacity(0.3)"
-        insertAfter({reference: gl.canvas as HTMLElement, new_element: this.element})
-
-        new ResizeObserver(this.resize).observe(this.canvas)
 
         this.element.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
             let currentBrushStroke = new BrushStroke({
@@ -57,16 +54,8 @@ export class OverlayViewport{
         })
     }
 
-    private resize = () => {
-        const viewport_geometry = this.viewport_driver.getGeometry()
-        coverContents({
-            target: this.canvas,
-            overlay: this.element,
-            offsetLeft: viewport_geometry.left,
-            offsetBottom: viewport_geometry.bottom,
-            height: viewport_geometry.height,
-            width: viewport_geometry.width,
-        })
+    public setBrushingEnabled(enabled: boolean){
+        this.element.style.pointerEvents = enabled ? "auto" : "none"
     }
 
     public getCameraPoseInWorldSpace(): {position_w: vec3, orientation_w: quat}{
@@ -129,9 +118,15 @@ export class OverlayViewport{
     }
 
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {
-        // debugger
-        // this.resize()
         const viewport_geometry = this.viewport_driver.getGeometry()
+        coverContents({
+            target: this.canvas,
+            overlay: this.element,
+            offsetLeft: viewport_geometry.left,
+            offsetBottom: viewport_geometry.bottom,
+            height: viewport_geometry.height,
+            width: viewport_geometry.width,
+        })
         this.gl.viewport(
             viewport_geometry.left,
             viewport_geometry.bottom,
@@ -194,6 +189,10 @@ export class BrushingOverlay{
                 })
             })
         }
+    }
+
+    public setBrushingEnabled(enabled: boolean){
+        this.viewports.forEach(viewport => viewport.setBrushingEnabled(enabled))
     }
 
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {

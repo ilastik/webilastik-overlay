@@ -49,9 +49,8 @@ export class BrushingWidget{
             },
         })
 
-        createElement({tagName: "label", innerHTML: "Enable Brushing: ", parentElement: brush_toggle_container})
-        this.brushingEnabler = new ToggleButton({parentElement: brush_toggle_container, value: "🖌", checked: brushingEnabled, onChange: (enable: boolean) => {
-            this.overlay.element.style.pointerEvents = enable ? "auto" : "none"
+        this.brushingEnabler = new ToggleButton({parentElement: brush_toggle_container, value: "🖌 Enable Brushing", checked: brushingEnabled, onChange: (enabled: boolean) => {
+            this.overlay.setBrushingEnabled(enabled)
         }})
 
         const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
