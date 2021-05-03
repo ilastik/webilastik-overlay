@@ -171,6 +171,41 @@ export class StencilConfig{
     }
 }
 
+export class ScissorConfig{
+    public readonly x: GLint
+    public readonly y: GLint
+    public readonly width: GLsizei
+    public readonly height: GLsizei
+    public readonly enable: boolean
+
+    constructor({x, y, width, height, enable=true}:{
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        enable?: boolean
+    }){
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.enable = enable
+    }
+
+    public static default(): ScissorConfig{
+        return new ScissorConfig({x:0, y:0, height:0, width: 0, enable: false})
+    }
+
+    public use(gl: WebGL2RenderingContext){
+        if(this.enable){
+            gl.enable(gl.SCISSOR_TEST)
+            gl.scissor(this.x, this.y, this.width, this.height)
+        }else{
+            gl.disable(gl.SCISSOR_TEST)
+        }
+    }
+}
+
 export class BlendingConfig{
     sfactor: BlendFactor
     dfactor: BlendFactor
@@ -277,6 +312,7 @@ export class RenderParams{
     public colorMask: ColorMask
     public depthConfig: DepthConfig
     public stencilConfig: StencilConfig
+    public scissorConfig: ScissorConfig
     public cullConfig: CullConfig
     public blendingConfig: BlendingConfig
     public clearConfig: ClearConfig
@@ -285,6 +321,7 @@ export class RenderParams{
         colorMask=new ColorMask({}),
         depthConfig=new DepthConfig({}),
         stencilConfig=new StencilConfig({}),
+        scissorConfig=ScissorConfig.default(),
         cullConfig=new CullConfig({}),
         blendingConfig=new BlendingConfig({}),
         clearConfig=new ClearConfig({}),
@@ -292,6 +329,7 @@ export class RenderParams{
         colorMask?: ColorMask,
         depthConfig?: DepthConfig,
         stencilConfig?: StencilConfig,
+        scissorConfig?: ScissorConfig,
         cullConfig?: CullConfig,
         blendingConfig?: BlendingConfig,
         clearConfig?: ClearConfig,
@@ -299,6 +337,7 @@ export class RenderParams{
         this.colorMask = colorMask
         this.depthConfig = depthConfig
         this.stencilConfig = stencilConfig
+        this.scissorConfig = scissorConfig
         this.cullConfig = cullConfig
         this.blendingConfig = blendingConfig
         this.clearConfig = clearConfig
@@ -308,6 +347,7 @@ export class RenderParams{
         this.colorMask.use(gl)
         this.depthConfig.use(gl)
         this.stencilConfig.use(gl)
+        this.scissorConfig.use(gl)
         this.cullConfig.use(gl)
         this.blendingConfig.use(gl)
         this.clearConfig.use(gl)
