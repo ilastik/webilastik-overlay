@@ -1,6 +1,6 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 
-type NewViewportsHander = (new_viewport_drivers: Array<IViewportDriver>) => void;
+export type NewViewportsHander = (new_viewport_drivers: Array<IViewportDriver>) => void;
 
 export interface IViewerDriver{
     getViewportDrivers: () => Array<IViewportDriver>;
