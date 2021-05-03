@@ -11,29 +11,29 @@ export class NeuroglancerViewportDriver implements IViewportDriver{
         private readonly orientation_offset: quat,
     ){
     }
-    getCameraPositionInVoxelSpace(): vec3{
-        return this.viewer.navigationState.pose.position.value as vec3
+    public getCameraPoseInVoxelSpace(): {position_vx: vec3, orientation_vx: quat}{
+        return {
+            position_vx: this.viewer.navigationState.pose.position.value as vec3,
+            orientation_vx: quat.multiply(
+                quat.create(), this.viewer.navigationState.pose.orientation.orientation, this.orientation_offset
+            ),
+        }
     }
-    getVoxelToWorldMatrix(): mat4{
+    public getVoxelToWorldMatrix(): mat4{
         //FIXME: this changes if the data is anisotropic
         return mat4.fromScaling(mat4.create(), vec3.fromValues(1, -1, -1))
     }
-    getZoomInPixelsPerVoxel(): number{
+    public getZoomInPixelsPerVoxel(): number{
         return 1 / this.viewer.navigationState.zoomFactor.value
     }
-    getCameraOrientationInVoxelSpace(): quat{
-        return quat.multiply(
-            quat.create(), this.viewer.navigationState.pose.orientation.orientation, this.orientation_offset
-        )
-    }
-    getViewportGeometryInPixels(): {left: number, top: number, width: number, height: number}{
+    public getViewportGeometryInPixels(): {left: number, bottom: number, width: number, height: number}{
         const panelParent = this.panel.parentNode! as HTMLElement
         const panelContentRect = getElementContentRect(this.panel)
         const parentContentRect = getElementContentRect(panelParent)
 
         return {
             left: panelContentRect.left - parentContentRect.left,
-            top: panelContentRect.top - parentContentRect.top,
+            bottom: panelContentRect.bottom - parentContentRect.bottom,
             width: panelContentRect.width,
             height: panelContentRect.height,
         }
