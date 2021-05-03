@@ -27,7 +27,6 @@ export class BrushingWidget{
         brushingEnabled
     }: {
         parentElement: HTMLElement,
-        tracked_element: HTMLElement,
         viewer_driver: IViewerDriver,
         cssClasses?: Array<string>,
         brushingEnabled?: boolean,

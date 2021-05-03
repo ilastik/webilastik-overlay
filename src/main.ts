@@ -87,6 +87,5 @@ const dummy_viewer_driver : IViewerDriver = {
 
 new BrushingWidget({
     parentElement: document.body,
-    tracked_element: viewer.element,
     viewer_driver: dummy_viewer_driver,
 })
