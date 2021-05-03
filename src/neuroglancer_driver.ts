@@ -26,7 +26,7 @@ export class NeuroglancerViewportDriver implements IViewportDriver{
     public getZoomInPixelsPerVoxel(): number{
         return 1 / this.viewer.navigationState.zoomFactor.value
     }
-    public getViewportGeometryInPixels(): {left: number, bottom: number, width: number, height: number}{
+    public getGeometry(): {left: number, bottom: number, width: number, height: number}{
         const panelParent = this.panel.parentNode! as HTMLElement
         const panelContentRect = getElementContentRect(this.panel)
         const parentContentRect = getElementContentRect(panelParent)

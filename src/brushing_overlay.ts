@@ -4,7 +4,7 @@ import { BrushRenderer } from './brush_renderer'
 import { BrushStroke, IBrushStrokeHandler } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
-import { ClearConfig, RenderParams } from './gl'
+import { ClearConfig, RenderParams, ScissorConfig } from './gl'
 import { changeOrientationBase, coverContents, insertAfter } from './utils'
 import { IViewerDriver, IViewportDriver } from './viewer_driver'
 
@@ -28,9 +28,9 @@ export class OverlayViewport{
         this.gl = gl
         this.canvas = this.gl.canvas as HTMLCanvasElement
         this.element = document.createElement("div")
-        let colors = ["red", "green", "blue", "orange", "green", "purple", "grey", "lime", "olive", "navy"]
-        this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
-        this.element.style.filter = "opacity(0.3)"
+        // let colors = ["red", "green", "blue", "orange", "green", "purple", "grey", "lime", "olive", "navy"]
+        // this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
+        // this.element.style.filter = "opacity(0.3)"
         insertAfter({reference: gl.canvas as HTMLElement, new_element: this.element})
 
         new ResizeObserver(this.resize).observe(this.canvas)
@@ -58,7 +58,7 @@ export class OverlayViewport{
     }
 
     private resize = () => {
-        const viewport_geometry = this.viewport_driver.getViewportGeometryInPixels()
+        const viewport_geometry = this.viewport_driver.getGeometry()
         coverContents({
             target: this.canvas,
             overlay: this.element,
@@ -131,7 +131,7 @@ export class OverlayViewport{
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {
         // debugger
         // this.resize()
-        const viewport_geometry = this.viewport_driver.getViewportGeometryInPixels()
+        const viewport_geometry = this.viewport_driver.getGeometry()
         this.gl.viewport(
             viewport_geometry.left,
             viewport_geometry.bottom,
@@ -144,6 +144,12 @@ export class OverlayViewport{
             camera: this.getCamera(),
             voxelToWorld: this.viewport_driver.getVoxelToWorldMatrix(),
             renderParams: new RenderParams({
+                scissorConfig: new ScissorConfig({
+                    x: viewport_geometry.left,
+                    y: viewport_geometry.bottom,
+                    height: viewport_geometry.height,
+                    width: viewport_geometry.width,
+                }),
                 clearConfig: new ClearConfig({
                     a: 0.0,
                 }),

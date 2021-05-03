@@ -8,8 +8,16 @@ export interface IViewerDriver{
     onViewportsChanged?: (handler: NewViewportsHander) => void;
 }
 
+//TThe dimensions and offset of a viewport within a viewer, measured in pixels
+export interface IViewportGeometry{
+    left: number;
+    bottom: number;
+    width: number;
+    height: number;
+}
+
 export interface IViewportDriver{
-    getViewportGeometryInPixels(): {left: number, bottom: number, width: number, height: number};
+    getGeometry(): IViewportGeometry;
     //gets camera pose in voxel coordinates
     getCameraPoseInVoxelSpace(): {position_vx: vec3, orientation_vx: quat};
      //get a mat4 tjat converts from voxel to worlkd space. Scaling part must have at least one axis set to 1
