@@ -5,7 +5,7 @@ import { BrushStroke, IBrushStrokeHandler } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { ClearConfig, RenderParams, ScissorConfig } from './gl'
-import { changeOrientationBase, coverContents, createElement } from './utils'
+import { changeOrientationBase, coverContents, createElement, insertAfter } from './utils'
 import { IViewerDriver, IViewportDriver } from './viewer_driver'
 
 
@@ -27,8 +27,22 @@ export class OverlayViewport{
         this.viewport_driver = viewport_driver
         this.gl = gl
         this.canvas = this.gl.canvas as HTMLCanvasElement
-        this.element = createElement({tagName: "div", parentElement: document.body})
-        let colors = ["red", "green", "blue", "orange", "green", "purple", "grey", "lime", "olive", "navy"]
+        this.element = document.createElement("div")
+        this.element.classList.add("OverlayViewport")
+
+
+        document.body.lastElementChild
+        const injection_params = viewport_driver.getInjectionParams ? viewport_driver.getInjectionParams() : {
+            precedingElement: undefined,
+            zIndex: undefined,
+        }
+        insertAfter({
+            new_element: this.element,
+            reference: injection_params.precedingElement || document.body.lastElementChild as HTMLElement
+        })
+        this.element.style.zIndex = injection_params.zIndex || "auto"
+
+        let colors = ["red", "green", "blue", "orange", "purple", "lime", "olive", "navy"]
         this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
         this.element.style.filter = "opacity(0.3)"
 
@@ -198,7 +212,6 @@ export class BrushingOverlay{
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {
         const trackedElement = this.viewer_driver.getTrackedElement()
         coverContents({target: trackedElement, overlay: this.element})
-        this.element.style.zIndex = trackedElement.style.zIndex
         this.element.width = this.element.scrollWidth
         this.element.height = this.element.scrollHeight
         this.viewports.forEach((viewport) => {

@@ -16,6 +16,19 @@ export interface IViewportGeometry{
     height: number;
 }
 
+export interface IViewportInjectionParams{
+    precedingElement?: HTMLElement;
+    zIndex?: string
+}
+
+// A viewer can be broken down into multiple viewports, that is, multiple non-overlapping
+// mini-screens within the main view where it can show the same data, but from different angles or
+// with different viewing options. A IViewerDriver should provide as many of these viewport drivers
+// as there are "brushable" viewports in the viewer.
+//
+// The reason to have multiple IVewportDriver instead of simply having multiple IViewerDrivers
+// is that by splitting a single canvas into multiple viewports it is possible to have a single webgl
+// context be shared between them.
 export interface IViewportDriver{
     getGeometry(): IViewportGeometry;
     //gets camera pose in voxel coordinates
@@ -25,4 +38,5 @@ export interface IViewportDriver{
      //orthogonal zoom; must be positive. Describes how many pixels (the smallest dimension of) the voxel should occupy on screen
     getZoomInPixelsPerVoxel(): number;
     snapCameraTo?: (voxel_position: vec3, orientation: quat) => any;
+    getInjectionParams?: () => IViewportInjectionParams
 }
