@@ -42,9 +42,9 @@ export class OverlayViewport{
         })
         this.element.style.zIndex = injection_params.zIndex || "auto"
 
-        let colors = ["red", "green", "blue", "orange", "purple", "lime", "olive", "navy"]
-        this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
-        this.element.style.filter = "opacity(0.3)"
+        // let colors = ["red", "green", "blue", "orange", "purple", "lime", "olive", "navy"]
+        // this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
+        // this.element.style.filter = "opacity(0.3)"
 
         this.element.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
             let currentBrushStroke = new BrushStroke({
