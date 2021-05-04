@@ -40,7 +40,7 @@ These are coordinates with the origin at the camera's position. It is assumed th
 
 ### Brush Stroke
 
-One of the main features of ilastik is doing pixel classification, that is, determine to which class any pixel in an image belongs based on some samples provided by the user. These samples are provided by means of brush strokes; the user draws on top of t heir image with MSPaint-llike brushing tools, marking pixels in the images with colors that map to arbitrary, user-defined classes (like, for example, "foreground" and "backgrond").
+One of the main features of ilastik is doing pixel classification, that is, determine to which class any pixel in an image belongs based on some samples provided by the user. These samples are provided by means of brush strokes; the user draws on top of t heir image with MSPaint-like brushing tools, marking pixels in the images with colors that map to arbitrary, user-defined classes (like, for example, "foreground" and "backgrond").
 
 Instances of the `BrushStroke` class represent a collection of voxel coordinates, which are the voxels marked using the brushing tool.
 
