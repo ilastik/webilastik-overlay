@@ -74,11 +74,12 @@ export class OverlayViewport{
 
     public getCameraPoseInWorldSpace(): {position_w: vec3, orientation_w: quat}{
         const pose_vx = this.viewport_driver.getCameraPoseInVoxelSpace()
+        const voxel_to_world = this.viewport_driver.getVoxelToWorldMatrix()
         return {
             position_w: vec3.transformMat4(
-                vec3.create(), pose_vx.position_vx, this.viewport_driver.getVoxelToWorldMatrix()
+                vec3.create(), pose_vx.position_vx, voxel_to_world
             ),
-            orientation_w: changeOrientationBase(pose_vx.orientation_vx, this.viewport_driver.getVoxelToWorldMatrix()),
+            orientation_w: changeOrientationBase(pose_vx.orientation_vx, voxel_to_world),
         }
     }
 
