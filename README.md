@@ -47,3 +47,7 @@ Instances of the `BrushStroke` class represent a collection of voxel coordinates
 ### Overlay
 
 The overlay is a transparent HTML element that tracks another underlying HTML element, and allows the user to brush over any web viewer.
+
+### Viewport
+
+The overlay can be split into multiple "Viewports", which behave as different views on the same data. A limitation of this implementation (and somewhat of webgl itself) is that the viewports must be geometrically contained within the main overlay.
