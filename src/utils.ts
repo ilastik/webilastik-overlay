@@ -282,3 +282,25 @@ export function changeOrientationBase(orientation_current: quat, transform: mat4
     const rotation_axis_target = vec3.transformMat4(vec3.create(), rotation_axis_current, transform);
     return quat.setAxisAngle(quat.create(), rotation_axis_target, rotation_rads)
 }
+
+export function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+export function websocket_connect(url: string) : Promise<WebSocket>{
+    return new Promise((resolve, reject) => {
+        var socket = new WebSocket(url);
+        socket.addEventListener("message", (event) => {
+            console.log(`Received this websocket payload: ${event.data}`)
+        })
+        socket.onopen = () => resolve(socket);
+        socket.onerror = (err) => reject(err);
+    });
+}
+
+export function sleep(ms: number){
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
