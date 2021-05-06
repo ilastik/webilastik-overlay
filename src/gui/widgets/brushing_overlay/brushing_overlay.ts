@@ -3,9 +3,9 @@ import { BrushRenderer } from './brush_renderer'
 // import { BrushShaderProgram } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
-import { ClearConfig, RenderParams, ScissorConfig } from '../../gl/gl'
-import { changeOrientationBase, coverContents, createElement, insertAfter } from '../../util/misc'
-import { IViewerDriver, IViewportDriver } from '../../drivers/viewer_driver'
+import { ClearConfig, RenderParams, ScissorConfig } from '../../../gl/gl'
+import { changeOrientationBase, coverContents, createElement, insertAfter } from '../../../util/misc'
+import { IViewerDriver, IViewportDriver } from '../../../drivers/viewer_driver'
 import { IBrushStrokeHandler, BrushStroke } from './brush_stroke'
 
 

@@ -1,6 +1,6 @@
 import { vec3 } from "gl-matrix"
-import { IViewerDriver, BrushStroke } from "../.."
-import { createElement, createInput, vec3ToRgb, vecToString, createSelect } from "../../util/misc"
+import { IViewerDriver, BrushStroke } from "../../.."
+import { createElement, createInput, vec3ToRgb, vecToString, createSelect } from "../../../util/misc"
 import { ToggleButton } from "../toggle_button"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"

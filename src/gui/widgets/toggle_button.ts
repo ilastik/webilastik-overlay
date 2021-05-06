@@ -1,4 +1,4 @@
-import { InlineCss, createElement, applyInlineCss } from "../util/misc";
+import { InlineCss, createElement, applyInlineCss } from "../../util/misc";
 
 export class ToggleButton{
     public readonly element: HTMLElement

@@ -1,6 +1,6 @@
 import { quat, vec3 } from "gl-matrix";
-import { Vec3AttributeBuffer, BufferUsageHint } from "../../gl/buffer";
-import { VertexArray } from "../../gl/vertex_primitives";
+import { Vec3AttributeBuffer, BufferUsageHint } from "../../../gl/buffer";
+import { VertexArray } from "../../../gl/vertex_primitives";
 // import { vec3ToString } from "./utils";
 
 export class BrushStroke extends VertexArray{

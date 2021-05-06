@@ -1,4 +1,4 @@
-import { CreateInputParams, createElement, createInput, vecToString } from "../util/misc";
+import { CreateInputParams, createElement, createInput, vecToString } from "../../util/misc";
 
 export class VecDisplayWidget{
     public readonly element: HTMLElement;

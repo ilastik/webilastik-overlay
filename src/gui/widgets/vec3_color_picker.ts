@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix";
-import { createElement, createInput, hexColorToVec3, vec3ToHexColor } from "../util/misc";
+import { createElement, createInput, hexColorToVec3, vec3ToHexColor } from "../../util/misc";
 
 export class Vec3ColorPicker{
     private picker: HTMLInputElement

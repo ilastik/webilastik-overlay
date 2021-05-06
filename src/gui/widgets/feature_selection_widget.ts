@@ -1,5 +1,5 @@
-import { createElement, createInput } from '../util/misc';
-import * as itk from '../client/ilastik'
+import { createElement, createInput } from '../../util/misc';
+import * as itk from '../../client/ilastik'
 
 // class FeatureCheckbox<FE extends itk.FeatureExtractor>{
 //     constructor()

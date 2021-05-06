@@ -1,5 +1,5 @@
-import { IViewerDriver } from ".."
-import { uuidv4 } from "../util/misc"
+import { IViewerDriver } from "../.."
+import { uuidv4 } from "../../util/misc"
 
 export class PixelClassificationWidget{
     public readonly viewer_driver: IViewerDriver

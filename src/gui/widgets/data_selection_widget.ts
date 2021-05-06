@@ -1,4 +1,4 @@
-import { IViewerDriver } from ".."
+import { IViewerDriver } from "../.."
 
 export class DataSelectionWidget{
     public readonly viewer_driver: IViewerDriver

@@ -1,9 +1,9 @@
 import { mat4 } from "gl-matrix"
 import { BrushRenderer } from "./brush_renderer"
 import { Camera } from "./camera"
-import { VertexArrayObject } from "../../gl/buffer"
-import { DrawingMode, RenderParams } from "../../gl/gl"
-import { FragmentShader, ShaderProgram, VertexShader } from "../../gl/shader"
+import { VertexArrayObject } from "../../../gl/buffer"
+import { DrawingMode, RenderParams } from "../../../gl/gl"
+import { FragmentShader, ShaderProgram, VertexShader } from "../../../gl/shader"
 import { BrushStroke } from "./brush_stroke"
 
 
