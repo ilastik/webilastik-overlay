@@ -1,5 +1,7 @@
-export abstract class FeatureExtractor{
-    public static fromJsonData(data: any): FeatureExtractor{
+import { IJsonable, Jsonable } from "../util/serialization"
+
+export abstract class FeatureExtractor implements IJsonable{
+    public static fromJsonValue(data: any): FeatureExtractor{
         let feature_class_name = data["__class__"]
         if(feature_class_name == "GaussianSmoothing"){
             return new GaussianSmoothing(data)
@@ -22,11 +24,18 @@ export abstract class FeatureExtractor{
         throw Error(`Bad feature extractor class name in ${JSON.stringify(data)}`)
     }
 
-    public equals(other: FeatureExtractor) : boolean{
-        return JSON.stringify(this.toJsonData) == JSON.stringify(other.toJsonData())
+    public static fromJsonList(data: Jsonable): FeatureExtractor[]{
+        if(!(data instanceof Array)){
+            throw `Bad payload: ${JSON.stringify(data)}`
+        }
+        return data.map(v => FeatureExtractor.fromJsonValue(v))
     }
 
-    public toJsonData(): any{
+    public equals(other: FeatureExtractor) : boolean{
+        return JSON.stringify(this.toJsonValue()) == JSON.stringify(other.toJsonValue())
+    }
+
+    public toJsonValue(): Jsonable{
         let out = JSON.parse(JSON.stringify(this))
         out["__class__"] = this.constructor.name.replace(RegExp("^"), "")
         return out
@@ -176,81 +185,69 @@ export class Lane{
     }
 }
 
-export abstract class Applet{
-    public constructor(public readonly name: string, public readonly socket: WebSocket){
-        socket.addEventListener('message', (event) => {
-            let payload = JSON.parse(event.data)
-            if("applet_name" in payload && payload["applet_name"] == this.name){
-                console.debug(`+++>>> Applet ${this.name} got message ${JSON.stringify(payload, null, 4)}`)
-                this.updateState(payload)
-            }
-        })
-    }
+// export abstract class Applet{
+//     public constructor(public readonly name: string, public readonly socket: WebSocket){
+//         socket.addEventListener('message', (event) => {
+//             let payload = JSON.parse(event.data)
+//             if("applet_name" in payload && payload["applet_name"] == this.name){
+//                 console.debug(`+++>>> Applet ${this.name} got message ${JSON.stringify(payload, null, 4)}`)
+//                 this.updateState(payload)
+//             }
+//         })
+//     }
 
-    protected doRpc(method_name: string, args: any){
-        console.debug(`>>>>>> Running RPC" ${this.name}.${method_name} with payloaf ${JSON.stringify(args, null, 4)}`)
-        this.socket.send(JSON.stringify({
-            "applet_name": this.name,
-            "method_name": method_name,
-            "args": args
-        }))
-    }
+//     protected doRpc(method_name: string, args: any){
+//         console.debug(`>>>>>> Running RPC" ${this.name}.${method_name} with payloaf ${JSON.stringify(args, null, 4)}`)
+//         this.socket.send(JSON.stringify({
+//             "applet_name": this.name,
+//             "method_name": method_name,
+//             "args": args
+//         }))
+//     }
 
-    protected updateState(event_payload: any){
-        console.debug(`Applet ${this.name} did not process socket event ${event_payload}`)
-    }
-}
+//     protected updateState(event_payload: any){
+//         console.debug(`Applet ${this.name} did not process socket event ${event_payload}`)
+//     }
+// }
 
-export type OnItemsChangedCallback<T> = (items: Array<T>) => any;
+// export type OnItemsChangedCallback<T> = (items: Array<T>) => any;
 
-export abstract class SequenceProviderApplet<T> extends Applet{
-    public items: Array<T> = []
-    private onItemsChanged: OnItemsChangedCallback<T>
-    public constructor({name, socket, onItemsChanged=(_) => {}}: {
-        name: string,
-        socket: WebSocket,
-        onItemsChanged?: OnItemsChangedCallback<T>,
-    }){
-        super(name, socket)
-        this.onItemsChanged = onItemsChanged
-    }
+// export abstract class SequenceProviderApplet<T> extends Applet{
+//     public items: Array<T> = []
+//     private onItemsChanged: OnItemsChangedCallback<T>
+//     public constructor({name, socket, onItemsChanged=(_) => {}}: {
+//         name: string,
+//         socket: WebSocket,
+//         onItemsChanged?: OnItemsChangedCallback<T>,
+//     }){
+//         super(name, socket)
+//         this.onItemsChanged = onItemsChanged
+//     }
 
-    public async setItems(items: Array<T>) : Promise<any>{
-        this.items = [...items]
-        this.doRpc("set_items", {"items": items})
-        this.onItemsChanged(items)
-    }
-}
+//     public async setItems(items: Array<T>) : Promise<any>{
+//         this.items = [...items]
+//         this.doRpc("set_items", {"items": items})
+//         this.onItemsChanged(items)
+//     }
+// }
 
-export class DataSelectionApplet extends SequenceProviderApplet<Lane>{
-    public async addLaneFromUrl(url: string){
-        this.doRpc("add", {"items": [{"raw_data": url}]})
-    }
-    protected updateState(event_payload: any){
-        this.items = (<Array<any>> event_payload["items"]).map(item => Lane.fromJsonData(item))
-    }
-}
+// export class DataSelectionApplet extends SequenceProviderApplet<Lane>{
+//     public async addLaneFromUrl(url: string){
+//         this.doRpc("add", {"items": [{"raw_data": url}]})
+//     }
+//     protected updateState(event_payload: any){
+//         this.items = (<Array<any>> event_payload["items"]).map(item => Lane.fromJsonData(item))
+//     }
+// }
 
-export class FeatureSelectionApplet extends SequenceProviderApplet<FeatureExtractor>{
-    public async add(items: Array<FeatureExtractor>) : Promise<any>{
-        this.doRpc("add", {"items": items.map((i) => {return i.toJsonData()})})
-    }
-    public async remove(items: Array<FeatureExtractor>) : Promise<any>{
-        this.doRpc("remove", {"items": items.map((i) => {return i.toJsonData()})})
-    }
-    protected updateState(event_payload: any){
-        this.items = (<Array<any>>event_payload["items"]).map(item => FeatureExtractor.fromJsonData(item))
-    }
-}
+// export class BrushingApplet extends SequenceProviderApplet<Annotation>{
+//     protected updateState(event_payload: any){
+//         this.items = (<Array<any>>event_payload["items"]).map(item => Annotation.fromJsonData(item))
+//     }
+// }
 
-export class BrushingApplet extends SequenceProviderApplet<Annotation>{
-    protected updateState(event_payload: any){
-        this.items = (<Array<any>>event_payload["items"]).map(item => Annotation.fromJsonData(item))
-    }
-}
+// export class PixelClassificationApplet extends Applet{
+// }
 
-export class PixelClassificationApplet extends Applet{
-}
-
-export class ExportApplet extends Applet{
-}
+// export class ExportApplet extends Applet{
+// }

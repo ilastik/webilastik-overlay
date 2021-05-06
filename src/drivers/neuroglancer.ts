@@ -1,6 +1,6 @@
 import { vec3, mat4, quat } from "gl-matrix"
-import { getElementContentRect } from "./utils";
-import { IViewerDriver, IViewportDriver } from "./viewer_driver"
+import { IViewportDriver, IViewerDriver } from "..";
+import { getElementContentRect } from "../util/misc";
 
 type NeuroglancerLayout = "4panel" | "xy" | "xy-3d" | "xz" | "xz-3d" | "yz" | "yz-3d";
 

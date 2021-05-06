@@ -1,12 +1,12 @@
 import { mat4, quat, vec3 } from 'gl-matrix'
 import { BrushRenderer } from './brush_renderer'
 // import { BrushShaderProgram } from './brush_stroke'
-import { BrushStroke, IBrushStrokeHandler } from './brush_stroke'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
-import { ClearConfig, RenderParams, ScissorConfig } from './gl'
-import { changeOrientationBase, coverContents, createElement, insertAfter } from './utils'
-import { IViewerDriver, IViewportDriver } from './viewer_driver'
+import { ClearConfig, RenderParams, ScissorConfig } from '../../gl/gl'
+import { changeOrientationBase, coverContents, createElement, insertAfter } from '../../util/misc'
+import { IViewerDriver, IViewportDriver } from '../../drivers/viewer_driver'
+import { IBrushStrokeHandler, BrushStroke } from './brush_stroke'
 
 
 export class OverlayViewport{

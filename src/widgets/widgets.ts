@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix";
-import { CreateInputParams, createElement, createInput, vecToString, InlineCss, applyInlineCss, hexColorToVec3, vec3ToHexColor } from "./utils";
+import { CreateInputParams, createElement, createInput, vecToString, InlineCss, applyInlineCss, hexColorToVec3, vec3ToHexColor } from "../util/misc";
 
 export class VecDisplayWidget{
     public readonly element: HTMLElement;

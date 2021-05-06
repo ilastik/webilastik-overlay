@@ -1,7 +1,7 @@
 import { mat4 } from "gl-matrix";
-import { BrushStroke } from ".";
+import { BrushStroke } from "../..";
+import { RenderParams } from "../../gl/gl";
 import { Camera } from "./camera";
-import { RenderParams } from "./gl";
 
 export interface BrushRenderer{
     render: (params: {

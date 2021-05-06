@@ -1,6 +1,6 @@
 import { mat4, vec3 } from "gl-matrix"
-import { ShaderProgram} from "./shader"
 import { BinaryArray, AttributeElementType } from "./gl"
+import { ShaderProgram } from "./shader"
 import { Buffer } from "./buffer"
 
 export type AttributeNumElements = 1 | 2 | 3 | 4

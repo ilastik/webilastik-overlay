@@ -1,11 +1,11 @@
 import { mat3, mat4 } from "gl-matrix"
-import { BrushStroke } from "."
+import { BrushStroke } from "../..";
+import { VertexArrayObject, BufferUsageHint } from "../../gl/buffer";
+import { RenderParams } from "../../gl/gl";
+import { ShaderProgram, VertexShader, FragmentShader } from "../../gl/shader";
+import { TriangleArray } from "../../gl/vertex_primitives";
 import { BrushRenderer } from "./brush_renderer"
-import { BufferUsageHint, VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
-import { RenderParams } from "./gl"
-import { FragmentShader, ShaderProgram, VertexShader } from "./shader"
-import { TriangleArray } from "./vertex_primitives"
 
 enum X{
     RIGHT = 0.5,

@@ -1,10 +1,10 @@
 import { mat4 } from "gl-matrix"
-import { BrushStroke } from "."
 import { BrushRenderer } from "./brush_renderer"
-import { VertexArrayObject } from "./buffer"
 import { Camera } from "./camera"
-import { DrawingMode, RenderParams } from "./gl"
-import { FragmentShader, ShaderProgram, VertexShader } from "./shader"
+import { VertexArrayObject } from "../../gl/buffer"
+import { DrawingMode, RenderParams } from "../../gl/gl"
+import { FragmentShader, ShaderProgram, VertexShader } from "../../gl/shader"
+import { BrushStroke } from "./brush_stroke"
 
 
 export class BrushelLinesRenderer extends ShaderProgram implements BrushRenderer{

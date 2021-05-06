@@ -1,11 +1,9 @@
-import { mat4, quat, vec3 } from 'gl-matrix'
-import { BrushingWidget } from '.'
-import { createElement } from './utils'
-import { IViewerDriver } from './viewer_driver'
-
+import { vec3, quat, mat4 } from "gl-matrix";
+import { IViewerDriver } from "..";
+import { createElement } from "../util/misc";
 
 // this is a stand-in for something like a neuroglancer "panel"
-interface IDummyViewport{
+export interface IDummyViewport{
     camera_position_vx: vec3;
     camera_orientation_vx: quat;
     zoom_in_pixels_per_voxel: number;
@@ -18,7 +16,7 @@ interface IDummyViewport{
 }
 
 //This would be Neuroglancer or OpenSeaDragon, for example
-class DummyViewer{
+export class DummyViewer{
     element: HTMLElement
     viewports: Array<IDummyViewport>
     constructor(){
@@ -58,34 +56,28 @@ class DummyViewer{
     }
 }
 
-const viewer = new DummyViewer();
-
-const dummy_viewer_driver : IViewerDriver = {
-    getTrackedElement: () => viewer.element,
-    getViewportDrivers: () => viewer.viewports.map(viewport => ({
-        getVoxelToWorldMatrix: () => viewport.voxel_to_world,
-        getZoomInPixelsPerVoxel: () => viewport.zoom_in_pixels_per_voxel,
-        getCameraPoseInVoxelSpace: () => {
-            return {
-                position_vx: viewport.camera_position_vx,
-                orientation_vx: viewport.camera_orientation_vx,
-            }
-        },
-        snapCameraTo: (position_vx: vec3, orientation_vx: quat) => {
-            viewport.camera_position_vx = vec3.clone(position_vx)
-            viewport.camera_orientation_vx = quat.clone(orientation_vx)
-        },
-        getGeometry: () => ({
-            bottom: viewport.bottom,
-            left: viewport.left,
-            width: viewport.width,
-            height: viewport.height,
-        })
-    }))
+export function getDummyViewerDriver(viewer: DummyViewer): IViewerDriver{
+    return {
+        getTrackedElement: () => viewer.element,
+        getViewportDrivers: () => viewer.viewports.map(viewport => ({
+            getVoxelToWorldMatrix: () => viewport.voxel_to_world,
+            getZoomInPixelsPerVoxel: () => viewport.zoom_in_pixels_per_voxel,
+            getCameraPoseInVoxelSpace: () => {
+                return {
+                    position_vx: viewport.camera_position_vx,
+                    orientation_vx: viewport.camera_orientation_vx,
+                }
+            },
+            snapCameraTo: (position_vx: vec3, orientation_vx: quat) => {
+                viewport.camera_position_vx = vec3.clone(position_vx)
+                viewport.camera_orientation_vx = quat.clone(orientation_vx)
+            },
+            getGeometry: () => ({
+                bottom: viewport.bottom,
+                left: viewport.left,
+                width: viewport.width,
+                height: viewport.height,
+            })
+        }))
+    }
 }
-
-
-new BrushingWidget({
-    parentElement: document.body,
-    viewer_driver: dummy_viewer_driver,
-})

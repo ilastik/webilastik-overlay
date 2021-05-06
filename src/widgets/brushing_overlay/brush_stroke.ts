@@ -1,7 +1,7 @@
 import { quat, vec3 } from "gl-matrix";
-import { BufferUsageHint, Vec3AttributeBuffer } from "./buffer";
+import { Vec3AttributeBuffer, BufferUsageHint } from "../../gl/buffer";
+import { VertexArray } from "../../gl/vertex_primitives";
 // import { vec3ToString } from "./utils";
-import { VertexArray } from "./vertex_primitives";
 
 export class BrushStroke extends VertexArray{
     public readonly camera_orientation: quat

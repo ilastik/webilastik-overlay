@@ -1,11 +1,11 @@
 import { vec3 } from "gl-matrix"
-import { BrushingOverlay, BrushStroke } from "."
+import { IViewerDriver, BrushStroke } from "../.."
+import { createElement, createInput, vec3ToRgb, vecToString, createSelect } from "../../util/misc"
+import { Vec3ColorPicker, ToggleButton } from "../widgets"
+import { BrushingOverlay } from "./brushing_overlay"
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
-import { createElement, createInput, createSelect, vec3ToRgb, vecToString } from "./utils"
-import { IViewerDriver } from "./viewer_driver"
-import { ToggleButton, Vec3ColorPicker } from "./widgets"
 
 export class BrushingWidget{
     public readonly element: HTMLElement

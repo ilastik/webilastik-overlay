@@ -7,7 +7,7 @@
   "scripts": {
     "build-cjs": "rm -rfv build/cjs && npx tsc --outDir build/cjs --module CommonJS",
     "build": "npm run build-cjs",
-    "bundle": "npm run build && npx esbuild src/main.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js",
+    "bundle": "npm run build && npx esbuild src/demo.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js",
     "package": "npm run bundle && npm pack"
   },
   "files": [

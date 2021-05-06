@@ -1,5 +1,5 @@
-export {BrushStroke} from "./brush_stroke";
-export {BrushingOverlay} from "./brushing_overlay"
-export {BrushingWidget, } from "./brushing_widget"
-export {IViewerDriver, IViewportDriver, NewViewportsHander} from "./viewer_driver"
-export {NeuroglancerViewportDriver, NeuroglancerDriver} from "./neuroglancer_driver"
+export {BrushStroke} from "./widgets/brushing_overlay/brush_stroke";
+export {BrushingOverlay} from "./widgets/brushing_overlay/brushing_overlay"
+export {BrushingWidget, } from "./widgets/brushing_overlay/brushing_widget"
+export {IViewerDriver, IViewportDriver, NewViewportsHander} from "./drivers/viewer_driver"
+export {NeuroglancerViewportDriver, NeuroglancerDriver} from "./drivers/neuroglancer"
