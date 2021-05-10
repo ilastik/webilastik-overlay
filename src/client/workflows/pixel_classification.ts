@@ -1,35 +1,17 @@
-import { websocket_connect } from "../../util/misc";
 import { Applet, IWidgetFactory } from "../applets/applet";
 import { FeatureExtractor } from "../ilastik";
 
 export class PixelClassificationWorkflow{
     public readonly feature_selection_applet: Applet<FeatureExtractor[]>
-    private constructor({
-        socket,
-        feature_selection_widget_factory,
-    }:{
+    protected constructor(params: {
         socket: WebSocket,
         feature_selection_widget_factory: IWidgetFactory<Array<FeatureExtractor>>,
     }){
         this.feature_selection_applet = new Applet<FeatureExtractor[]>({
             name: "feature_selection_applet",
-            socket,
+            socket: params.socket,
             deserializer: FeatureExtractor.fromJsonList,
-            widget_factory: feature_selection_widget_factory,
-        })
-    }
-
-    public static async create({
-        ilastik_ws_url,
-        feature_selection_widget_factory,
-    }: {
-        ilastik_ws_url: string,
-        feature_selection_widget_factory: IWidgetFactory<Array<FeatureExtractor>>,
-    }): Promise<PixelClassificationWorkflow>{
-        const socket = await websocket_connect(ilastik_ws_url)
-        return new PixelClassificationWorkflow({
-            socket,
-            feature_selection_widget_factory
+            widget_factory: params.feature_selection_widget_factory,
         })
     }
 }

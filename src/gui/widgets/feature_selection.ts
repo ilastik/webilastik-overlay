@@ -1,20 +1,19 @@
 import { createElement, createInput } from '../../util/misc';
 import * as itk from '../../client/ilastik'
+import { IAppletWidget } from '../../client/applets/applet';
 
 // class FeatureCheckbox<FE extends itk.FeatureExtractor>{
 //     constructor()
 // }
 
-export class FeatureSelectionWidget{
+export class FeatureSelectionWidget implements IAppletWidget<Array<itk.FeatureExtractor>>{
     private readonly element : HTMLElement
     private selected_features: Array<itk.FeatureExtractor> = [];
+    private feature_to_checkbox: Map<itk.FeatureExtractor, HTMLInputElement>
 
-    public constructor({parentElement, resolve, reject=(_) => {}}: {
-        parentElement: HTMLElement,
-        resolve: (selected_features: Array<itk.FeatureExtractor>) => any,
-        reject?: (selected_features: Array<itk.FeatureExtractor>) => any,
-    }){
-        this.element = createElement({tagName: "div", parentElement, cssClasses: [FeatureSelectionWidget.name]})
+    public constructor(params: {parentElement: HTMLElement, onNewState: (new_state: Array<itk.FeatureExtractor>) => void}){
+        this.element = createElement({tagName: "div", parentElement: params.parentElement, cssClasses: ["FeatureSelectionWidget"]})
+        this.feature_to_checkbox = new Map<itk.FeatureExtractor, HTMLInputElement>()
         const table = createElement({tagName: 'table', parentElement: this.element})
         const column_values = [0.3, 0.7, 1.0, 1.6, 3.5, 5.0, 10.0]
 
@@ -34,7 +33,7 @@ export class FeatureSelectionWidget{
                 if(!(extractor instanceof itk.GaussianSmoothing) && scale == 0.3){
                     continue
                 }
-                createInput({inputType: 'checkbox', parentElement: td, onClick: (e) => {
+                let checkbox = createInput({inputType: 'checkbox', parentElement: td, onClick: (e) => {
                     let cb = <HTMLInputElement>e.target
                     if(cb.checked){
                         this.selected_features.push(extractor)
@@ -42,6 +41,7 @@ export class FeatureSelectionWidget{
                         this.selected_features = this.selected_features.filter((fe) => {return !fe.equals(extractor)})
                     }
                 }})
+                this.feature_to_checkbox.set(extractor_from_scale(scale), checkbox)
             }
         }
 
@@ -65,14 +65,22 @@ export class FeatureSelectionWidget{
 
         createInput({inputType: 'button', parentElement: this.element, value: 'Ok', onClick: async () => {
             this.element.parentNode?.removeChild(this.element)
-            resolve(this.selected_features)
+            params.onNewState(this.selected_features)
         }})
         createInput({inputType: 'button', parentElement: this.element, value: 'Cancel', onClick: async () => {
-            reject(this.selected_features)
+            this.element.parentNode?.removeChild(this.element)
         }})
     }
 
-    // public displayState(state: {items: Array<itk.FeatureExtractor>}){
-
-    // }
+    public displayState(features: Array<itk.FeatureExtractor>){
+        this.selected_features = []
+        this.feature_to_checkbox.forEach((checkbox, feature) => {
+            checkbox.checked = false
+            for(let i=0; i<features.length; i++){
+                if(feature.equals(features[i])){
+                    checkbox.click()
+                }
+            }
+        })
+    }
 }

@@ -1,4 +1,5 @@
 import { vec3, mat4, vec4, quat } from "gl-matrix";
+import { Jsonable } from "./serialization";
 
 export function project(out: vec3, v: vec3, onto: vec3){
     // a . b = |a| * |b| * cos(alpha)
@@ -299,6 +300,68 @@ export function websocket_connect(url: string) : Promise<WebSocket>{
         socket.onopen = () => resolve(socket);
         socket.onerror = (err) => reject(err);
     });
+}
+
+export type WebsocketPayload =  string | ArrayBufferLike | Blob | ArrayBufferView
+export type JsonMessageHandler<T> = (data: Jsonable) => T | undefined
+export type MessageHandler<T> = (ev: MessageEvent) => T | undefined
+//
+
+function make_json_message_handler<T>(handler: JsonMessageHandler<T>): MessageHandler<T>{
+    return (ev: MessageEvent<any>) => {
+        const raw_data = ev.data
+        if(typeof raw_data != "string"){
+            return undefined
+        }
+        let json_data: Jsonable
+        try{
+            json_data = JSON.parse(raw_data)
+        }catch(e){
+            console.debug(`Could not interpret ${raw_data}as JSON`)
+            return undefined
+        }
+        return handler(json_data)
+    }
+}
+
+export function websocket_get<T>(params: {
+    socket: WebSocket,
+    payload: WebsocketPayload,
+    extractor: (event: MessageEvent<any>) => T | undefined
+}): Promise<T>{
+    const out =  new Promise<T>((resolve, _) => {
+        const listener = (ev: MessageEvent<any>) => {
+            const data = params.extractor(ev)
+            if(data !== undefined){
+                params.socket.removeEventListener("message", listener)
+                resolve(data)
+            }
+        }
+        params.socket.addEventListener("message", listener)
+    })
+    params.socket.send(params.payload)
+    return out
+}
+
+export function websocket_get_json<T>(params: {
+    socket: WebSocket,
+    payload: WebsocketPayload,
+    extractor: JsonMessageHandler<T>,
+}): Promise<T>{
+    return websocket_get<T>({
+        socket: params.socket,
+        payload: params.payload,
+        extractor: make_json_message_handler(params.extractor)
+    })
+}
+
+export function websocket_listen_to_json_message<T>(params: {
+    socket: WebSocket,
+    extractor: JsonMessageHandler<T>,
+}): MessageHandler<T>{
+    let message_handler = make_json_message_handler(params.extractor)
+    params.socket.addEventListener("message", message_handler)
+    return message_handler
 }
 
 export function sleep(ms: number){
