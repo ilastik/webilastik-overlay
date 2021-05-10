@@ -32,12 +32,17 @@ export abstract class FeatureExtractor implements IJsonable{
     }
 
     public equals(other: FeatureExtractor) : boolean{
+        if(this.constructor !== other.constructor){
+            return false
+        }
+        //FIXME: maybe impelment a faster comparison here?
         return JSON.stringify(this.toJsonValue()) == JSON.stringify(other.toJsonValue())
     }
 
     public toJsonValue(): Jsonable{
         let out = JSON.parse(JSON.stringify(this))
-        out["__class__"] = this.constructor.name.replace(RegExp("^"), "")
+        //FIXME: Class name
+        out["__class__"] = this.constructor.name
         return out
     }
 }
