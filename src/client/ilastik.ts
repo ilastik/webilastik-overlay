@@ -1,4 +1,72 @@
+import { sleep, websocket_connect } from "../util/misc"
 import { IJsonable, Jsonable } from "../util/serialization"
+
+export interface SessionParams{
+    ilastik_url: URL,
+    session_url: URL,
+    id: string,
+    token: string
+}
+
+export interface SessionConstructor<S extends Session>{
+    new(params: SessionParams): S
+}
+
+export class Session{
+    ilastik_url: string
+    session_url: string
+    id: string
+    token: string
+
+    public constructor({ilastik_url, session_url, id, token}: SessionParams){
+        this.ilastik_url = ilastik_url.toString().replace(/\/$/, "")
+        this.session_url = session_url.toString().replace(/\/$/, "")
+        this.id = id
+        this.token = token
+    }
+
+    public static async create<S extends Session>({ctor, ilastik_url, session_duration_seconds, retries=5}: {
+        ctor: SessionConstructor<S>,
+        ilastik_url: URL,
+        session_duration_seconds: number,
+        retries: number,
+    }): Promise<S>{
+        const clean_ilastik_url = ilastik_url.toString().replace(/\/$/, "")
+        const new_session_url = clean_ilastik_url + "/session"
+        for(;retries > 0; retries--){
+            let session_creation_response = await fetch(new_session_url, {
+                method: "POST",
+                body: JSON.stringify({session_duration: session_duration_seconds})
+            })
+            if(!session_creation_response.ok){
+                await sleep(2000)
+                continue
+            }
+            let raw_session_data: {url: string, id: string, token: string} = await session_creation_response.json()
+            while(true){
+                let session_status_response = await fetch(clean_ilastik_url + `/session/${raw_session_data.id}`)
+                if(session_status_response.ok  && (await session_status_response.json())["status"] == "ready"){
+                    break
+                }
+                await sleep(2000)
+            }
+            return new ctor({
+                ilastik_url: new URL(clean_ilastik_url),
+                session_url: new URL(raw_session_data.url),
+                id: raw_session_data["id"],
+                token: raw_session_data["token"],
+            })
+        }
+        throw `Could not create a session`
+    }
+
+    public async createAppletSocket(applet_name: string): Promise<WebSocket>{
+        let ws_url = new URL(this.session_url)
+        ws_url.protocol = "ws:" //FIXME: use wss
+        ws_url.pathname = ws_url.pathname + `/ws/${applet_name}`
+        return await websocket_connect(ws_url.toString())
+    }
+}
 
 export abstract class FeatureExtractor implements IJsonable{
     public static fromJsonValue(data: any): FeatureExtractor{
