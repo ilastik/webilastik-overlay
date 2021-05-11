@@ -1,5 +1,5 @@
-import { websocket_connect } from "../../util/misc";
 import { Jsonable, IDeserializer, toJsonValue } from "../../util/serialization";
+import { Session } from "../ilastik";
 
 export type StateChangeCallback<STATE extends Jsonable> = (state: STATE) => void;
 export interface IAppletWidget<STATE extends Jsonable>{
@@ -17,17 +17,22 @@ export class Applet<STATE extends Jsonable>{
     public readonly deserializer: IDeserializer<STATE>
     public readonly widget?: IAppletWidget<STATE>
 
-    public constructor(params: {
+    private constructor({name, socket, deserializer, widget_factory}: {
         name: string,
         socket: WebSocket,
         deserializer: IDeserializer<STATE>,
         widget_factory?: IWidgetFactory<STATE>,
     }){
-        this.name = params.name
-        this.socket = params.socket
-        this.deserializer = params.deserializer
-        if(params.widget_factory){
-            this.widget = params.widget_factory({
+        this.name = name
+        this.deserializer = deserializer
+        //FIXME: handle failing sockets
+        this.socket = socket
+        this.socket.addEventListener("error", (ev) => {
+            console.error(`Socket for ${this.name} broke:`)
+            console.error(ev)
+        })
+        if(widget_factory){
+            this.widget = widget_factory({
                 onNewState: (state) => this.updateUpstreamState(state)
             })
             this.socket.addEventListener("message", (ev: MessageEvent) => {
@@ -38,18 +43,18 @@ export class Applet<STATE extends Jsonable>{
         }
     }
 
-    public static async create<STATE extends Jsonable>(params: {
-        session_url: string,
+    public static async create<STATE extends Jsonable>({name, session, deserializer, widget_factory}: {
         name: string,
+        session: Session,
         deserializer: IDeserializer<STATE>,
-        widget_factory?: IWidgetFactory<STATE>
+        widget_factory?: IWidgetFactory<STATE>,
     }): Promise<Applet<STATE>>{
-        let socket = await websocket_connect(params.session_url.replace(/\/$/, "") + "/ws/" + params.name)
+        let socket = await session.createAppletSocket(name)
+        if(socket === undefined){
+            throw `Could not create socket for applet "${name}"`
+        }
         return new Applet<STATE>({
-            name: params.name,
-            socket: socket,
-            deserializer: params.deserializer,
-            widget_factory: params.widget_factory,
+            name, socket, deserializer, widget_factory
         })
     }
 
