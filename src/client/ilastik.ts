@@ -1,70 +1,96 @@
-import { sleep, websocket_connect } from "../util/misc"
+import { sleep } from "../util/misc"
 import { IJsonable, Jsonable } from "../util/serialization"
-
-export interface SessionParams{
-    ilastik_url: URL,
-    session_url: URL,
-    id: string,
-    token: string
-}
-
-export interface SessionConstructor<S extends Session>{
-    new(params: SessionParams): S
-}
 
 export class Session{
     ilastik_url: string
     session_url: string
-    id: string
     token: string
 
-    public constructor({ilastik_url, session_url, id, token}: SessionParams){
+    protected constructor({ilastik_url, session_url, token}: {
+        ilastik_url: URL,
+        session_url: URL,
+        token: string
+    }){
         this.ilastik_url = ilastik_url.toString().replace(/\/$/, "")
         this.session_url = session_url.toString().replace(/\/$/, "")
-        this.id = id
         this.token = token
     }
 
-    public static async create<S extends Session>({ctor, ilastik_url, session_duration_seconds, retries=5}: {
-        ctor: SessionConstructor<S>,
+    public static async create({ilastik_url, session_duration_seconds, timeout_s=60, onProgress=(_) => {}}: {
         ilastik_url: URL,
         session_duration_seconds: number,
-        retries: number,
-    }): Promise<S>{
+        timeout_s: number,
+        onProgress?: (message: string) => void,
+    }): Promise<Session>{
         const clean_ilastik_url = ilastik_url.toString().replace(/\/$/, "")
         const new_session_url = clean_ilastik_url + "/session"
-        for(;retries > 0; retries--){
+        while(timeout_s > 0){
             let session_creation_response = await fetch(new_session_url, {
                 method: "POST",
                 body: JSON.stringify({session_duration: session_duration_seconds})
             })
             if(!session_creation_response.ok){
+                onProgress(
+                    `Requesting session failed (${session_creation_response.status}): ${session_creation_response.body}`
+                )
+                timeout_s -= 2
                 await sleep(2000)
                 continue
             }
+            onProgress(`Successfully requested a session!`)
             let raw_session_data: {url: string, id: string, token: string} = await session_creation_response.json()
-            while(true){
+            while(timeout_s){
                 let session_status_response = await fetch(clean_ilastik_url + `/session/${raw_session_data.id}`)
                 if(session_status_response.ok  && (await session_status_response.json())["status"] == "ready"){
+                    onProgress(`Session has become ready!`)
                     break
                 }
+                onProgress(`Session is not ready yet`)
+                timeout_s -= 2
                 await sleep(2000)
             }
-            return new ctor({
+            return new Session({
                 ilastik_url: new URL(clean_ilastik_url),
                 session_url: new URL(raw_session_data.url),
-                id: raw_session_data["id"],
                 token: raw_session_data["token"],
             })
         }
         throw `Could not create a session`
     }
 
-    public async createAppletSocket(applet_name: string): Promise<WebSocket>{
+    public static async load({ilastik_url, session_url, token}: {
+        ilastik_url: URL, session_url:URL, token: string
+    }): Promise<Session>{
+        const status_endpoint = session_url.toString().replace(/\/?$/, "/status")
+        let session_status_resp = await fetch(status_endpoint, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+        if(!session_status_resp.ok){
+            throw Error(`Bad response from session: ${session_status_resp.status}`)
+        }
+        return new Session({
+            ilastik_url: ilastik_url,
+            session_url: session_url,
+            token: token,
+        })
+    }
+
+    public createAppletSocket(applet_name: string): WebSocket{
+        //FIXME  is there a point to handling socket errors?:
         let ws_url = new URL(this.session_url)
         ws_url.protocol = "ws:" //FIXME: use wss
         ws_url.pathname = ws_url.pathname + `/ws/${applet_name}`
-        return await websocket_connect(ws_url.toString())
+        return new WebSocket(ws_url.toString())
+    }
+
+    public async close(): Promise<true | undefined>{
+        let close_session_response = await fetch(this.session_url + `/close`, {method: "DELETE"})
+        if(close_session_response.ok){
+            return undefined
+        }
+        return true
     }
 }
 
