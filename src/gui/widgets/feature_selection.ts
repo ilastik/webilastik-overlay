@@ -1,18 +1,21 @@
 import { createElement, createInput } from '../../util/misc';
 import * as itk from '../../client/ilastik'
-import { IAppletWidget } from '../../client/applets/applet';
+import { Applet } from '../../client/applets/applet';
 
 // class FeatureCheckbox<FE extends itk.FeatureExtractor>{
 //     constructor()
 // }
 
-export class FeatureSelectionWidget implements IAppletWidget<Array<itk.FeatureExtractor>>{
+export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
     private readonly element : HTMLElement
     private selected_features: Array<itk.FeatureExtractor> = [];
     private feature_to_checkbox: Map<itk.FeatureExtractor, HTMLInputElement>
 
-    public constructor(params: {parentElement: HTMLElement, onNewState: (new_state: Array<itk.FeatureExtractor>) => void}){
-        this.element = createElement({tagName: "div", parentElement: params.parentElement, cssClasses: ["FeatureSelectionWidget"]})
+    public constructor({name, session, parentElement}: {
+        name: string, session: itk.Session, parentElement: HTMLElement
+    }){
+        super({name, session, deserializer: itk.FeatureExtractor.fromJsonList})
+        this.element = createElement({tagName: "div", parentElement: parentElement, cssClasses: ["FeatureSelectionWidget"]})
         this.feature_to_checkbox = new Map<itk.FeatureExtractor, HTMLInputElement>()
         const table = createElement({tagName: 'table', parentElement: this.element})
         const column_values = [0.3, 0.7, 1.0, 1.6, 3.5, 5.0, 10.0]
@@ -64,15 +67,15 @@ export class FeatureSelectionWidget implements IAppletWidget<Array<itk.FeatureEx
         }})
 
         createInput({inputType: 'button', parentElement: this.element, value: 'Ok', onClick: async () => {
-            this.element.parentNode?.removeChild(this.element)
-            params.onNewState(this.selected_features)
+            this.hide()
+            this.updateUpstreamState(this.selected_features)
         }})
         createInput({inputType: 'button', parentElement: this.element, value: 'Cancel', onClick: async () => {
-            this.element.parentNode?.removeChild(this.element)
+            this.hide()
         }})
     }
 
-    public displayState(features: Array<itk.FeatureExtractor>){
+    protected onNewState(features: Array<itk.FeatureExtractor>){
         this.selected_features = []
         this.feature_to_checkbox.forEach((checkbox, feature) => {
             checkbox.checked = false
@@ -82,5 +85,13 @@ export class FeatureSelectionWidget implements IAppletWidget<Array<itk.FeatureEx
                 }
             }
         })
+    }
+
+    public show(){
+        this.element.style.display = "block"
+    }
+
+    public hide(){
+        this.element.style.display = "none"
     }
 }
