@@ -51,6 +51,7 @@ export class OverlayViewport{
                 gl: this.gl,
                 start_postition: this.getMouseVoxelPosition(mouseDownEvent),
                 color: brush_stroke_handler.getCurrentColor(),
+                annotated_data_url: viewport_driver.getDataUrl(),
                 camera_orientation: viewport_driver.getCameraPoseInVoxelSpace().orientation_vx, //FIXME: realy voxel space? rename param in BrushStroke?
             })
             brush_stroke_handler.handleNewBrushStroke(currentBrushStroke)

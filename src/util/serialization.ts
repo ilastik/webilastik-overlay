@@ -46,3 +46,10 @@ export function isIJsonable(value: Jsonable): value is IJsonable{
 export function isObject(value: Jsonable): value is IJsonableObject{
     return typeof(value) == "object" && value != null && !isIJsonable(value)
 }
+
+export function ensureObject(value: Jsonable): IJsonableObject{
+    if(!isObject(value)){
+        throw `Expected JSON object, found this: ${JSON.stringify(value)}`
+    }
+    return value
+}

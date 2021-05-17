@@ -30,6 +30,7 @@ export interface IViewportInjectionParams{
 // is that by splitting a single canvas into multiple viewports it is possible to have a single webgl
 // context be shared between them.
 export interface IViewportDriver{
+    getDataUrl(): URL;
     getGeometry(): IViewportGeometry;
     //gets camera pose in voxel coordinates
     getCameraPoseInVoxelSpace(): {position_vx: vec3, orientation_vx: quat};

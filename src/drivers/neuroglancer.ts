@@ -1,6 +1,7 @@
 import { vec3, mat4, quat } from "gl-matrix"
 import { IViewportDriver, IViewerDriver } from "..";
 import { getElementContentRect } from "../util/misc";
+import { NewViewportsHander } from "./viewer_driver";
 
 type NeuroglancerLayout = "4panel" | "xy" | "xy-3d" | "xz" | "xz-3d" | "yz" | "yz-3d";
 
@@ -34,6 +35,10 @@ export class NeuroglancerViewportDriver implements IViewportDriver{
             height: panelContentRect.height,
         }
     }
+    public getDataUrl(): URL{
+        //FIXME: what if there are multiple layers of type image?
+        return this.viewer.state.toJSON().layers.filter((l: any) => l.type == "image")[0].source
+    }
     public getInjectionParams = () => ({
         precedingElement: this.panel,
         // zIndex: 10
@@ -62,5 +67,10 @@ export class NeuroglancerDriver implements IViewerDriver{
             ]
         }
         return [new NeuroglancerViewportDriver(this, panels[0], orientation_offsets.get(layout.replace("-3d", ""))!)]
+    }
+    onViewportsChanged(handler: NewViewportsHander){
+        this.viewer.layout.changed.add(() => {
+            handler(this.getViewportDrivers())
+        })
     }
 }

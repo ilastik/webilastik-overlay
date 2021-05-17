@@ -77,7 +77,8 @@ export function getDummyViewerDriver(viewer: DummyViewer): IViewerDriver{
                 left: viewport.left,
                 width: viewport.width,
                 height: viewport.height,
-            })
+            }),
+            getDataUrl: () => new URL("http://example.com/my_data"),
         }))
     }
 }
