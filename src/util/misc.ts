@@ -86,19 +86,7 @@ export function insertAfter({reference, new_element}: {reference: HTMLElement, n
     if(!reference.parentNode){
         throw `Element ${reference} has no parent node!`
     }
-    let parent = reference.parentNode
-    let found = false
-    for(let child of parent.children){
-        if(found){
-            parent.insertBefore(new_element, child)
-            return
-        }
-        if(child == reference){
-            found = true
-        }
-    }
-    //refenrece was the last child
-    parent.appendChild(new_element)
+    reference.parentNode.insertBefore(new_element, reference.nextSibling);
 }
 
 export function createImage({src, parentElement, cssClasses, onClick}:
