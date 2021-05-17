@@ -57,6 +57,7 @@ export interface CreateInputParams extends Omit<CreateElementParams, "tagName">{
     value?:string,
     name?:string,
     disabled?:boolean,
+    required?:boolean,
 }
 
 export function createElement({tagName, parentElement, innerHTML, cssClasses, inlineCss={}, onClick}: CreateElementParams): HTMLElement{
@@ -117,6 +118,9 @@ export function createInput(params : CreateInputParams): HTMLInputElement{
     }
     if(params.name !== undefined){
         input.name = params.name
+    }
+    if(params.required !== undefined){
+        input.required = params.required
     }
     input.disabled = params.disabled ? true : false
     return input
