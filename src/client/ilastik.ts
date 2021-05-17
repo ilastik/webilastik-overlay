@@ -16,7 +16,7 @@ export class Session{
         this.token = token
     }
 
-    public static async create({ilastik_url, session_duration_seconds, timeout_s=60, onProgress=(_) => {}}: {
+    public static async create({ilastik_url, session_duration_seconds, timeout_s, onProgress=(_) => {}}: {
         ilastik_url: URL,
         session_duration_seconds: number,
         timeout_s: number,

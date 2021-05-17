@@ -13,4 +13,7 @@ import { IlastikLauncherWidget } from "./gui/reference_pixel_classification_work
 //     viewer_driver: viewer_driver,
 // })
 
-new IlastikLauncherWidget(document.body, new URL("http://localhost:5000"))
+new IlastikLauncherWidget({
+    parentElement: document.body,
+    ilastik_url: new URL("http://localhost:5000")
+})
