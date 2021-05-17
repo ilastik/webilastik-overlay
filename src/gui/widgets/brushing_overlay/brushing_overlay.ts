@@ -196,10 +196,10 @@ export class BrushingOverlay{
             return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
         })
         if(viewer_driver.onViewportsChanged){
-            this.viewports.forEach((viewport) => {
-                viewport.destroy()
-            })
             viewer_driver.onViewportsChanged((new_viewport_drivers) => {
+                this.viewports.forEach((viewport) => {
+                    viewport.destroy()
+                })
                 this.viewports = new_viewport_drivers.map((viewport_driver) => {
                     return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
                 })
