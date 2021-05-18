@@ -3,8 +3,8 @@ import { createElement, createInput } from "../../util/misc";
 
 export class SessionLoaderWidget{
     element: HTMLElement;
-    constructor({ilastik_url, parentElement, onNewSession}: {
-        ilastik_url: URL,
+    constructor({ilastik_url=new URL("https://web.ilastik.org/app"), parentElement, onNewSession}: {
+        ilastik_url?: URL,
         parentElement: HTMLElement,
         onNewSession: (session: Session) => void,
     }){
@@ -13,6 +13,10 @@ export class SessionLoaderWidget{
         const fieldset = createElement({tagName: "fieldset", parentElement: this.element, cssClasses: ["SessionLoaderWidget"]})
         createElement({tagName: "legend", parentElement: fieldset, innerHTML: "Rejoin Session"})
         let p: HTMLElement;
+
+        p = createElement({tagName: "p", parentElement: fieldset})
+        createElement({tagName: "label", innerHTML: "Ilastik api URL: ", parentElement: p})
+        const url_input = createInput({inputType: "url", parentElement: p, required: true, value: ilastik_url.toString()})
 
         p = createElement({tagName: "p", parentElement: fieldset})
         createElement({tagName: "label", parentElement: p, innerHTML: "Session url: "})
@@ -32,7 +36,7 @@ export class SessionLoaderWidget{
             message_p.innerHTML = ""
             load_session_button.disabled = true
             Session.load({
-                ilastik_url,
+                ilastik_url: new URL(url_input.value),
                 session_url: new URL(session_url_field.value.trim()),
                 token: session_token_field.value.trim(),
             }).then(

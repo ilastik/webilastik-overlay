@@ -10,7 +10,7 @@ export class SessionManagerWidget{
     session?: Session
     workflow?: ReferencePixelClassificationWorkflowGui
     constructor({parentElement, ilastik_url, viewer_driver}: {
-        parentElement: HTMLElement, ilastik_url: URL, viewer_driver: IViewerDriver
+        parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver
     }){
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["IlastikLauncherWidget"]})
 
