@@ -29,7 +29,8 @@ export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
             extractor_from_scale: (scale: number) => FE,
         ) => {
             let tr = createElement({tagName: 'tr', parentElement: table});
-            createElement({tagName: 'td', innerHTML: extractor_name, parentElement: tr});
+            let label_td = createElement({tagName: 'td', innerHTML: extractor_name, parentElement: tr});
+            createElement({tagName: 'label', innerHTML: extractor_name, parentElement: label_td});
             for(let scale of column_values){
                 let td = createElement({tagName: 'td', parentElement: tr});
                 let extractor = extractor_from_scale(scale)
@@ -67,11 +68,7 @@ export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
         }})
 
         createInput({inputType: 'button', parentElement: this.element, value: 'Ok', onClick: async () => {
-            this.hide()
             this.updateUpstreamState(this.selected_features)
-        }})
-        createInput({inputType: 'button', parentElement: this.element, value: 'Cancel', onClick: async () => {
-            this.hide()
         }})
     }
 
@@ -85,13 +82,5 @@ export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
                 }
             }
         })
-    }
-
-    public show(){
-        this.element.style.display = "block"
-    }
-
-    public hide(){
-        this.element.style.display = "none"
     }
 }
