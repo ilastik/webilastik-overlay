@@ -108,4 +108,5 @@ export class BrushStroke extends VertexArray implements IJsonable{
 export interface IBrushStrokeHandler{
     getCurrentColor: () => vec3,
     handleNewBrushStroke: (stroke: BrushStroke) => any,
+    handleFinishedBrushStroke: (stroke: BrushStroke) => any,
 }

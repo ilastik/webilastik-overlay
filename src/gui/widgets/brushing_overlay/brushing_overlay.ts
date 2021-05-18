@@ -63,6 +63,7 @@ export class OverlayViewport{
             let handlerCleanup = () => {
                 this.element.removeEventListener("mousemove", scribbleHandler)
                 document.removeEventListener("mouseup", handlerCleanup)
+                brush_stroke_handler.handleFinishedBrushStroke(currentBrushStroke)
             }
             this.element.addEventListener("mousemove", scribbleHandler)
             document.addEventListener("mouseup", handlerCleanup)

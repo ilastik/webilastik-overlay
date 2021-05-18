@@ -78,7 +78,7 @@ export function getDummyViewerDriver(viewer: DummyViewer): IViewerDriver{
                 width: viewport.width,
                 height: viewport.height,
             }),
-            getDataUrl: () => new URL("http://example.com/my_data"),
+            getDataUrl: () => new URL("https://www.ilastik.org/assets/ilastik-logo.png"),
         }))
     }
 }

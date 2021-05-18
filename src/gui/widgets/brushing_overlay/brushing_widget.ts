@@ -1,6 +1,9 @@
 import { vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
+import { Applet } from "../../../client/applets/applet"
+import { Session } from "../../../client/ilastik"
 import { createElement, createInput, vec3ToRgb, vecToString, createSelect } from "../../../util/misc"
+import { ensureArray, toJsonValue } from "../../../util/serialization"
 import { ToggleButton } from "../toggle_button"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"
@@ -8,7 +11,7 @@ import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
 
-export class BrushingWidget{
+export class BrushingWidget extends Applet<Array<BrushStroke>>{
     public readonly element: HTMLElement
     public readonly viewer_driver: IViewerDriver
     private readonly brushStrokesContainer: HTMLElement
@@ -22,16 +25,26 @@ export class BrushingWidget{
     // private lastMouseMoveEvent: MouseEvent = new MouseEvent("mousemove")
 
     constructor({
+        session,
         parentElement,
         viewer_driver,
         cssClasses,
         brushingEnabled
     }: {
+        session: Session,
         parentElement: HTMLElement,
         viewer_driver: IViewerDriver,
         cssClasses?: Array<string>,
         brushingEnabled?: boolean,
     }){
+        super({
+            name: "brushing_applet",
+            deserializer: (data) => {
+                let raw_annotations = ensureArray(data);
+                return raw_annotations.map(a => BrushStroke.fromJsonValue(this.overlay.gl, a))
+            },
+            session,
+        })
         this.viewer_driver = viewer_driver
         this.element = createElement({tagName: "div", parentElement, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
 
@@ -45,7 +58,8 @@ export class BrushingWidget{
             viewer_driver,
             brush_stroke_handler: {
                 getCurrentColor: () => this.colorPicker.getColor(),
-                handleNewBrushStroke: (stroke) => this.addBrushStroke(stroke),
+                handleNewBrushStroke: (stroke) => this.doAddBrushStroke(stroke),
+                handleFinishedBrushStroke: (_) => this.updateUpstreamState(this.getBrushStrokes())
             },
         })
 
@@ -100,6 +114,11 @@ export class BrushingWidget{
     }
 
     public addBrushStroke(brushStroke: BrushStroke){
+        this.doAddBrushStroke(brushStroke)
+        this.updateUpstreamState(this.brushStrokeWidgets.map(bsw => bsw.brushStroke))
+    }
+
+    protected doAddBrushStroke(brushStroke: BrushStroke){
         this.brushStrokeWidgets.push(
             new BrushStrokeWidget({
                 brushStroke,
@@ -115,6 +134,17 @@ export class BrushingWidget{
                 }
             })
         )
+    }
+
+    public getBrushStrokes(): Array<BrushStroke>{
+        return this.brushStrokeWidgets.map(bsw => bsw.brushStroke)
+    }
+
+    protected onNewState(brush_strokes: Array<BrushStroke>){
+        super.onNewState(brush_strokes)
+        this.brushStrokeWidgets.forEach(bsw => bsw.destroy())
+        this.brushStrokeWidgets = []
+        brush_strokes.forEach(stroke => this.doAddBrushStroke(stroke))
     }
 }
 
@@ -156,6 +186,11 @@ export class BrushStrokeWidget{
                 cursor: "pointer"
             }
         })
+    }
+
+    public destroy(){
+        this.brushStroke.destroy()
+        this.element.parentElement?.removeChild(this.element)
     }
 }
 

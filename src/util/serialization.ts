@@ -53,3 +53,10 @@ export function ensureObject(value: Jsonable): IJsonableObject{
     }
     return value
 }
+
+export function ensureArray(value: Jsonable): Array<Jsonable>{
+    if(!isArray(value)){
+        throw `Expected JSON object, found this: ${JSON.stringify(value)}`
+    }
+    return value
+}
