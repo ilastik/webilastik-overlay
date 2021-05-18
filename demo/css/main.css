@@ -1,0 +1,16 @@
+.FeatureSelectionWidget, .BrushingWidget, .IlastikLauncherWidget{
+    padding: 10px;
+    border-radius: 3px;
+    font-family: monospace;
+    border: solid 2px black;
+    background-color: rgb(239 239 239);
+    margin-bottom: 5px;
+}
+
+.FeatureSelectionWidget td, .FeatureSelectionWidget td{
+    border: solid 1px grey;
+}
+
+.BrushingWidget{
+
+}
