@@ -1,7 +1,7 @@
 .OverlayControls, .FeatureSelectionWidget, .BrushingWidget, .IlastikLauncherWidget{
     padding: 10px;
     border-radius: 3px;
-    font-family: monospace;
+    font-family: helvetica;
     border: solid 2px black;
     background-color: rgb(239 239 239);
     margin-bottom: 5px;
@@ -36,10 +36,16 @@
     margin-bottom: 2px;
 }
 
-.FeatureSelectionWidget td, .FeatureSelectionWidget td{
+.FeatureSelectionWidget td, .FeatureSelectionWidget th, .FeatureSelectionWidget td{
     border: solid 1px grey;
+    padding: 0.3em;
 }
 
-.BrushingWidget{
+.BrushingWidget .brushStrokesContainer{
+    background-color: rgba(0,0,0, 0.1);
+}
 
+.BrushingWidget .brushStrokesContainer td{
+    padding: 0.4em;
+    background-color: rgba(0,0,0, 0.1);
 }

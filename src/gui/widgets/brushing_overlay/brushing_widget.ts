@@ -2,9 +2,8 @@ import { vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
 import { Applet } from "../../../client/applets/applet"
 import { Session } from "../../../client/ilastik"
-import { createElement, createInput, vec3ToRgb, vecToString, createSelect } from "../../../util/misc"
+import { createElement, vec3ToRgb, vecToString, createSelect, createInput } from "../../../util/misc"
 import { ensureArray } from "../../../util/serialization"
-import { ToggleButton } from "../toggle_button"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
@@ -17,7 +16,6 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
     private readonly brushStrokesContainer: HTMLElement
 
     public readonly colorPicker: Vec3ColorPicker
-    public readonly brushingEnabler: ToggleButton
     public readonly rendererDropdown: RendererDropdown
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
@@ -28,14 +26,10 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         session,
         parentElement,
         viewer_driver,
-        cssClasses,
-        brushingEnabled
     }: {
         session: Session,
         parentElement: HTMLElement,
         viewer_driver: IViewerDriver,
-        cssClasses?: Array<string>,
-        brushingEnabled?: boolean,
     }){
         super({
             name: "brushing_applet",
@@ -45,15 +39,6 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
             },
             session,
         })
-        this.viewer_driver = viewer_driver
-        this.element = createElement({tagName: "div", parentElement, cssClasses: (cssClasses || []).concat(["BrushingWidget"])})
-
-        const brush_toggle_container = createElement({tagName:"p", parentElement: this.element})
-        const brush_color_container = createElement({tagName: "p", parentElement: this.element})
-
-        createElement({tagName: "label", innerHTML: "Brush Color: ", parentElement: brush_color_container})
-        this.colorPicker = new Vec3ColorPicker({parentElement: brush_color_container})
-
         this.overlay = new BrushingOverlay({
             viewer_driver,
             brush_stroke_handler: {
@@ -62,10 +47,24 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
                 handleFinishedBrushStroke: (_) => this.updateUpstreamState(this.getBrushStrokes())
             },
         })
+        this.viewer_driver = viewer_driver
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["BrushingWidget"]})
 
-        this.brushingEnabler = new ToggleButton({parentElement: brush_toggle_container, value: "🖌 Enable Brushing", checked: brushingEnabled, onChange: (enabled: boolean) => {
-            this.overlay.setBrushingEnabled(enabled)
+        let p: HTMLElement;
+
+        p = createElement({tagName:"p", parentElement: this.element})
+        const brushing_enabled_checkbox = createInput({inputType: "checkbox", parentElement: p, onClick: () => {
+            this.overlay.setBrushingEnabled(brushing_enabled_checkbox.checked)
         }})
+        brushing_enabled_checkbox.id = "brushing_enabled_checkbox"
+        this.overlay.setBrushingEnabled(brushing_enabled_checkbox.checked)
+        const enable_brushing_label = createElement({tagName: "label", innerHTML: "Enable Brushing", parentElement: p});
+        (enable_brushing_label as HTMLLabelElement).htmlFor = brushing_enabled_checkbox.id
+
+        p = createElement({tagName: "p", parentElement: this.element})
+        createElement({tagName: "label", innerHTML: "Brush Color: ", parentElement: p})
+        this.colorPicker = new Vec3ColorPicker({parentElement: p})
+
 
         const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
             createElement({tagName: "label", innerHTML: "Rendering style: ", parentElement: rendererControlsContainer})
@@ -88,8 +87,8 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         //     const mouse_pos_world_display = new VecDisplayWidget({label: "world: ", parentElement: cameraPositionContainer})
         //     const mouse_pos_voxel_display = new VecDisplayWidget({label: "voxel: ", parentElement: cameraPositionContainer})
 
-        createElement({tagName: "h1", innerHTML: "Brush Strokes", parentElement: this.element})
-        this.brushStrokesContainer = createElement({tagName: "ul", parentElement: this.element})
+        createElement({tagName: "h2", innerHTML: "Brush Strokes", parentElement: this.element})
+        this.brushStrokesContainer = createElement({tagName: "table", parentElement: this.element, cssClasses: ["brushStrokesContainer"]})
 
 
         // this.overlay.canvas.addEventListener("mousemove", (mouseMoveEvent: MouseEvent) => {
@@ -123,14 +122,16 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
             new BrushStrokeWidget({
                 brushStroke,
                 parentElement: this.brushStrokesContainer,
-                // onLabelClicked: () => {
-                //     let snapCameraTo = this.viewer_driver.snapCameraTo
-                //     if(snapCameraTo){
-                //         snapCameraTo(brushStroke.getVertRef(0), brushStroke.camera_orientation)
-                //     }
-                // },
                 onColorClicked: (color: vec3) => {
                     this.colorPicker.setColor(color);
+                },
+                onLabelClicked: (_) => {
+                    //FIXME: snap viewer to coord
+                },
+                onDeleteClicked: (stroke) => {
+                    let updated_strokes = this.getBrushStrokes().filter(stk => stk != stroke)
+                    this.onNewState(updated_strokes)
+                    this.updateUpstreamState(updated_strokes)
                 }
             })
         )
@@ -152,39 +153,46 @@ export class BrushStrokeWidget{
     public readonly element: HTMLElement
     public readonly brushStroke: BrushStroke
 
-    constructor({brushStroke, parentElement, onLabelClicked, onColorClicked}:{
+    constructor({brushStroke, parentElement, onLabelClicked, onColorClicked, onDeleteClicked}:{
         brushStroke: BrushStroke,
         parentElement: HTMLElement,
-        onLabelClicked? : (event: MouseEvent) => void,
-        onColorClicked? : (color: vec3) => void,
+        onLabelClicked : (stroke: BrushStroke) => void,
+        onColorClicked : (color: vec3) => void,
+        onDeleteClicked : (stroke: BrushStroke) => void,
     }){
         this.brushStroke = brushStroke
-        this.element = createElement({
-            tagName: "li",
-            parentElement,
-            inlineCss: {
-                listStyleType: "none",
-            }
-        })
+        this.element = createElement({tagName: "tr", parentElement, cssClasses: ["BrushStrokeWidget"], inlineCss: {
+            listStyleType: "none",
+        }})
+
+        const color_container = createElement({tagName: "td", parentElement: this.element})
         createInput({
             inputType: "button",
-            value: "🖍️",
-            parentElement: this.element,
+            value: "🖌",
+            parentElement: color_container,
             inlineCss: {
-                // border: "solid 1px black",
                 backgroundColor: vec3ToRgb(brushStroke.color),
-                color: "black",
             },
-            onClick: onColorClicked ? () => { onColorClicked(brushStroke.color) } : undefined
+            onClick: () => onColorClicked(brushStroke.color),
         })
+
         createElement({
             parentElement: this.element,
-            tagName: "span",
-            innerHTML: ` at voxel ${vecToString(brushStroke.getVertRef(0), 0)}`,
-            onClick: onLabelClicked,
+            tagName: "td",
+            innerHTML: `at voxel ${vecToString(brushStroke.getVertRef(0), 0)}`,
+            onClick: () => onLabelClicked(brushStroke),
             inlineCss: {
                 cursor: "pointer"
             }
+        })
+
+        const close_button_cell = createElement({parentElement: this.element, tagName: "td"})
+        createInput({
+            inputType: "button",
+            value: "✖",
+            parentElement: close_button_cell,
+            cssClasses: ["delete_brush_button"],
+            onClick: () => onDeleteClicked(brushStroke),
         })
     }
 
