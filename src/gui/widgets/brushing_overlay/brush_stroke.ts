@@ -63,7 +63,11 @@ export class BrushStroke extends VertexArray implements IJsonable{
 
         return {
             "voxels": raw_voxels,
-            "color": {"r": this.color[0], "g": this.color[1], "b": this.color[2]},
+            "color": {
+                "r": Math.floor(this.color[0] * 255), //FIXME: rounding issues?
+                "g": Math.floor(this.color[1] * 255),
+                "b": Math.floor(this.color[2] * 255),
+            },
             "raw_data": {"url": this.annotated_data_url.toString()},
             "camera_orientation": [
                 this.camera_orientation[0], this.camera_orientation[1], this.camera_orientation[2], this.camera_orientation[3],
@@ -74,9 +78,13 @@ export class BrushStroke extends VertexArray implements IJsonable{
     public static fromJsonValue(gl: WebGL2RenderingContext, value: Jsonable): BrushStroke{
         let raw = ensureObject(value)
         //FIXME: better error checking
-        let voxels = (raw["voxels"] as Array<Array<number>>).map(v => vec3.fromValues(v[0], v[1], v[2]));
-        let raw_color = raw["color"] as Array<number>;
-        let color = vec3.fromValues(raw_color[0], raw_color[1], raw_color[2],)
+        let voxels = (raw["voxels"] as Array<any>).map(v => vec3.fromValues(v["x"], v["y"], v["z"]));
+        let raw_color = ensureObject(raw["color"])
+        let color = vec3.fromValues(
+            raw_color["r"] as number / 255,  //FIXME: rounding issues?
+            raw_color["g"]  as number / 255,
+            raw_color["b"]  as number / 255,
+        )
         let camera_orientation: quat;
         if("camera_orientation" in raw){
             let raw_camera_orientation = raw["camera_orientation"] as Array<number>;
@@ -86,8 +94,9 @@ export class BrushStroke extends VertexArray implements IJsonable{
         }else{
             camera_orientation = quat.create()
         }
+        let raw_data = ensureObject(raw["raw_data"])
         let brush_stroke = new BrushStroke({
-            gl, start_postition: voxels[0], camera_orientation, color, annotated_data_url: new URL(raw["raw_data"] as string)
+            gl, start_postition: voxels[0], camera_orientation, color, annotated_data_url: new URL(raw_data["url"] as string)
         })
         for(let i=1; i<voxels.length; i++){
             brush_stroke.add_voxel(voxels[i])
