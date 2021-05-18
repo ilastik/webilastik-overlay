@@ -18,7 +18,7 @@ export class ReferencePixelClassificationWorkflowGui{
         viewer_driver: IViewerDriver,
     }){
         this.session = session
-        this.element = createElement({tagName: "div", parentElement})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["ReferencePixelClassificationWorkflowGui"]})
         this.feature_selection_applet = new FeatureSelectionWidget({
             name: "feature_selection_applet",
             session,

@@ -8,30 +8,30 @@ export class SessionLoaderWidget{
         parentElement: HTMLElement,
         onNewSession: (session: Session) => void,
     }){
-        this.element = createElement({tagName: "form", parentElement, cssClasses: ["SessionLoaderWidget"]})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["SessionLoaderWidget"]})
+        createElement({tagName: "h2", parentElement: this.element, innerHTML: "Rejoin Session"})
 
-        const fieldset = createElement({tagName: "fieldset", parentElement: this.element, cssClasses: ["SessionLoaderWidget"]})
-        createElement({tagName: "legend", parentElement: fieldset, innerHTML: "Rejoin Session"})
+        const form = createElement({tagName: "form", parentElement: this.element})
         let p: HTMLElement;
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Ilastik api URL: ", parentElement: p})
         const url_input = createInput({inputType: "url", parentElement: p, required: true, value: ilastik_url.toString()})
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", parentElement: p, innerHTML: "Session url: "})
         const session_url_field = createInput({inputType: "url", parentElement: p, required: true})
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", parentElement: p, innerHTML: "Session token: "})
         const session_token_field = createInput({inputType: "text", parentElement: p, required: true})
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         const load_session_button = createInput({inputType: "submit", value: "Rejoin Session", parentElement: p})
 
-        const message_p = createElement({tagName: "p", parentElement: fieldset})
+        const message_p = createElement({tagName: "p", parentElement: form})
 
-        this.element.addEventListener("submit", (ev) => {
+        form.addEventListener("submit", (ev) => {
             load_session_button.value = "Loading Session..."
             message_p.innerHTML = ""
             load_session_button.disabled = true

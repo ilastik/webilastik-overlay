@@ -8,31 +8,34 @@ export class SessionCreatorWidget{
         ilastik_url?: URL,
         onNewSession: (new_session: Session) => void,
     }){
-        this.element = createElement({tagName: "form", parentElement, cssClasses: ["SessionCreatorWidget"]})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["SessionCreatorWidget"]})
+        createElement({tagName: "h2", parentElement: this.element, innerHTML: "Create New Session"})
 
-        const fieldset = createElement({tagName: "fieldset", parentElement: this.element, cssClasses: ["SessionCreatorWidget"]})
-        createElement({tagName: "legend", parentElement: fieldset, innerHTML: "Create New Session"})
+        const form = createElement({tagName: "form", parentElement: this.element})
 
-        let p = createElement({tagName: "p", parentElement: fieldset})
+        let p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Ilastik api URL: ", parentElement: p})
         const url_input = createInput({inputType: "url", parentElement: p, required: true, value: ilastik_url.toString()})
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Timeout (minutes): ", parentElement: p})
         const timeout_input = createInput({inputType: "number", parentElement: p, required: true, value: "5"})
         timeout_input.min = "1"
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Session Duration (minutes): ", parentElement: p})
         const duration_input = createInput({inputType: "number", parentElement: p, required: true, value: "5"})
         duration_input.min = "5"
 
-        p = createElement({tagName: "p", parentElement: fieldset})
+        p = createElement({tagName: "p", parentElement: form})
         const create_session_btn = createInput({inputType: "submit", value: "Create", parentElement: p})
 
-        const status_messages = createElement({tagName: "div", parentElement: fieldset, cssClasses: ["status_messages"]})
+        const creation_log_p = createElement({tagName: "p", parentElement: form, inlineCss: {display: "none"}})
+        createElement({tagName: "label", innerHTML: "Creation Log: ", parentElement: creation_log_p})
+        const status_messages = createElement({tagName: "div", parentElement: creation_log_p, cssClasses: ["status_messages"]})
 
-        this.element.addEventListener("submit", (ev) => {
+        form.addEventListener("submit", (ev) => {
+            creation_log_p.style.display = "block"
             create_session_btn.value = "Creating Session..."
             create_session_btn.disabled = true
             status_messages.innerHTML = ""

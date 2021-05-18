@@ -9,8 +9,8 @@ export class SessionManagerWidget{
     element: HTMLElement
     session?: Session
     workflow?: ReferencePixelClassificationWorkflowGui
-    constructor({parentElement, ilastik_url, viewer_driver}: {
-        parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver
+    constructor({parentElement, ilastik_url, viewer_driver, workflow_container}: {
+        parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver, workflow_container: HTMLElement
     }){
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["IlastikLauncherWidget"]})
 
@@ -18,7 +18,7 @@ export class SessionManagerWidget{
             this.session = new_session
             this.workflow?.element.parentElement?.removeChild(this.workflow.element)
             this.workflow = new ReferencePixelClassificationWorkflowGui({
-                session: new_session, parentElement, viewer_driver
+                session: new_session, parentElement: workflow_container, viewer_driver
             })
             close_session_btn.disabled = false
         }
