@@ -57,7 +57,7 @@ export class BrushStroke extends VertexArray implements IJsonable{
     public toJsonValue(): IJsonableObject{
         let raw_voxels: Array<{x: number, y: number, z: number}> = []
         for(let i=0; i<this.num_voxels; i++){
-            let vert = this.getVertRef(0)
+            let vert = this.getVertRef(i)
             raw_voxels.push({x: vert[0], y: vert[1], z: vert[2]})
         }
 
