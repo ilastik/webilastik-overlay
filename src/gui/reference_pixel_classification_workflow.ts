@@ -14,8 +14,8 @@ export class IlastikLauncherWidget{
     constructor({parentElement, ilastik_url, viewer_driver}: {
         parentElement: HTMLElement, ilastik_url: URL, viewer_driver: IViewerDriver
     }){
-        this.element = createElement({tagName: "fieldset", parentElement})
-        createElement({tagName: "legend", parentElement: this.element, innerHTML: "Webilastik - Pixel Classification"})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["IlastikLauncherWidget"]})
+        createElement({tagName: "h1", parentElement: this.element, innerHTML: "Webilastik - Pixel Classification"})
 
         const onNewSession = (new_session: Session) => {
             this.session = new_session
