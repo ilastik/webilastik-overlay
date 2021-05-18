@@ -13,6 +13,7 @@ export interface IWidgetFactory<STATE extends Jsonable>{
 
 export class Applet<STATE extends Jsonable>{
     public readonly name: string
+    public readonly session: Session
     public readonly socket: WebSocket
     public readonly deserializer: IDeserializer<STATE>
 
@@ -23,6 +24,7 @@ export class Applet<STATE extends Jsonable>{
     }){
         this.name = name
         this.deserializer = deserializer
+        this.session = session
         //FIXME: handle failing sockets
         this.socket = session.createAppletSocket(name)
         this.socket.addEventListener("error", (ev) => {
