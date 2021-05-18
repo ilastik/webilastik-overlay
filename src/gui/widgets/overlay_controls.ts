@@ -9,7 +9,7 @@ export class OverlayControls{
         parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver, draggable?: boolean
     }){
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["OverlayControls"]})
-        const header = createElement({tagName: "h1", parentElement: this.element, innerHTML: "Webilastik"})
+        const header = createElement({tagName: "h1", parentElement: this.element, cssClasses: ["OverlayControls_header"], innerHTML: "Webilastik"})
 
         if(draggable){
             this.element.style.position = "fixed"
@@ -18,7 +18,7 @@ export class OverlayControls{
             header.style.userSelect = "none"
             header.style.cursor = "move"
             createElement({
-                tagName: "span", parentElement: header, innerHTML: "•••", cssClasses: ["drag_handle"], inlineCss: {float: "right"}
+                tagName: "span", parentElement: header, innerHTML: "•••", cssClasses: ["OverlayControls_drag_handle"], inlineCss: {float: "right"}
             })
             header.addEventListener("mousedown", (mouse_down_event) => {
                 let current_pos = {x: parseInt(this.element.style.left), y: parseInt(this.element.style.top)}
