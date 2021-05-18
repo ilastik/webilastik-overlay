@@ -2,9 +2,9 @@ import { sleep } from "../util/misc"
 import { IJsonable, Jsonable } from "../util/serialization"
 
 export class Session{
-    ilastik_url: string
-    session_url: string
-    token: string
+    public readonly ilastik_url: string
+    public readonly session_url: string
+    public readonly token: string
 
     protected constructor({ilastik_url, session_url, token}: {
         ilastik_url: URL,
