@@ -1,4 +1,4 @@
-.OverlayControls, .FeatureSelectionWidget, .BrushingWidget, .IlastikLauncherWidget{
+.CollapsableApplet, .OverlayControls, .FeatureSelectionWidget, .BrushingWidget, .IlastikLauncherWidget{
     padding: 10px;
     border-radius: 3px;
     font-family: helvetica;
@@ -53,4 +53,8 @@
 .BrushingWidget .brushStrokesContainer td{
     padding: 0.4em;
     background-color: rgba(0,0,0, 0.1);
+}
+
+.itk_hidden_element{
+    display: none;
 }
