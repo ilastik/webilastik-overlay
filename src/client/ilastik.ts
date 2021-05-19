@@ -1,5 +1,5 @@
 import { sleep } from "../util/misc"
-import { ensureJsonArray, IJsonable, JsonValue } from "../util/serialization"
+import { ensureJsonArray, ensureJsonObject, IJsonable, JsonObject, JsonValue } from "../util/serialization"
 
 export class Session{
     public readonly ilastik_url: string
@@ -247,7 +247,7 @@ export class Annotation{
         return new Annotation(
             data["voxels"],
             Color.fromJsonData(data["color"]),
-            DataSource.fromJsonData(data["raw_data"])
+            DataSource.fromJsonValue(data["raw_data"])
         )
     }
 }
@@ -266,18 +266,29 @@ export class Shape5D{
     }
 }
 
-export class DataSource{
-    public constructor(public readonly url: string, public readonly shape: Shape5D){
+export class DataSource implements IJsonable{
+    public constructor(public readonly url: URL){
     }
-    public static fromJsonData(data: any) : DataSource{
-        return new this(data["url"], Shape5D.fromJsonData(data["shape"]))
+    public static fromJsonValue(data: JsonValue) : DataSource{
+        let obj = ensureJsonObject(data)
+        return new this(new URL(obj["url"] as string))
+    }
+    public toJsonValue(): JsonObject{
+        return {url: this.url.toString()}
     }
 }
 
-export class Lane{
+export class Lane implements IJsonable{
     public constructor(public readonly raw_data: DataSource){
     }
-    public static fromJsonData(data: any): Lane{
-        return new Lane(DataSource.fromJsonData(data["raw_data"]))
+    public static fromJsonValue(data: any): Lane{
+        return new Lane(DataSource.fromJsonValue(data["raw_data"]))
+    }
+    public toJsonValue(): JsonObject{
+        return {raw_data: this.raw_data.toJsonValue()}
+    }
+    public static fromJsonArray(data: JsonValue): Lane[]{
+        const array = ensureJsonArray(data)
+        return array.map((v: JsonValue) => Lane.fromJsonValue(v))
     }
 }
