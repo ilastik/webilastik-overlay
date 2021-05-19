@@ -19,8 +19,6 @@ export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
 
-    // private lastMouseMoveEvent: MouseEvent = new MouseEvent("mousemove")
-
     constructor({
         session,
         parentElement,
@@ -79,34 +77,11 @@ export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
                 ])
             })
 
-        // let cameraPositionContainer = createElement({tagName: "div", parentElement: this.element})
-        //     createElement({tagName: "h2", parentElement: cameraPositionContainer, innerHTML: "Camera Position"})
-        //     const camera_pos_world_display = new VecDisplayWidget({label: "world: ", parentElement: cameraPositionContainer})
-        //     const camera_pos_voxel_display = new VecDisplayWidget({label: "voxel: ", parentElement: cameraPositionContainer})
-
-        //     createElement({tagName: "h2", parentElement: cameraPositionContainer, innerHTML: "Cursor Position"})
-        //     const mouse_pos_world_display = new VecDisplayWidget({label: "world: ", parentElement: cameraPositionContainer})
-        //     const mouse_pos_voxel_display = new VecDisplayWidget({label: "voxel: ", parentElement: cameraPositionContainer})
-
         createElement({tagName: "h2", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "table", parentElement: this.element, cssClasses: ["brushStrokesContainer"]})
 
-
-        // this.overlay.canvas.addEventListener("mousemove", (mouseMoveEvent: MouseEvent) => {
-        //     this.lastMouseMoveEvent = mouseMoveEvent //store the event so the mouse displays refresh even without moving the mouse
-        // })
-
         let render = () => {
             this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke), this.rendererDropdown.getRenderer())
-
-            // camera_pos_world_display.value = this.overlay.camera.position_w
-            // camera_pos_voxel_display.value = viewer_driver.getCameraPositionInVoxelSpace()
-
-            // const mouseWorldPosition = this.overlay.getMouseWorldPosition(this.lastMouseMoveEvent)
-            // mouse_pos_world_display.value = mouseWorldPosition
-            // const mouseVoxelPosition = this.overlay.getMouseVoxelPosition(this.lastMouseMoveEvent)
-            // mouse_pos_voxel_display.value = mouseVoxelPosition
-
             window.requestAnimationFrame(render)
         }
 
