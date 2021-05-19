@@ -1,17 +1,16 @@
 import { vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
-import { Applet } from "../../../client/applets/applet"
 import { Session } from "../../../client/ilastik"
 import { createElement, vec3ToRgb, vecToString, createSelect, createInput } from "../../../util/misc"
 import { ensureJsonArray } from "../../../util/serialization"
+import { CollapsableAppletGui } from "../collapsable_applet_gui"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
 
-export class BrushingWidget extends Applet<Array<BrushStroke>>{
-    public readonly element: HTMLElement
+export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
     public readonly viewer_driver: IViewerDriver
     private readonly brushStrokesContainer: HTMLElement
 
@@ -38,6 +37,8 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
                 return raw_annotations.map(a => BrushStroke.fromJsonValue(this.overlay.gl, a))
             },
             session,
+            parentElement,
+            display_name: "Training",
         })
         this.overlay = new BrushingOverlay({
             viewer_driver,
@@ -48,7 +49,7 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
             },
         })
         this.viewer_driver = viewer_driver
-        this.element = createElement({tagName: "div", parentElement, cssClasses: ["BrushingWidget"]})
+        this.element.classList.add("BrushingWidget")
 
         let p: HTMLElement;
 
