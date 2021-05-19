@@ -116,9 +116,9 @@ export function createInput(params : CreateInputParams): HTMLInputElement{
 export function createSelect({parentElement, values, name, onClick}:
     {parentElement:HTMLElement, values?: Map<string, string>, name?:string, onClick?: (event: MouseEvent) => void}
 ): HTMLSelectElement{
-    const select = <HTMLSelectElement>createElement({tagName: 'select', parentElement})
+    const select = <HTMLSelectElement>createElement({tagName: 'select', parentElement, onClick})
     if(values !== undefined){
-        values.forEach((displayValue:string, value:string) => {
+        values.forEach((value:string, displayValue:string) => {
             let option = <HTMLInputElement>createElement({tagName: 'option', innerHTML: displayValue, parentElement: select, onClick})
             option.value = value
         })
