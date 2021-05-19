@@ -4,7 +4,6 @@ import { IViewerDriver } from "../drivers/viewer_driver";
 import { createElement } from "../util/misc";
 import { BrushingWidget } from "./widgets/brushing_overlay/brushing_widget";
 import { FeatureSelectionWidget } from "./widgets/feature_selection";
-import { PredictionsExportWidget } from "./widgets/predictions_export";
 
 export class ReferencePixelClassificationWorkflowGui{
     public readonly element: HTMLElement
