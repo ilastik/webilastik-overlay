@@ -37,6 +37,7 @@ export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
             session,
             parentElement,
             display_name: "Training",
+            onNewState: (new_state) => this.onNewState(new_state)
         })
         this.overlay = new BrushingOverlay({
             viewer_driver,
@@ -118,7 +119,6 @@ export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
     }
 
     protected onNewState(brush_strokes: Array<BrushStroke>){
-        super.onNewState(brush_strokes)
         this.brushStrokeWidgets.forEach(bsw => bsw.destroy())
         this.brushStrokeWidgets = []
         brush_strokes.forEach(stroke => this.doAddBrushStroke(stroke))

@@ -5,14 +5,15 @@ import { IDeserializer, JsonableValue } from "../../util/serialization";
 
 export class CollapsableAppletGui<STATE extends JsonableValue> extends Applet<STATE>{
     public readonly element: HTMLElement;
-    public constructor({display_name, parentElement, name, session, deserializer}: {
+    public constructor({display_name, parentElement, name, session, deserializer, onNewState}: {
         display_name: string,
         parentElement: HTMLElement,
         name: string,
         session: Session,
         deserializer: IDeserializer<STATE>,
+        onNewState?: (new_state: STATE) => void,
     }){
-        super({name, session, deserializer})
+        super({name, session, deserializer, onNewState})
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["CollapsableApplet"]})
         const header = createElement({tagName: "h2", parentElement: this.element, innerHTML: display_name})
         const collapse_button = createInput({

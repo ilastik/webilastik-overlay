@@ -8,10 +8,11 @@ export class Applet<STATE extends JsonableValue>{
     public readonly socket: WebSocket
     public readonly deserializer: IDeserializer<STATE>
 
-    public constructor({name, session, deserializer}: {
+    public constructor({name, session, deserializer, onNewState}: {
         name: string,
         session: Session,
         deserializer: IDeserializer<STATE>,
+        onNewState?: (new_state: STATE) => void
     }){
         this.name = name
         this.deserializer = deserializer
@@ -26,7 +27,9 @@ export class Applet<STATE extends JsonableValue>{
             let raw_data = JSON.parse(ev.data)
             console.log(`vvvvvvvv ${this.name} got this state from server:\n${JSON.stringify(raw_data, null, 4)}`)
             let new_state = this.deserializer(raw_data)
-            this.onNewState(new_state)
+            if(onNewState){
+                onNewState(new_state)
+            }
         })
     }
 
@@ -34,8 +37,5 @@ export class Applet<STATE extends JsonableValue>{
         const args = toJsonValue(new_state)
         console.debug(`^^^^^^^ ${this.name} is pushing following state:\n${JSON.stringify(args, null, 4)}`)
         this.socket.send(JSON.stringify(toJsonValue(new_state)))
-    }
-
-    protected onNewState(_new_state: STATE){
     }
 }

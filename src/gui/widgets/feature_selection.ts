@@ -14,7 +14,12 @@ export class FeatureSelectionWidget extends CollapsableAppletGui<itk.FeatureExtr
         name: string, session: itk.Session, parentElement: HTMLElement
     }){
         super({
-            name, session, deserializer: itk.FeatureExtractor.fromJsonArray, display_name: "Select Image Features", parentElement
+            name,
+            session,
+            deserializer: itk.FeatureExtractor.fromJsonArray,
+            display_name: "Select Image Features",
+            parentElement,
+            onNewState: (new_state) => this.onNewState(new_state)
         })
         this.element.classList.add("FeatureSelectionWidget")
         this.feature_to_checkbox = new Map<itk.FeatureExtractor, HTMLInputElement>()
