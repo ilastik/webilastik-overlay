@@ -1,5 +1,5 @@
 import { sleep } from "../util/misc"
-import { IJsonable, Jsonable } from "../util/serialization"
+import { ensureJsonArray, IJsonable, JsonValue } from "../util/serialization"
 
 export class Session{
     public readonly ilastik_url: string
@@ -118,11 +118,9 @@ export abstract class FeatureExtractor implements IJsonable{
         throw Error(`Bad feature extractor class name in ${JSON.stringify(data)}`)
     }
 
-    public static fromJsonList(data: Jsonable): FeatureExtractor[]{
-        if(!(data instanceof Array)){
-            throw `Bad payload: ${JSON.stringify(data)}`
-        }
-        return data.map(v => FeatureExtractor.fromJsonValue(v))
+    public static fromJsonArray(data: JsonValue): FeatureExtractor[]{
+        const array = ensureJsonArray(data)
+        return array.map((v: JsonValue) => FeatureExtractor.fromJsonValue(v))
     }
 
     public equals(other: FeatureExtractor) : boolean{
@@ -133,7 +131,7 @@ export abstract class FeatureExtractor implements IJsonable{
         return JSON.stringify(this.toJsonValue()) == JSON.stringify(other.toJsonValue())
     }
 
-    public toJsonValue(): Jsonable{
+    public toJsonValue(): JsonValue{
         let out = JSON.parse(JSON.stringify(this))
         //FIXME: Class name
         out["__class__"] = this.constructor.name

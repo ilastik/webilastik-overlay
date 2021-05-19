@@ -3,7 +3,7 @@ import { IViewerDriver, BrushStroke } from "../../.."
 import { Applet } from "../../../client/applets/applet"
 import { Session } from "../../../client/ilastik"
 import { createElement, vec3ToRgb, vecToString, createSelect, createInput } from "../../../util/misc"
-import { ensureArray } from "../../../util/serialization"
+import { ensureJsonArray } from "../../../util/serialization"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
@@ -34,7 +34,7 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         super({
             name: "brushing_applet",
             deserializer: (data) => {
-                let raw_annotations = ensureArray(data);
+                let raw_annotations = ensureJsonArray(data);
                 return raw_annotations.map(a => BrushStroke.fromJsonValue(this.overlay.gl, a))
             },
             session,

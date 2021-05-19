@@ -1,7 +1,7 @@
 import { quat, vec3 } from "gl-matrix";
 import { Vec3AttributeBuffer, BufferUsageHint } from "../../../gl/buffer";
 import { VertexArray } from "../../../gl/vertex_primitives";
-import { ensureObject, IJsonable, IJsonableObject, Jsonable } from "../../../util/serialization";
+import { ensureJsonObject, IJsonable, JsonObject, JsonValue} from "../../../util/serialization";
 // import { vec3ToString } from "./utils";
 
 export class BrushStroke extends VertexArray implements IJsonable{
@@ -54,7 +54,7 @@ export class BrushStroke extends VertexArray implements IJsonable{
         this.positions_buffer.destroy()
     }
 
-    public toJsonValue(): IJsonableObject{
+    public toJsonValue(): JsonObject{
         let raw_voxels: Array<{x: number, y: number, z: number}> = []
         for(let i=0; i<this.num_voxels; i++){
             let vert = this.getVertRef(i)
@@ -75,11 +75,11 @@ export class BrushStroke extends VertexArray implements IJsonable{
         }
     }
 
-    public static fromJsonValue(gl: WebGL2RenderingContext, value: Jsonable): BrushStroke{
-        let raw = ensureObject(value)
+    public static fromJsonValue(gl: WebGL2RenderingContext, value: JsonValue): BrushStroke{
+        let raw = ensureJsonObject(value)
         //FIXME: better error checking
         let voxels = (raw["voxels"] as Array<any>).map(v => vec3.fromValues(v["x"], v["y"], v["z"]));
-        let raw_color = ensureObject(raw["color"])
+        let raw_color = ensureJsonObject(raw["color"])
         let color = vec3.fromValues(
             raw_color["r"] as number / 255,  //FIXME: rounding issues?
             raw_color["g"]  as number / 255,
@@ -94,7 +94,7 @@ export class BrushStroke extends VertexArray implements IJsonable{
         }else{
             camera_orientation = quat.create()
         }
-        let raw_data = ensureObject(raw["raw_data"])
+        let raw_data = ensureJsonObject(raw["raw_data"])
         let brush_stroke = new BrushStroke({
             gl, start_postition: voxels[0], camera_orientation, color, annotated_data_url: new URL(raw_data["url"] as string)
         })

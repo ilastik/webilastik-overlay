@@ -14,7 +14,7 @@ export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
     public constructor({name, session, parentElement}: {
         name: string, session: itk.Session, parentElement: HTMLElement
     }){
-        super({name, session, deserializer: itk.FeatureExtractor.fromJsonList})
+        super({name, session, deserializer: itk.FeatureExtractor.fromJsonArray})
         this.element = createElement({tagName: "div", parentElement: parentElement, cssClasses: ["FeatureSelectionWidget"]})
         this.feature_to_checkbox = new Map<itk.FeatureExtractor, HTMLInputElement>()
         const table = createElement({tagName: 'table', parentElement: this.element})

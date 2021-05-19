@@ -1,24 +1,38 @@
+export type JsonLeafValue = number | string | boolean | null
+
+export interface JsonObject{
+    [key: string]: JsonValue
+}
+
+export type JsonArray = Array<JsonValue>
+
+export type JsonValue = JsonLeafValue | JsonArray | JsonObject
+
+//////////////////////////////
+
 export interface IJsonable{
-    toJsonValue(): Jsonable
+    toJsonValue(): JsonValue
 }
 
 export interface IJsonableObject{
-    [key: string]: Jsonable
+    [key: string]: JsonableValue
 }
 
-export type JsonLeaf = number | string | boolean | null
+export type JsonableArray = Array<JsonableValue>
 
-export type Jsonable = JsonLeaf | IJsonable | Array<Jsonable> | IJsonableObject
+export type JsonableValue = JsonValue | IJsonable | IJsonableObject | JsonableArray
 
-export function toJsonValue(value: Jsonable) : Jsonable{
-    if(isLeaf(value)){
+///////////////////////////////////////////
+
+export function toJsonValue(value: JsonableValue) : JsonValue{
+    if(isJsonLeafValue(value)){
         return value
     }
-    if(isArray(value)){
-        return value.map(val => toJsonValue(val))
+    if(isJsonableArray(value)){
+        return value.map((val : JsonableValue) => toJsonValue(val))
     }
-    if(isObject(value)){
-        let out : IJsonableObject = {}
+    if(isJsonableObject(value)){
+        let out : JsonObject = {}
         for(let key in value){
             out[key] = toJsonValue(value[key])
         }
@@ -27,35 +41,39 @@ export function toJsonValue(value: Jsonable) : Jsonable{
     return (value as IJsonable).toJsonValue()
 }
 
-export interface IDeserializer<STATE extends Jsonable>{
-    (data: any): STATE;
+///////////////////////////////////////////
+
+export interface IDeserializer<T>{
+    (data: JsonValue): T;
 }
 
-export function isLeaf(value: Jsonable): value is JsonLeaf{
+///////////////////////////////////////////
+
+export function isJsonLeafValue(value: JsonableValue): value is JsonLeafValue{
     return typeof value == "number" || typeof value == "string" || value === null
 }
 
-export function isArray(value: Jsonable): value is Array<Jsonable>{
+export function isJsonableArray(value: JsonableValue): value is JsonableArray{
     return value instanceof Array
 }
 
-export function isIJsonable(value: Jsonable): value is IJsonable{
+export function isIJsonable(value: JsonableValue): value is IJsonable{
     return value !== null && typeof(value) == "object" && "toJsonValue" in value
 }
 
-export function isObject(value: Jsonable): value is IJsonableObject{
+export function isJsonableObject(value: JsonableValue): value is IJsonableObject{
     return typeof(value) == "object" && value != null && !isIJsonable(value)
 }
 
-export function ensureObject(value: Jsonable): IJsonableObject{
-    if(!isObject(value)){
+export function ensureJsonObject(value: JsonValue): JsonObject{
+    if(!isJsonableObject(value)){
         throw `Expected JSON object, found this: ${JSON.stringify(value)}`
     }
     return value
 }
 
-export function ensureArray(value: Jsonable): Array<Jsonable>{
-    if(!isArray(value)){
+export function ensureJsonArray(value: JsonValue): JsonArray{
+    if(!isJsonableArray(value)){
         throw `Expected JSON object, found this: ${JSON.stringify(value)}`
     }
     return value
