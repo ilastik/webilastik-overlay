@@ -276,6 +276,9 @@ export class DataSource implements IJsonable{
     public toJsonValue(): JsonObject{
         return {url: this.url.toString()}
     }
+    public equals(other: DataSource): boolean{
+        return this.url.toString() == other.url.toString()
+    }
 }
 
 export class Lane implements IJsonable{
