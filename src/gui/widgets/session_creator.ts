@@ -9,7 +9,7 @@ export class SessionCreatorWidget{
         onNewSession: (new_session: Session) => void,
     }){
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["SessionCreatorWidget"]})
-        createElement({tagName: "h2", parentElement: this.element, innerHTML: "Create New Session"})
+        createElement({tagName: "h3", parentElement: this.element, innerHTML: "Create New Session"})
 
         const form = createElement({tagName: "form", parentElement: this.element})
 
@@ -37,7 +37,7 @@ export class SessionCreatorWidget{
         form.addEventListener("submit", (ev) => {
             creation_log_p.style.display = "block"
             create_session_btn.value = "Creating Session..."
-            create_session_btn.disabled = true
+            this.set_disabled(true)
             status_messages.innerHTML = ""
             Session.create({
                 ilastik_url: new URL(url_input.value),
@@ -51,15 +51,21 @@ export class SessionCreatorWidget{
                 session => onNewSession(session),
                 failure => {
                     status_messages.innerHTML = failure.message
+                    this.set_disabled(false)
                 }
             ).then(_ => {
                 create_session_btn.value = "Create"
-                create_session_btn.disabled = false
             })
             //don't submit synchronously
             ev.preventDefault()
             return false
         })
 
+    }
+
+    public set_disabled(disabled: boolean){
+        this.element.querySelectorAll("input").forEach(inp => {
+            (inp as HTMLInputElement).disabled = disabled
+        })
     }
 }
