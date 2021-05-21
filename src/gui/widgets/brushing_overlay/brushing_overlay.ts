@@ -7,6 +7,7 @@ import { ClearConfig, RenderParams, ScissorConfig } from '../../../gl/gl'
 import { changeOrientationBase, coverContents, createElement, insertAfter } from '../../../util/misc'
 import { IViewerDriver, IViewportDriver } from '../../../drivers/viewer_driver'
 import { IBrushStrokeHandler, BrushStroke } from './brush_stroke'
+import { DataSource } from '../../../client/ilastik'
 
 
 export class OverlayViewport{
@@ -51,7 +52,7 @@ export class OverlayViewport{
                 gl: this.gl,
                 start_postition: this.getMouseVoxelPosition(mouseDownEvent),
                 color: brush_stroke_handler.getCurrentColor(),
-                annotated_data_url: viewport_driver.getDataUrl(),
+                annotated_data_source: new DataSource(viewport_driver.getDataUrl()),
                 camera_orientation: viewport_driver.getCameraPoseInVoxelSpace().orientation_vx, //FIXME: realy voxel space? rename param in BrushStroke?
             })
             brush_stroke_handler.handleNewBrushStroke(currentBrushStroke)

@@ -1,4 +1,5 @@
 import { quat, vec3 } from "gl-matrix";
+import { DataSource } from "../../../client/ilastik";
 import { Vec3AttributeBuffer, BufferUsageHint } from "../../../gl/buffer";
 import { VertexArray } from "../../../gl/vertex_primitives";
 import { ensureJsonObject, IJsonable, JsonObject, JsonValue} from "../../../util/serialization";
@@ -9,19 +10,19 @@ export class BrushStroke extends VertexArray implements IJsonable{
     public num_voxels : number
     public readonly color : vec3
     public readonly positions_buffer: Vec3AttributeBuffer
-    public readonly annotated_data_url: URL;
+    public readonly annotated_data_source: DataSource;
 
-    constructor({gl, start_postition, color, camera_orientation, annotated_data_url}: {
+    constructor({gl, start_postition, color, camera_orientation, annotated_data_source}: {
         gl: WebGL2RenderingContext,
         start_postition: vec3,
         color: vec3,
         camera_orientation: quat,
-        annotated_data_url: URL,
+        annotated_data_source: DataSource,
     }){
         let data = new Float32Array(1024 * 3) // 1024 vec3's
         super(data)
         this.camera_orientation = quat.create(); quat.copy(this.camera_orientation, camera_orientation)
-        this.annotated_data_url = annotated_data_url
+        this.annotated_data_source = annotated_data_source
         this.num_voxels = 0
         this.color = vec3.create(); vec3.copy(this.color, color)
         this.positions_buffer = new Vec3AttributeBuffer(gl, data, BufferUsageHint.DYNAMIC_DRAW)
@@ -68,7 +69,7 @@ export class BrushStroke extends VertexArray implements IJsonable{
                 "g": Math.floor(this.color[1] * 255),
                 "b": Math.floor(this.color[2] * 255),
             },
-            "raw_data": {"url": this.annotated_data_url.toString()},
+            "raw_data": this.annotated_data_source.toJsonValue(),
             "camera_orientation": [
                 this.camera_orientation[0], this.camera_orientation[1], this.camera_orientation[2], this.camera_orientation[3],
             ],
@@ -94,9 +95,9 @@ export class BrushStroke extends VertexArray implements IJsonable{
         }else{
             camera_orientation = quat.create()
         }
-        let raw_data = ensureJsonObject(raw["raw_data"])
+        let annotated_data_source = DataSource.fromJsonValue(raw["raw_data"])
         let brush_stroke = new BrushStroke({
-            gl, start_postition: voxels[0], camera_orientation, color, annotated_data_url: new URL(raw_data["url"] as string)
+            gl, start_postition: voxels[0], camera_orientation, color, annotated_data_source
         })
         for(let i=1; i<voxels.length; i++){
             brush_stroke.add_voxel(voxels[i])
