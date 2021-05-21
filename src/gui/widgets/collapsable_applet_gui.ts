@@ -1,19 +1,8 @@
-import { Applet } from "../../client/applets/applet";
-import { Session } from "../../client/ilastik";
 import { createElement, createInput } from "../../util/misc";
-import { IDeserializer, JsonableValue } from "../../util/serialization";
 
-export class CollapsableAppletGui<STATE extends JsonableValue> extends Applet<STATE>{
+export class CollapsableWidget{
     public readonly element: HTMLElement;
-    public constructor({display_name, parentElement, name, session, deserializer, onNewState}: {
-        display_name: string,
-        parentElement: HTMLElement,
-        name: string,
-        session: Session,
-        deserializer: IDeserializer<STATE>,
-        onNewState?: (new_state: STATE) => void,
-    }){
-        super({name, session, deserializer, onNewState})
+    public constructor({display_name, parentElement}:{display_name: string, parentElement: HTMLElement}){
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["CollapsableApplet"]})
         const header = createElement({tagName: "h2", parentElement: this.element, innerHTML: display_name})
         const collapse_button = createInput({

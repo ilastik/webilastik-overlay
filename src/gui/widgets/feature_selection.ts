@@ -1,12 +1,14 @@
 import { createElement, createInput } from '../../util/misc';
 import * as itk from '../../client/ilastik'
-import { CollapsableAppletGui } from './collapsable_applet_gui';
+import { CollapsableWidget } from './collapsable_applet_gui';
+import { Applet } from '../../client/applets/applet';
 
 // class FeatureCheckbox<FE extends itk.FeatureExtractor>{
 //     constructor()
 // }
 
-export class FeatureSelectionWidget extends CollapsableAppletGui<itk.FeatureExtractor[]>{
+export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
+    public readonly element: HTMLElement;
     private selected_features: Array<itk.FeatureExtractor> = [];
     private feature_to_checkbox: Map<itk.FeatureExtractor, HTMLInputElement>
 
@@ -17,10 +19,9 @@ export class FeatureSelectionWidget extends CollapsableAppletGui<itk.FeatureExtr
             name,
             session,
             deserializer: itk.FeatureExtractor.fromJsonArray,
-            display_name: "Select Image Features",
-            parentElement,
             onNewState: (new_state) => this.onNewState(new_state)
         })
+        this.element = new CollapsableWidget({display_name: "Select Image Features", parentElement}).element
         this.element.classList.add("FeatureSelectionWidget")
         this.feature_to_checkbox = new Map<itk.FeatureExtractor, HTMLInputElement>()
         const table = createElement({tagName: 'table', parentElement: this.element})

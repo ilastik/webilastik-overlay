@@ -1,17 +1,19 @@
 import { vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
+import { Applet } from "../../../client/applets/applet"
 import { Session } from "../../../client/ilastik"
 import { createElement, vec3ToRgb, vecToString, createSelect, createInput } from "../../../util/misc"
 import { ensureJsonArray } from "../../../util/serialization"
-import { CollapsableAppletGui } from "../collapsable_applet_gui"
+import { CollapsableWidget } from "../collapsable_applet_gui"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
 
-export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
+export class BrushingWidget extends Applet<Array<BrushStroke>>{
     public readonly viewer_driver: IViewerDriver
+    public readonly element: HTMLElement
     private readonly brushStrokesContainer: HTMLElement
 
     public readonly colorPicker: Vec3ColorPicker
@@ -35,8 +37,6 @@ export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
                 return raw_annotations.map(a => BrushStroke.fromJsonValue(this.overlay.gl, a))
             },
             session,
-            parentElement,
-            display_name: "Training",
             onNewState: (new_state) => this.onNewState(new_state)
         })
         this.overlay = new BrushingOverlay({
@@ -48,6 +48,7 @@ export class BrushingWidget extends CollapsableAppletGui<Array<BrushStroke>>{
             },
         })
         this.viewer_driver = viewer_driver
+        this.element = new CollapsableWidget({display_name: "Training", parentElement}).element
         this.element.classList.add("BrushingWidget")
 
         let p: HTMLElement;
