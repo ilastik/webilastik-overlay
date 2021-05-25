@@ -65,6 +65,20 @@ export function isJsonableObject(value: JsonableValue): value is IJsonableObject
     return typeof(value) == "object" && value != null && !isIJsonable(value)
 }
 
+export function ensureJsonBoolean(value: JsonValue): boolean{
+    if(typeof(value) !== "boolean"){
+        throw `Expected boolean, found ${JSON.stringify(value)}`
+    }
+    return value
+}
+
+export function ensureJsonNumber(value: JsonValue): number{
+    if(typeof(value) !== "number"){
+        throw `Expected number, found ${JSON.stringify(value)}`
+    }
+    return value
+}
+
 export function ensureJsonObject(value: JsonValue): JsonObject{
     if(!isJsonableObject(value)){
         throw `Expected JSON object, found this: ${JSON.stringify(value)}`
