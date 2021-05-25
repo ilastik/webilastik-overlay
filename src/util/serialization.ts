@@ -79,6 +79,13 @@ export function ensureJsonNumber(value: JsonValue): number{
     return value
 }
 
+export function ensureJsonString(value: JsonValue): string{
+    if(typeof(value) !== "string"){
+        throw `Expected number, found ${JSON.stringify(value)}`
+    }
+    return value
+}
+
 export function ensureJsonObject(value: JsonValue): JsonObject{
     if(!isJsonableObject(value)){
         throw `Expected JSON object, found this: ${JSON.stringify(value)}`
