@@ -5,3 +5,4 @@ export {IViewerDriver, IViewportDriver, NewViewportsHander} from "./drivers/view
 export {NeuroglancerViewportDriver, NeuroglancerDriver} from "./drivers/neuroglancer"
 export {ReferencePixelClassificationWorkflowGui} from "./gui/reference_pixel_classification_workflow"
 export {SessionManagerWidget} from "./gui/widgets/session_manager"
+export {OverlayControls} from "./gui/widgets/overlay_controls"
