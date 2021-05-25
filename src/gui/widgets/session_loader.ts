@@ -14,7 +14,7 @@ export class SessionLoaderWidget{
         parentElement: HTMLElement,
         onNewSession: (session: Session) => void,
     }){
-        this.element = createElement({tagName: "div", parentElement, cssClasses: ["SessionLoaderWidget"]})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["ItkSessionLoaderWidget"]})
         createElement({tagName: "h3", parentElement: this.element, innerHTML: "Rejoin Session"})
 
         const form = createElement({tagName: "form", parentElement: this.element})

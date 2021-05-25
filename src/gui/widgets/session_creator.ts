@@ -8,7 +8,7 @@ export class SessionCreatorWidget{
         ilastik_url?: URL,
         onNewSession: (new_session: Session) => void,
     }){
-        this.element = createElement({tagName: "div", parentElement, cssClasses: ["SessionCreatorWidget"]})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["ItkSessionCreatorWidget"]})
         createElement({tagName: "h3", parentElement: this.element, innerHTML: "Create New Session"})
 
         const form = createElement({tagName: "form", parentElement: this.element})
@@ -32,7 +32,7 @@ export class SessionCreatorWidget{
 
         const creation_log_p = createElement({tagName: "p", parentElement: form, inlineCss: {display: "none"}})
         createElement({tagName: "label", innerHTML: "Creation Log: ", parentElement: creation_log_p})
-        const status_messages = createElement({tagName: "div", parentElement: creation_log_p, cssClasses: ["status_messages"]})
+        const status_messages = createElement({tagName: "div", parentElement: creation_log_p, cssClasses: ["ItkSessionCreatorWidget_status-messages"]})
 
         form.addEventListener("submit", (ev) => {
             creation_log_p.style.display = "block"

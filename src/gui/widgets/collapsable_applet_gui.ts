@@ -6,8 +6,10 @@ export class CollapsableWidget{
     public readonly collapse_button: HTMLInputElement;
     private _is_collapsed: boolean = false
     public constructor({display_name, parentElement}:{display_name: string, parentElement: HTMLElement}){
-        this.element = createElement({tagName: "div", parentElement, cssClasses: ["CollapsableApplet"]})
-        this.header = createElement({tagName: "h2", parentElement: this.element, innerHTML: display_name})
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["ItkCollapsableApplet"]})
+        this.header = createElement({
+            tagName: "h2", parentElement: this.element, innerHTML: display_name, cssClasses: ["ItkCollapsableApplet_header"]
+        })
         this.collapse_button = createInput({
             inputType: "button",
             parentElement: this.header,

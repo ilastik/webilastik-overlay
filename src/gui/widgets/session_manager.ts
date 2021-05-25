@@ -16,7 +16,7 @@ export class SessionManagerWidget{
         parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver, workflow_container: HTMLElement
     }){
         this.element = new CollapsableWidget({display_name: "Session Management", parentElement}).element;
-        this.element.classList.add("IlastikLauncherWidget")
+        this.element.classList.add("ItkLauncherWidget")
 
         const onNewSession = (new_session: Session) => {
             this.session = new_session

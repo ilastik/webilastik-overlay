@@ -22,7 +22,7 @@ export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
             onNewState: (new_state) => this.onNewState(new_state)
         })
         this.element = new CollapsableWidget({display_name: "Select Image Features", parentElement}).element
-        this.element.classList.add("FeatureSelectionWidget")
+        this.element.classList.add("ItkFeatureSelectionWidget")
         this.feature_to_checkbox = new Map<itk.FeatureExtractor, HTMLInputElement>()
         const table = createElement({tagName: 'table', parentElement: this.element})
         const column_values = [0.3, 0.7, 1.0, 1.6, 3.5, 5.0, 10.0]

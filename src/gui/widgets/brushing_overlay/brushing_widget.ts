@@ -49,7 +49,7 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         })
         this.viewer_driver = viewer_driver
         this.element = new CollapsableWidget({display_name: "Training", parentElement}).element
-        this.element.classList.add("BrushingWidget")
+        this.element.classList.add("ItkBrushingWidget")
 
         let p: HTMLElement;
 
@@ -80,7 +80,7 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
             })
 
         createElement({tagName: "h2", innerHTML: "Brush Strokes", parentElement: this.element})
-        this.brushStrokesContainer = createElement({tagName: "table", parentElement: this.element, cssClasses: ["brushStrokesContainer"]})
+        this.brushStrokesContainer = createElement({tagName: "table", parentElement: this.element, cssClasses: ["ItkBrushingWidget_strokes-container"]})
 
         let render = () => {
             this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke), this.rendererDropdown.getRenderer())

@@ -1,15 +1,20 @@
 import { IViewerDriver } from "../../drivers/viewer_driver";
-import { createElement } from "../../util/misc";
+import { createElement, injectCss } from "../../util/misc";
 import { SessionManagerWidget } from "./session_manager";
 // import { SessionManagerWidget } from "./session_manager";
 
 export class OverlayControls{
     element: HTMLElement;
-    constructor({parentElement=document.body, ilastik_url, viewer_driver, draggable=true}: {
-        parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver, draggable?: boolean
+    constructor({
+        parentElement=document.body, ilastik_url, viewer_driver, draggable=true, css
+    }: {
+        parentElement: HTMLElement, ilastik_url?: URL, viewer_driver: IViewerDriver, draggable?: boolean, css?: URL
     }){
-        this.element = createElement({tagName: "div", parentElement, cssClasses: ["OverlayControls"]})
-        const header = createElement({tagName: "h1", parentElement: this.element, cssClasses: ["OverlayControls_header"], innerHTML: "Webilastik"})
+        if(css){
+            injectCss(css)
+        }
+        this.element = createElement({tagName: "div", parentElement, cssClasses: ["ItkOverlayControls"]})
+        const header = createElement({tagName: "h1", parentElement: this.element, cssClasses: ["ItkOverlayControls_header"], innerHTML: "Webilastik"})
 
         if(draggable){
             this.element.style.position = "fixed"
@@ -18,7 +23,7 @@ export class OverlayControls{
             header.style.userSelect = "none"
             header.style.cursor = "move"
             createElement({
-                tagName: "span", parentElement: header, innerHTML: "•••", cssClasses: ["OverlayControls_drag_handle"], inlineCss: {float: "right"}
+                tagName: "span", parentElement: header, innerHTML: "•••", cssClasses: ["ItkOverlayControls_drag_handle"], inlineCss: {float: "right"}
             })
             header.addEventListener("mousedown", (mouse_down_event) => {
                 let current_pos = {x: parseInt(this.element.style.left), y: parseInt(this.element.style.top)}
