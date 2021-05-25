@@ -137,7 +137,7 @@ export function createOption({displayText, value, parentElement}:
     return option
 }
 
-
+//Gets element geometry, with offsets relative to bottom-left of the screen
 export function getElementContentRect(element: HTMLElement){
     let clientRect = element.getBoundingClientRect() //with border and padding
 
@@ -156,7 +156,7 @@ export function getElementContentRect(element: HTMLElement){
         height: clientRect.height - borderTop - paddingTop - paddingBottom - borderBottom,
         left:   clientRect.left   + paddingLeft + borderLeft,
         //offset from bottom OF THE SCREEN
-        bottom: window.innerHeight - (clientRect.bottom - paddingBottom - borderBottom) //FIXME: horizontal scrollbar?
+        bottom: document.documentElement.clientHeight - (clientRect.bottom - paddingBottom - borderBottom) //FIXME: horizontal scrollbar?
     }
 }
 
