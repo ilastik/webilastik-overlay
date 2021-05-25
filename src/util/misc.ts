@@ -298,3 +298,9 @@ export type WebsocketPayload =  string | ArrayBufferLike | Blob | ArrayBufferVie
 export function sleep(ms: number){
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function injectCss(url: URL){
+    let link_element = createElement({tagName: "link", parentElement: document.head}) as HTMLLinkElement
+    link_element.rel = "stylesheet"
+    link_element.href = url.toString()
+}
