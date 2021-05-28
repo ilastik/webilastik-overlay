@@ -3,8 +3,9 @@ import { mat4, quat, vec3 } from "gl-matrix";
 export type NewViewportsHander = (new_viewport_drivers: Array<IViewportDriver>) => void;
 
 export interface IViewerDriver{
-    getViewportDrivers: () => Array<IViewportDriver>;
+    getViewportDrivers: () => Promise<Array<IViewportDriver>>;
     getTrackedElement: () => HTMLElement;
+    refreshViews: (views: Array<{name: string, url: string}>, channel_colors: Array<vec3>) => void;
     onViewportsChanged?: (handler: NewViewportsHander) => void;
 }
 
@@ -30,7 +31,7 @@ export interface IViewportInjectionParams{
 // is that by splitting a single canvas into multiple viewports it is possible to have a single webgl
 // context be shared between them.
 export interface IViewportDriver{
-    getDataUrl(): URL;
+    data_url: string;
     getGeometry(): IViewportGeometry;
     //gets camera pose in voxel coordinates
     getCameraPoseInVoxelSpace(): {position_vx: vec3, orientation_vx: quat};

@@ -2,6 +2,7 @@ import { Applet } from "../client/applets/applet";
 import { FeatureExtractor, Session } from "../client/ilastik";
 import { IViewerDriver } from "../drivers/viewer_driver";
 import { createElement } from "../util/misc";
+import { PredictingWidget } from "./widgets/predicting_widget";
 import { BrushingWidget } from "./widgets/brushing_overlay/brushing_widget";
 import { FeatureSelectionWidget } from "./widgets/feature_selection";
 
@@ -9,6 +10,7 @@ export class ReferencePixelClassificationWorkflowGui{
     public readonly element: HTMLElement
     public readonly feature_selection_applet: Applet<FeatureExtractor[]>
     public readonly brushing_applet: BrushingWidget;
+    public readonly live_updater: PredictingWidget;
     session: Session;
 
     public constructor({parentElement, session, viewer_driver}: {
@@ -27,6 +29,10 @@ export class ReferencePixelClassificationWorkflowGui{
             session,
             parentElement: this.element,
             viewer_driver,
+        })
+        this.live_updater = new PredictingWidget({
+            session,
+            viewer_driver
         })
     }
 

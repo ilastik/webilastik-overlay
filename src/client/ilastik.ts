@@ -1,5 +1,5 @@
 import { sleep } from "../util/misc"
-import { ensureJsonArray, ensureJsonObject, IJsonable, JsonObject, JsonValue } from "../util/serialization"
+import { ensureJsonArray, ensureJsonObject, ensureJsonString, IJsonable, JsonObject, JsonValue } from "../util/serialization"
 
 export class Session{
     public readonly ilastik_url: string
@@ -267,17 +267,17 @@ export class Shape5D{
 }
 
 export class DataSource implements IJsonable{
-    public constructor(public readonly url: URL){
+    public constructor(public readonly url: string){
     }
     public static fromJsonValue(data: JsonValue) : DataSource{
         let obj = ensureJsonObject(data)
-        return new this(new URL(obj["url"] as string))
+        return new this(ensureJsonString(obj["url"]))
     }
     public toJsonValue(): JsonObject{
-        return {url: this.url.toString()}
+        return {url: this.url}
     }
     public equals(other: DataSource): boolean{
-        return this.url.toString() == other.url.toString()
+        return this.url == other.url
     }
 }
 

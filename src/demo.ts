@@ -1,14 +1,15 @@
-// import { BrushingWidget } from '.'
-// import { DummyViewer, getDummyViewerDriver } from './drivers/dummy'
+import { HtmlImgDriver, OverlayControls } from ".";
+import { createElement } from "./util/misc"
 
-import { DummyViewer, getDummyViewerDriver } from "./drivers/dummy";
-import { OverlayControls } from "./gui/widgets/overlay_controls";
+const img = createElement({tagName: "img", parentElement: document.body}) as HTMLImageElement
+img.src = "/images/c_cells_1.png"
 
-const viewer = new DummyViewer()
-const viewer_driver = getDummyViewerDriver(viewer)
+const viewer_driver = new HtmlImgDriver({img});
 
-new OverlayControls({
+let controls = new OverlayControls({
     parentElement: document.body,
     ilastik_url: new URL("http://localhost:5000"),
     viewer_driver
 })
+
+controls.element.style.zIndex = "999"

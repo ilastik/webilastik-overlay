@@ -52,7 +52,7 @@ export class OverlayViewport{
                 gl: this.gl,
                 start_postition: this.getMouseVoxelPosition(mouseDownEvent),
                 color: brush_stroke_handler.getCurrentColor(),
-                annotated_data_source: new DataSource(viewport_driver.getDataUrl()),
+                annotated_data_source: new DataSource(viewport_driver.data_url),
                 camera_orientation: viewport_driver.getCameraPoseInVoxelSpace().orientation_vx, //FIXME: realy voxel space? rename param in BrushStroke?
             })
             brush_stroke_handler.handleNewBrushStroke(currentBrushStroke)
@@ -181,7 +181,7 @@ export class BrushingOverlay{
     public readonly viewer_driver
 
     private readonly brush_stroke_handler: IBrushStrokeHandler
-    private viewports: Array<OverlayViewport>
+    private viewports: Array<OverlayViewport> = []
 
     public constructor({
         viewer_driver,
@@ -194,9 +194,12 @@ export class BrushingOverlay{
         this.brush_stroke_handler = brush_stroke_handler
         this.element = createElement({tagName: "canvas", parentElement: document.body}) as HTMLCanvasElement;
         this.gl = this.element.getContext("webgl2", {depth: true, stencil: true})!
-        this.viewports = this.viewer_driver.getViewportDrivers().map((viewport_driver) => {
-            return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
+        this.viewer_driver.getViewportDrivers().then((viewport_drivers) => {
+            this.viewports = viewport_drivers.map(viewport_driver => {
+                return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
+            })
         })
+
         if(viewer_driver.onViewportsChanged){
             viewer_driver.onViewportsChanged((new_viewport_drivers) => {
                 this.viewports.forEach((viewport) => {
