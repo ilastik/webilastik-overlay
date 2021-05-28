@@ -304,3 +304,7 @@ export function injectCss(url: URL){
     link_element.rel = "stylesheet"
     link_element.href = url.toString()
 }
+
+export function removeElement(element: HTMLElement){
+    element.parentNode?.removeChild(element)
+}
