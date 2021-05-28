@@ -1,4 +1,4 @@
-.ItkOverlayControls, .ItkCollapsableApplet{
+.ItkOverlayControls, .ItkCollapsableApplet, .ItkPopupWidget{
     padding: 10px;
     border-radius: 3px;
     font-family: helvetica;
