@@ -178,7 +178,7 @@ export class OverlayViewport{
 export class BrushingOverlay{
     public readonly element: HTMLCanvasElement
     public readonly gl: WebGL2RenderingContext
-    public readonly viewer_driver
+    public readonly viewer_driver: IViewerDriver
 
     private readonly brush_stroke_handler: IBrushStrokeHandler
     private viewports: Array<OverlayViewport> = []
