@@ -21,8 +21,11 @@ export class NeuroglancerViewportDriver implements IViewportDriver{
         const orientation_vx = quat.multiply(
             quat.create(), this.viewer.navigationState.pose.orientation.orientation, this.orientation_offset
         )
+        const ng_position_obj = this.viewer.navigationState.pose.position
+        //old neuroglancers do not have the "value" key
+        const position_vx = "value" in ng_position_obj ? ng_position_obj.value : ng_position_obj.spatialCoordinates
         return {
-            position_vx: this.viewer.navigationState.pose.position.value as vec3,
+            position_vx: position_vx as vec3,
             orientation_vx: quat.normalize(orientation_vx, orientation_vx),
         }
     }
