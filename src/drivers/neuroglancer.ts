@@ -126,7 +126,7 @@ export class NeuroglancerDriver implements IViewerDriver{
         //FIXME: what if there are multiple layers of type image?
         const urls : Array<string> = this.viewer.state.toJSON().layers
             .filter((l: any) => l.type == "image")
-            .map((l: any) => l.source.url);
+            .map((l: any) => typeof l.source == "string" ? l.source : l.source.url);
         const selected_url = await SelectorWidget.select({
             title: "Select a data source:", options: urls, optionRenderer: (url: string) => url
         })
