@@ -2,6 +2,7 @@ import { vec3 } from "gl-matrix";
 import { Applet } from "../../client/applets/applet";
 import { DataSource, Session } from "../../client/ilastik";
 import { IViewerDriver } from "../../drivers/viewer_driver";
+import { uuidv4 } from "../../util/misc";
 import { ensureJsonArray, ensureJsonBoolean, ensureJsonNumber, ensureJsonObject, JsonObject, JsonValue } from "../../util/serialization";
 
 class PredictingAppletState{
@@ -44,9 +45,10 @@ export class PredictingWidget extends Applet<PredictingAppletState>{
                 }
                 let views = new_state.datasources.map((ds, ds_index) => {
                     let encoded_ds_url = btoa(ds.url.toString()).replace("+", "-").replace("/", "_")
+                    let run_id = uuidv4()
                     return {
                         name: `lane${ds_index}`,
-                        url: `precomputed://${this.session.session_url.toString()}/${this.name}/${encoded_ds_url}`,
+                        url: `precomputed://${this.session.session_url.toString()}/${this.name}/datasource=${encoded_ds_url}/run_id=${run_id}`,
                     }
                 })
                 viewer_driver.refreshViews(views, new_state.channel_colors)
