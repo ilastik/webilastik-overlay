@@ -111,7 +111,7 @@ export class NeuroglancerDriver implements IViewerDriver{
 
     private makePredictionsShader(channel_colors: Array<vec3>): string{
             let color_lines = channel_colors.map((c: vec3, idx: number) => {
-                `vec3 color${idx} = (vec3(${c[0]}, ${c[1]}, ${c[2]}) / 255.0) * toNormalized(getDataValue(${idx}));`
+                return `vec3 color${idx} = (vec3(${c[0]}, ${c[1]}, ${c[2]}) / 255.0) * toNormalized(getDataValue(${idx}));`
             })
             let colors_to_mix = channel_colors.map((_: vec3, idx: number) => `color${idx}`)
 
