@@ -9,6 +9,7 @@
     "build": "npm run build-cjs",
     "bundle-demo": "npm run build && npx esbuild src/demo.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/bundle.js",
     "bundle-ng-inject": "npm run build && npx esbuild src/injection/inject_into_neuroglancer.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/inject_into_neuroglancer.js",
+    "bundle-img-inject": "npm run build && npx esbuild src/injection/inject_into_img.ts --bundle --loader:.ts=ts --sourcemap --outfile=build/inject_into_img.js",
     "package": "npm run build && npm pack"
   },
   "files": [
