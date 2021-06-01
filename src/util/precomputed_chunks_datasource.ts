@@ -33,7 +33,7 @@ export class PrecomputedChunksScale{
 
     public getChunkUrl(interval: {x: [number, number], y: [number, number], z: [number, number]}): string{
         return this.getUrl().toString() +
-            `${interval.x[0]}-${interval.x[1]}_${interval.y[0]}-${interval.y[1]}_${interval.z[0]}-${interval.z[1]}`
+            `/${interval.x[0]}-${interval.x[1]}_${interval.y[0]}-${interval.y[1]}_${interval.z[0]}-${interval.z[1]}`
     }
 
     public getFullChunkUrl(): string{
