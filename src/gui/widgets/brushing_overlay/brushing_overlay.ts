@@ -4,7 +4,7 @@ import { BrushRenderer } from './brush_renderer'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { ClearConfig, RenderParams, ScissorConfig } from '../../../gl/gl'
-import { changeOrientationBase, coverContents, createElement, insertAfter } from '../../../util/misc'
+import { changeOrientationBase, coverContents, createElement, insertAfter, removeElement } from '../../../util/misc'
 import { IViewerDriver, IViewportDriver } from '../../../drivers/viewer_driver'
 import { IBrushStrokeHandler, BrushStroke } from './brush_stroke'
 import { DataSource } from '../../../client/ilastik'
@@ -227,5 +227,10 @@ export class BrushingOverlay{
         this.viewports.forEach((viewport) => {
             viewport.render(brushStrokes, renderer)
         })
+    }
+
+    public destroy(){
+        this.viewports.forEach(viewport => viewport.destroy())
+        removeElement(this.element)
     }
 }

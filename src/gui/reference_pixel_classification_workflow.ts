@@ -1,7 +1,7 @@
 import { Applet } from "../client/applets/applet";
 import { FeatureExtractor, Session } from "../client/ilastik";
 import { IViewerDriver } from "../drivers/viewer_driver";
-import { createElement } from "../util/misc";
+import { createElement, removeElement } from "../util/misc";
 import { PredictingWidget } from "./widgets/predicting_widget";
 import { BrushingWidget } from "./widgets/brushing_overlay/brushing_widget";
 import { FeatureSelectionWidget } from "./widgets/feature_selection";
@@ -36,7 +36,9 @@ export class ReferencePixelClassificationWorkflowGui{
         })
     }
 
-    public close(){
+    public destroy(){
         //FIXME: close predictions and stuff
+        this.brushing_applet.destroy()
+        removeElement(this.element)
     }
 }

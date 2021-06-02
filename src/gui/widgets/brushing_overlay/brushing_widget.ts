@@ -2,7 +2,7 @@ import { vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
 import { Applet } from "../../../client/applets/applet"
 import { Session } from "../../../client/ilastik"
-import { createElement, vec3ToRgb, vecToString, createSelect, createInput } from "../../../util/misc"
+import { createElement, vec3ToRgb, vecToString, createSelect, createInput, removeElement } from "../../../util/misc"
 import { ensureJsonArray } from "../../../util/serialization"
 import { CollapsableWidget } from "../collapsable_applet_gui"
 import { Vec3ColorPicker } from "../vec3_color_picker"
@@ -123,6 +123,11 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         this.brushStrokeWidgets.forEach(bsw => bsw.destroy())
         this.brushStrokeWidgets = []
         brush_strokes.forEach(stroke => this.doAddBrushStroke(stroke))
+    }
+
+    public destroy(){
+        this.overlay.destroy()
+        removeElement(this.element)
     }
 }
 

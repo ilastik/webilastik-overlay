@@ -38,7 +38,7 @@ export class SessionManagerWidget{
         this.session_loader = new SessionLoaderWidget({parentElement: this.element, ilastik_url, onNewSession})
 
         const onLeaveSession = () => {
-            this.workflow?.element.parentElement?.removeChild(this.workflow.element)
+            this.workflow?.destroy()
             close_session_btn.disabled = true
             leave_session_btn.disabled = true
             this.session_creator.set_disabled(false)
