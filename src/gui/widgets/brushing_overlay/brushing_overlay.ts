@@ -182,6 +182,7 @@ export class BrushingOverlay{
 
     private readonly brush_stroke_handler: IBrushStrokeHandler
     private viewports: Array<OverlayViewport> = []
+    private brushing_enabled: boolean = false
 
     public constructor({
         viewer_driver,
@@ -194,25 +195,25 @@ export class BrushingOverlay{
         this.brush_stroke_handler = brush_stroke_handler
         this.element = createElement({tagName: "canvas", parentElement: document.body}) as HTMLCanvasElement;
         this.gl = this.element.getContext("webgl2", {depth: true, stencil: true})!
-        this.viewer_driver.getViewportDrivers().then((viewport_drivers) => {
-            this.viewports = viewport_drivers.map(viewport_driver => {
-                return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
-            })
-        })
-
+        this.viewer_driver.getViewportDrivers().then(viewport_drivers => this.refreshViewports(viewport_drivers))
         if(viewer_driver.onViewportsChanged){
-            viewer_driver.onViewportsChanged((new_viewport_drivers) => {
-                this.viewports.forEach((viewport) => {
-                    viewport.destroy()
-                })
-                this.viewports = new_viewport_drivers.map((viewport_driver) => {
-                    return new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
-                })
-            })
+            viewer_driver.onViewportsChanged(new_viewport_drivers => this.refreshViewports(new_viewport_drivers))
         }
     }
 
+    private refreshViewports(viewport_drivers: Array<IViewportDriver>){
+        this.viewports.forEach((viewport) => {
+            viewport.destroy()
+        })
+        this.viewports = viewport_drivers.map((viewport_driver) => {
+            const viewport = new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
+            viewport.setBrushingEnabled(this.brushing_enabled)
+            return viewport
+        })
+    }
+
     public setBrushingEnabled(enabled: boolean){
+        this.brushing_enabled = enabled
         this.viewports.forEach(viewport => viewport.setBrushingEnabled(enabled))
     }
 
