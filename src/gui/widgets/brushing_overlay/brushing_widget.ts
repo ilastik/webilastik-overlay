@@ -68,6 +68,7 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
 
 
         const rendererControlsContainer = createElement({tagName: "p", parentElement: this.element})
+        rendererControlsContainer.style.display = (window as any).ilastik_debug ? "block" : "none"
             createElement({tagName: "label", innerHTML: "Rendering style: ", parentElement: rendererControlsContainer})
             this.rendererDropdown = new RendererDropdown({
                 parentElement: rendererControlsContainer,
