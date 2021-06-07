@@ -3,9 +3,9 @@ import { createElement, createInput } from "../../util/misc"
 
 export class SessionCreatorWidget{
     element: HTMLElement
-    constructor({parentElement, ilastik_url=new URL("https://web.ilastik.org/app"), onNewSession}:{
+    constructor({parentElement, ilastik_url, onNewSession}:{
         parentElement: HTMLElement,
-        ilastik_url?: URL,
+        ilastik_url: URL,
         onNewSession: (new_session: Session) => void,
     }){
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["ItkSessionCreatorWidget"]})

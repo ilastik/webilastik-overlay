@@ -7,8 +7,8 @@ export class SessionLoaderWidget{
     public readonly session_url_field: HTMLInputElement;
     public readonly session_token_field: HTMLInputElement;
     constructor({
-        ilastik_url=new URL("https://web.ilastik.org/app"), session_url, token="", parentElement, onNewSession}: {
-        ilastik_url?: URL,
+        ilastik_url, session_url, token="", parentElement, onNewSession}: {
+        ilastik_url: URL,
         session_url?: URL,
         token?: string,
         parentElement: HTMLElement,
