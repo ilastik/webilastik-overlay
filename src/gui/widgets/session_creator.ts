@@ -15,16 +15,16 @@ export class SessionCreatorWidget{
 
         let p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Ilastik api URL: ", parentElement: p})
-        const url_input = createInput({inputType: "url", parentElement: p, required: true, value: ilastik_url.toString()})
+        const url_input = createInput({inputType: "url", parentElement: p, required: true, value: ilastik_url.toString(), name: "itk_api_url"})
 
         p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Timeout (minutes): ", parentElement: p})
-        const timeout_input = createInput({inputType: "number", parentElement: p, required: true, value: "5"})
+        const timeout_input = createInput({inputType: "number", parentElement: p, required: true, value: "5", name: "itk_session_request_timeout"})
         timeout_input.min = "1"
 
         p = createElement({tagName: "p", parentElement: form})
         createElement({tagName: "label", innerHTML: "Session Duration (minutes): ", parentElement: p})
-        const duration_input = createInput({inputType: "number", parentElement: p, required: true, value: "5"})
+        const duration_input = createInput({inputType: "number", parentElement: p, required: true, value: "5", name: "itk_session_request_duration"})
         duration_input.min = "5"
 
         p = createElement({tagName: "p", parentElement: form})
