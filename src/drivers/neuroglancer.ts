@@ -129,7 +129,10 @@ export class NeuroglancerDriver implements IViewerDriver{
         //FIXME: what if there are multiple layers of type image?
         const urls : Array<string> = this.viewer.state.toJSON().layers
             .filter((l: any) => l.type == "image")
-            .map((l: any) => typeof l.source == "string" ? l.source : l.source.url);
+            .map((l: any) => {
+                let url : string = typeof l.source == "string" ? l.source : l.source.url
+                return url.replace(/\bgs:\/\//, "https://storage.googleapis.com/")
+            });
         const selected_url = await SelectorWidget.select({
             title: "Select a data source:", options: urls, optionRenderer: (url: string) => url
         })
