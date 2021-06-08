@@ -80,7 +80,7 @@ export class Session{
     public createAppletSocket(applet_name: string): WebSocket{
         //FIXME  is there a point to handling socket errors?:
         let ws_url = new URL(this.session_url)
-        ws_url.protocol = "ws:" //FIXME: use wss
+        ws_url.protocol = ws_url.protocol == "http:" ? "ws:" : "wss:";
         ws_url.pathname = ws_url.pathname + `/ws/${applet_name}`
         return new WebSocket(ws_url.toString())
     }
