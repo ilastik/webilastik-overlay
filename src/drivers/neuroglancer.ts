@@ -148,7 +148,7 @@ export class NeuroglancerDriver implements IViewerDriver{
             precomp_chunks.scales[0].getUrl()
         }
         const selected_scale = await SelectorWidget.select({
-            title: "Select a scale:",
+            title: "Select a scale to train ilastik on:",
             options: precomp_chunks.scales,
             optionRenderer: (scale: PrecomputedChunksScale) => scale.resolution.map(axis => `${axis}nm`).join(" x "),
         })
