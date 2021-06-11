@@ -3,7 +3,6 @@ import { IViewportDriver, IViewerDriver } from "..";
 import { SelectorWidget } from "../gui/widgets/selector_widget";
 import { getElementContentRect } from "../util/misc";
 import { PrecomputedChunks, PrecomputedChunksScale } from "../util/precomputed_chunks_datasource";
-import { NewViewportsHander } from "./viewer_driver";
 
 type NeuroglancerLayout = "4panel" | "xy" | "xy-3d" | "xz" | "xz-3d" | "yz" | "yz-3d";
 
@@ -80,11 +79,9 @@ export class NeuroglancerDriver implements IViewerDriver{
         }
         return [new NeuroglancerViewportDriver(data_url, this, panels[0], orientation_offsets.get(layout.replace("-3d", ""))!)]
     }
-    onViewportsChanged(handler: NewViewportsHander){
+    onViewportsChanged(handler: () => void){
         //FIXME: check that this async works fine
-        this.viewer.layout.changed.add(async () => {
-            handler(await this.getViewportDrivers())
-        })
+        this.viewer.layout.changed.add(() => handler())
     }
     refreshViews(views: Array<{name: string, url: string}>, channel_colors: Array<vec3>): void{
         views.forEach(view => this.refreshLayer({

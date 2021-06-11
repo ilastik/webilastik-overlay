@@ -1,12 +1,10 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 
-export type NewViewportsHander = (new_viewport_drivers: Array<IViewportDriver>) => void;
-
 export interface IViewerDriver{
     getViewportDrivers: () => Promise<Array<IViewportDriver>>;
     getTrackedElement: () => HTMLElement;
     refreshViews: (views: Array<{name: string, url: string}>, channel_colors: Array<vec3>) => void;
-    onViewportsChanged?: (handler: NewViewportsHander) => void;
+    onViewportsChanged?: (handler: () => void) => void;
 }
 
 //TThe dimensions and offset of a viewport within a viewer, measured in pixels
