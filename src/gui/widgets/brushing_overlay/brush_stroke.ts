@@ -107,7 +107,6 @@ export class BrushStroke extends VertexArray implements IJsonable{
 }
 
 export interface IBrushStrokeHandler{
-    getCurrentColor: () => vec3,
-    handleNewBrushStroke: (stroke: BrushStroke) => any,
+    handleNewBrushStroke: (params: {start_position_uvw: vec3, camera_orientation_uvw: quat, data_url: string}) => BrushStroke,
     handleFinishedBrushStroke: (stroke: BrushStroke) => any,
 }

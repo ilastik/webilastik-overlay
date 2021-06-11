@@ -7,7 +7,6 @@ import { ClearConfig, RenderParams, ScissorConfig } from '../../../gl/gl'
 import { changeOrientationBase, coverContents, createElement, insertAfter, removeElement } from '../../../util/misc'
 import { IViewerDriver, IViewportDriver } from '../../../drivers/viewer_driver'
 import { IBrushStrokeHandler, BrushStroke } from './brush_stroke'
-import { DataSource } from '../../../client/ilastik'
 
 
 export class OverlayViewport{
@@ -50,14 +49,11 @@ export class OverlayViewport{
         }
 
         this.element.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
-            let currentBrushStroke = new BrushStroke({
-                gl: this.gl,
-                start_postition: this.getMouseUvwPosition(mouseDownEvent),
-                color: brush_stroke_handler.getCurrentColor(),
-                annotated_data_source: new DataSource(viewport_driver.data_url),
-                camera_orientation: viewport_driver.getCameraPoseInUvwSpace().orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
+            let currentBrushStroke = brush_stroke_handler.handleNewBrushStroke({
+                start_position_uvw: this.getMouseUvwPosition(mouseDownEvent),
+                camera_orientation_uvw: viewport_driver.getCameraPoseInUvwSpace().orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
+                data_url: viewport_driver.data_url,
             })
-            brush_stroke_handler.handleNewBrushStroke(currentBrushStroke)
 
             let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
                 currentBrushStroke.add_voxel(this.getMouseUvwPosition(mouseMoveEvent))

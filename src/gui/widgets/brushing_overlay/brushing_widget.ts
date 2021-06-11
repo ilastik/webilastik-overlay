@@ -1,7 +1,7 @@
-import { vec3 } from "gl-matrix"
+import { quat, vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
 import { Applet } from "../../../client/applets/applet"
-import { Session } from "../../../client/ilastik"
+import { DataSource, Session } from "../../../client/ilastik"
 import { createElement, vec3ToRgb, vecToString, createSelect, createInput, removeElement } from "../../../util/misc"
 import { ensureJsonArray } from "../../../util/serialization"
 import { CollapsableWidget } from "../collapsable_applet_gui"
@@ -42,8 +42,17 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         this.overlay = new BrushingOverlay({
             viewer_driver,
             brush_stroke_handler: {
-                getCurrentColor: () => this.colorPicker.getColor(),
-                handleNewBrushStroke: (stroke) => this.doAddBrushStroke(stroke),
+                handleNewBrushStroke: (params: {start_position_uvw: vec3, camera_orientation_uvw: quat, data_url: string}) => {
+                    const stroke = new BrushStroke({
+                        gl: this.overlay.gl,
+                        start_postition: params.start_position_uvw, //FIXME put scale somewhere
+                        color: this.colorPicker.getColor(),
+                        annotated_data_source: new DataSource(params.data_url/*FIXME: grab it from viewer_driver + scale*/),
+                        camera_orientation: params.camera_orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
+                    })
+                    this.doAddBrushStroke(stroke)
+                    return stroke
+                },
                 handleFinishedBrushStroke: (_) => this.updateUpstreamState(this.getBrushStrokes())
             },
         })
