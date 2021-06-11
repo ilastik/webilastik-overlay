@@ -36,8 +36,7 @@ export class FeatureSelectionWidget extends Applet<itk.FeatureExtractor[]>{
             extractor_from_scale: (scale: number) => FE,
         ) => {
             let tr = createElement({tagName: 'tr', parentElement: table});
-            let label_td = createElement({tagName: 'td', innerHTML: extractor_name, parentElement: tr});
-            createElement({tagName: 'label', innerHTML: extractor_name, parentElement: label_td});
+            createElement({tagName: 'td', innerHTML: extractor_name, parentElement: tr});
             for(let scale of column_values){
                 let td = createElement({tagName: 'td', parentElement: tr});
                 let extractor = extractor_from_scale(scale)
