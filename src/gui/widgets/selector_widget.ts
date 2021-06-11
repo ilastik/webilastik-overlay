@@ -1,4 +1,4 @@
-import { createElement, createInput, removeElement } from "../../util/misc";
+import { createElement, createInput, removeElement, uuidv4 } from "../../util/misc";
 import { PopupWidget } from "./popup";
 
 export class SelectorWidget<T>{
@@ -66,6 +66,28 @@ export class SelectorWidget<T>{
                 parentElement,
                 onSelection: (opt?: T) => resolve(opt)
             })
+        })
+    }
+}
+
+
+export class SimpleSelectorWidget<T>{
+    public readonly element: HTMLElement;
+    constructor({options, optionRenderer, onSelection, parentElement}: {
+        options: Array<T>,
+        optionRenderer: (option: T) => string,
+        onSelection: (selection: T) => void,
+        parentElement: HTMLElement,
+    }){
+        this.element = createElement({tagName: "form", parentElement, cssClasses: ["ItkSelector"]})
+        options.forEach(opt => {
+            const p = createElement({tagName: "p", parentElement: this.element})
+            let radio = createInput({inputType: "radio", name: "option_selection", parentElement: p, onClick: () => {
+                onSelection(opt)
+            }})
+            radio.id = uuidv4()
+            const label =createElement({tagName: "label", parentElement: p, innerHTML: " " + optionRenderer(opt)}) as HTMLLabelElement;
+            label.htmlFor = radio.id
         })
     }
 }
