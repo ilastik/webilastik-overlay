@@ -52,15 +52,15 @@ export class OverlayViewport{
         this.element.addEventListener("mousedown", (mouseDownEvent: MouseEvent) => {
             let currentBrushStroke = new BrushStroke({
                 gl: this.gl,
-                start_postition: this.getMouseVoxelPosition(mouseDownEvent),
+                start_postition: this.getMouseUvwPosition(mouseDownEvent),
                 color: brush_stroke_handler.getCurrentColor(),
                 annotated_data_source: new DataSource(viewport_driver.data_url),
-                camera_orientation: viewport_driver.getCameraPoseInVoxelSpace().orientation_vx, //FIXME: realy voxel space? rename param in BrushStroke?
+                camera_orientation: viewport_driver.getCameraPoseInUvwSpace().orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
             })
             brush_stroke_handler.handleNewBrushStroke(currentBrushStroke)
 
             let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
-                currentBrushStroke.add_voxel(this.getMouseVoxelPosition(mouseMoveEvent))
+                currentBrushStroke.add_voxel(this.getMouseUvwPosition(mouseMoveEvent))
             }
 
             let handlerCleanup = () => {
@@ -78,32 +78,30 @@ export class OverlayViewport{
     }
 
     public getCameraPoseInWorldSpace(): {position_w: vec3, orientation_w: quat}{
-        const pose_vx = this.viewport_driver.getCameraPoseInVoxelSpace()
-        const voxel_to_world = this.viewport_driver.getVoxelToWorldMatrix()
+        const pose_uvw = this.viewport_driver.getCameraPoseInUvwSpace()
+        const uvw_to_world = this.viewport_driver.getUvwToWorldMatrix()
         return {
             position_w: vec3.transformMat4(
-                vec3.create(), pose_vx.position_vx, voxel_to_world
+                vec3.create(), pose_uvw.position_uvw, uvw_to_world
             ),
-            orientation_w: changeOrientationBase(pose_vx.orientation_vx, voxel_to_world),
+            orientation_w: changeOrientationBase(pose_uvw.orientation_uvw, uvw_to_world),
         }
     }
 
     public getCamera(): OrthoCamera{
-        // - left, right, top, bottom, near and far are measured in world-space-units;
-        //      - 1 world-space-unit is the smallest side of a voxel, as determined by this.voxelToWorld
-        //           - For isotropic data, it's simply 1
+        // - left, right, top, bottom, near and far are measured in nm;
         // - pixelsPerVoxel determines the zoom/field of view;
         // - near and far have to be such that a voxel in any orientation would fit between them;
-        const pixels_per_voxel = this.viewport_driver.getZoomInPixelsPerVoxel()
-        const voxel_diagonal_length = vec3.length(mat4.getScaling(vec3.create(), this.viewport_driver.getVoxelToWorldMatrix()))
-        const viewport_width_in_voxels = this.element.scrollWidth / pixels_per_voxel
-        const viewport_height_in_voxels = this.element.scrollHeight / pixels_per_voxel
+        const pixels_per_nm = this.viewport_driver.getZoomInPixelsPerNm()
+        // const voxel_diagonal_length = vec3.length(mat4.getScaling(vec3.create(), this.viewport_driver.getVoxelToWorldMatrix()))
+        const viewport_width_in_voxels = this.element.scrollWidth / pixels_per_nm
+        const viewport_height_in_voxels = this.element.scrollHeight / pixels_per_nm
         const camera_pose_w = this.getCameraPoseInWorldSpace()
         return new OrthoCamera({
             left: -viewport_width_in_voxels / 2,
             right: viewport_width_in_voxels / 2,
-            near: -voxel_diagonal_length,
-            far: voxel_diagonal_length,
+            near: -1,//-voxel_diagonal_length,
+            far: 1,//voxel_diagonal_length,
             bottom: -viewport_height_in_voxels / 2,
             top: viewport_height_in_voxels / 2,
             position: camera_pose_w.position_w,
@@ -129,12 +127,12 @@ export class OverlayViewport{
         return position_w
     }
 
-    public getMouseVoxelPosition(ev: MouseEvent): vec3{
-        const world_to_voxel = mat4.invert(mat4.create(), this.viewport_driver.getVoxelToWorldMatrix())
+    public getMouseUvwPosition(ev: MouseEvent): vec3{
+        const world_to_uvw = mat4.invert(mat4.create(), this.viewport_driver.getUvwToWorldMatrix())
         let position_w = this.getMouseWorldPosition(ev)
-        let position_vx = vec3.transformMat4(vec3.create(), position_w, world_to_voxel)
-        // console.log(`VoxelPosition: ${vecToString(position_vx)} ======================`)
-        return position_vx
+        let position_uvw = vec3.transformMat4(vec3.create(), position_w, world_to_uvw)
+        // console.log(`DataPosition(nm): ${vecToString(position_uvw)} ======================`)
+        return position_uvw
     }
 
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {
@@ -157,7 +155,7 @@ export class OverlayViewport{
         renderer.render({
             brush_strokes: brushStrokes,
             camera: this.getCamera(),
-            voxelToWorld: this.viewport_driver.getVoxelToWorldMatrix(),
+            voxelToWorld: this.viewport_driver.getUvwToWorldMatrix(),
             renderParams: new RenderParams({
                 scissorConfig: new ScissorConfig({
                     x: viewport_geometry.left,

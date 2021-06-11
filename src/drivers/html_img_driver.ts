@@ -71,16 +71,16 @@ export class HtmlImgViewportDriver implements IViewportDriver{
     public getGeometry(): IViewportGeometry{
         return {left: 0, bottom: 0, height: this.img.height, width: this.img.width}
     }
-    public getCameraPoseInVoxelSpace(): {position_vx: vec3, orientation_vx: quat}{
+    public getCameraPoseInUvwSpace(): {position_uvw: vec3, orientation_uvw: quat}{
         return {
-            position_vx: vec3.fromValues(this.img.width / 2, this.img.height / 2, 0),
-            orientation_vx: quat.create(),
+            position_uvw: vec3.fromValues(this.img.width / 2, this.img.height / 2, 0),
+            orientation_uvw: quat.create(),
         }
     }
-    public getVoxelToWorldMatrix(): mat4{
+    public getUvwToWorldMatrix(): mat4{
         return this.voxelToWorld
     }
-    public getZoomInPixelsPerVoxel(): number{
+    public getZoomInPixelsPerNm(): number{
         return 1
     }
 }

@@ -17,20 +17,26 @@ export class NeuroglancerViewportDriver implements IViewportDriver{
     ){
         this.viewer = viewer_driver.viewer
     }
-    public getCameraPoseInVoxelSpace = () => {
-        const orientation_vx = quat.multiply(
+    public getCameraPoseInUvwSpace = () => {
+        const orientation_uvw = quat.multiply(
             quat.create(), this.viewer.navigationState.pose.orientation.orientation, this.orientation_offset
         )
         const ng_position_obj = this.viewer.navigationState.pose.position
         //old neuroglancers do not have the "value" key
-        const position_vx = "value" in ng_position_obj ? ng_position_obj.value : ng_position_obj.spatialCoordinates
+        //FIXME: check if this is in Nm and not finest-voxel-space
+        const position_uvw = "value" in ng_position_obj ? ng_position_obj.value : ng_position_obj.spatialCoordinates
         return {
-            position_vx: position_vx as vec3,
-            orientation_vx: quat.normalize(orientation_vx, orientation_vx),
+            position_uvw: position_uvw as vec3,
+            orientation_uvw: quat.normalize(orientation_uvw, orientation_uvw),
         }
     }
-    public getVoxelToWorldMatrix = () => mat4.fromScaling(mat4.create(), vec3.fromValues(1, -1, -1))
-    public getZoomInPixelsPerVoxel = () => 1 / this.viewer.navigationState.zoomFactor.value
+    public getUvwToWorldMatrix(): mat4{
+        return mat4.fromScaling(mat4.create(), vec3.fromValues(1, -1, -1))
+    }
+    public getZoomInPixelsPerNm(): number{
+        //FIXME: check if this is acually in Nm and not in finest-voxel-units
+        return 1 / this.viewer.navigationState.zoomFactor.value
+    }
     public getGeometry = () => {
         const panelContentRect = getElementContentRect(this.panel)
         const trackedElementRect = getElementContentRect(this.viewer_driver.getTrackedElement())
