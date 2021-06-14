@@ -71,3 +71,7 @@
 .itk_hidden_element{
     display: none;
 }
+
+.ItkSelector{
+    background-color: rgba(0,0,0, 0.1);
+}
