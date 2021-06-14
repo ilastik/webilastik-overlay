@@ -27,6 +27,7 @@ export class BrushingWidget{
     public readonly brushing_enabled_checkbox: HTMLInputElement
 
     private staging_brush_stroke: BrushStroke | undefined = undefined
+    private destroyed = false
 
     constructor({
         session,
@@ -112,7 +113,9 @@ export class BrushingWidget{
                 strokes.push(this.staging_brush_stroke)
             }
             this.overlay.render(strokes, this.rendererDropdown.getRenderer())
-            window.requestAnimationFrame(render)
+            if(!this.destroyed){
+                window.requestAnimationFrame(render)
+            }
         }
 
         window.requestAnimationFrame(render)
@@ -180,6 +183,7 @@ export class BrushingWidget{
     }
 
     public destroy(){
+        this.destroyed = true
         this.overlay.destroy()
         this.brushStrokeContainer.destroy()
         removeElement(this.element)
