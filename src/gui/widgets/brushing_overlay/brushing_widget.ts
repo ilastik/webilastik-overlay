@@ -26,6 +26,7 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
     private brushing_scale_selector: SimpleSelectorWidget<IDataSourceScale>
     public readonly status_display: HTMLElement
     private refreshStart: Date = new Date()
+    public readonly brushing_enabled_checkbox: HTMLInputElement
 
     constructor({
         session,
@@ -74,13 +75,13 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         let p: HTMLElement;
 
         p = createElement({tagName:"p", parentElement: this.element})
-        const brushing_enabled_checkbox = createInput({inputType: "checkbox", parentElement: p, onClick: () => {
-            this.overlay.setBrushingEnabled(brushing_enabled_checkbox.checked)
+        this.brushing_enabled_checkbox = createInput({inputType: "checkbox", parentElement: p, onClick: () => {
+            this.overlay.setBrushingEnabled(this.brushing_enabled_checkbox.checked)
         }})
-        brushing_enabled_checkbox.id = "brushing_enabled_checkbox"
-        this.overlay.setBrushingEnabled(brushing_enabled_checkbox.checked)
+        this.brushing_enabled_checkbox.id = "brushing_enabled_checkbox"
+        this.overlay.setBrushingEnabled(this.brushing_enabled_checkbox.checked)
         const enable_brushing_label = createElement({tagName: "label", innerHTML: "Enable Brushing", parentElement: p});
-        (enable_brushing_label as HTMLLabelElement).htmlFor = brushing_enabled_checkbox.id
+        (enable_brushing_label as HTMLLabelElement).htmlFor = this.brushing_enabled_checkbox.id
 
         p = createElement({tagName: "p", parentElement: this.element})
         createElement({tagName: "label", innerHTML: "Data resolution (voxel size): ", parentElement: p})
@@ -145,6 +146,11 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
             })
             this.showStatus(status_message)
             this.overlay.refreshViewports(viewport_drivers)
+
+            if(scale_opts.length == 0 && this.brushing_enabled_checkbox.checked){
+                this.brushing_enabled_checkbox.click()
+            }
+            this.brushing_enabled_checkbox.disabled = scale_opts.length == 0
         }
 
         const url = this.viewer_driver.getUrlOnDisplay()
