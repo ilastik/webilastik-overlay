@@ -59,11 +59,11 @@
     padding: 0.2em;
 }
 
-.ItkBrushingWidget_strokes-container{
+.ItkBrushStrokesContainer{
     background-color: rgba(0,0,0, 0.1);
 }
 
-.ItkBrushingWidget_strokes-container td{
+.ItkBrushStrokesContainer td{
     padding: 0.4em;
     background-color: rgba(0,0,0, 0.1);
 }
