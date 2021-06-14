@@ -5,6 +5,17 @@ export interface IViewerDriver{
     getTrackedElement: () => HTMLElement;
     refreshViews: (views: Array<{name: string, url: string}>, channel_colors: Array<vec3>) => void;
     onViewportsChanged?: (handler: () => void) => void;
+    getUrlOnDisplay(): string | undefined;
+}
+
+export interface IMultiscaleDataSource{
+    url: string;
+    scales: Array<IDataSourceScale>;
+}
+
+export interface IDataSourceScale{
+    url: string;
+    resolution: vec3;
 }
 
 //TThe dimensions and offset of a viewport within a viewer, measured in pixels
@@ -29,7 +40,6 @@ export interface IViewportInjectionParams{
 // is that by splitting a single canvas into multiple viewports it is possible to have a single webgl
 // context be shared between them.
 export interface IViewportDriver{
-    data_url: string;
     getGeometry(): IViewportGeometry;
     //gets camera pose in data space, measured in Nm (NOT in fines-voxel-units)
     getCameraPoseInUvwSpace(): {position_uvw: vec3, orientation_uvw: quat};

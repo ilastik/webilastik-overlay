@@ -52,7 +52,6 @@ export class OverlayViewport{
             let currentBrushStroke = brush_stroke_handler.handleNewBrushStroke({
                 start_position_uvw: this.getMouseUvwPosition(mouseDownEvent),
                 camera_orientation_uvw: viewport_driver.getCameraPoseInUvwSpace().orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
-                data_url: viewport_driver.data_url,
             })
 
             let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
@@ -191,17 +190,13 @@ export class BrushingOverlay{
         this.brush_stroke_handler = brush_stroke_handler
         this.element = createElement({tagName: "canvas", parentElement: document.body}) as HTMLCanvasElement;
         this.gl = this.element.getContext("webgl2", {depth: true, stencil: true})!
-        if(viewer_driver.onViewportsChanged){
-            viewer_driver.onViewportsChanged(() => this.refreshViewports())
-        }
-        this.refreshViewports()
     }
 
-    private async refreshViewports(){
+    public refreshViewports(viewport_drivers: Array<IViewportDriver>){
         this.viewports.forEach((viewport) => {
             viewport.destroy()
         })
-        this.viewports = (await this.viewer_driver.getViewportDrivers()).map((viewport_driver) => {
+        this.viewports = viewport_drivers.map((viewport_driver) => {
             const viewport = new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
             viewport.setBrushingEnabled(this.brushing_enabled)
             return viewport

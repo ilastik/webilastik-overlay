@@ -53,6 +53,12 @@
     padding: 0.3em;
 }
 
+.ItkBrushingWidget_status_display{
+    border: dashed 1px grey;
+    background-color: rgba(0,0,0, 0.1);
+    padding: 0.2em;
+}
+
 .ItkBrushingWidget_strokes-container{
     background-color: rgba(0,0,0, 0.1);
 }

@@ -6,10 +6,22 @@ import { IViewportDriver, IViewportGeometry } from "./viewer_driver";
 
 export class HtmlImgDriver implements IViewerDriver{
     public readonly img: HTMLImageElement;
-    container: HTMLElement;
+    public readonly container: HTMLElement;
+    public readonly data_url: string;
     constructor({img}:{img: HTMLImageElement}){
         this.img = img
         this.container = img.parentElement || document.body
+        try{
+            this.data_url = new URL(this.img.src).toString()
+        }catch{
+            let url = new URL(window.location.href)
+            if(this.img.src.startsWith("/")){
+                url.pathname = this.img.src
+            }else{
+                url.pathname = url.pathname.replace(/\/$/, "") + "/" + this.img.src
+            }
+            this.data_url = url.toString()
+        }
     }
     public async getViewportDrivers() : Promise<Array<HtmlImgViewportDriver>>{
         return [new HtmlImgViewportDriver(this.img)]
@@ -49,24 +61,15 @@ export class HtmlImgDriver implements IViewerDriver{
             })
         })
     }
+    public getUrlOnDisplay(): string | undefined{
+        return this.data_url
+    }
 }
 
 export class HtmlImgViewportDriver implements IViewportDriver{
-    public readonly data_url: string;
     private voxelToWorld = mat4.fromScaling(mat4.create(), vec3.fromValues(1, -1, -1))
 
     constructor(public readonly img: HTMLImageElement){
-        try{
-            this.data_url = new URL(this.img.src).toString()
-        }catch{
-            let url = new URL(window.location.href)
-            if(this.img.src.startsWith("/")){
-                url.pathname = this.img.src
-            }else{
-                url.pathname = url.pathname.replace(/\/$/, "") + "/" + this.img.src
-            }
-            this.data_url = url.toString()
-        }
     }
     public getGeometry(): IViewportGeometry{
         return {left: 0, bottom: 0, height: this.img.height, width: this.img.width}

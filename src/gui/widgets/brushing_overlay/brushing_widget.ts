@@ -2,9 +2,12 @@ import { quat, vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
 import { Applet } from "../../../client/applets/applet"
 import { DataSource, Session } from "../../../client/ilastik"
+import { IDataSourceScale, IViewportDriver } from "../../../drivers/viewer_driver"
 import { createElement, vec3ToRgb, vecToString, createSelect, createInput, removeElement } from "../../../util/misc"
+import { PrecomputedChunks } from "../../../util/precomputed_chunks_datasource"
 import { ensureJsonArray } from "../../../util/serialization"
 import { CollapsableWidget } from "../collapsable_applet_gui"
+import { SimpleSelectorWidget } from "../selector_widget"
 import { Vec3ColorPicker } from "../vec3_color_picker"
 import { BrushingOverlay } from "./brushing_overlay"
 import { BrushelBoxRenderer } from "./brush_boxes_renderer"
@@ -20,6 +23,9 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
     public readonly rendererDropdown: RendererDropdown
     private readonly overlay: BrushingOverlay
     private brushStrokeWidgets: Array<BrushStrokeWidget> = []
+    private brushing_scale_selector: SimpleSelectorWidget<IDataSourceScale>
+    public readonly status_display: HTMLElement
+    private refreshStart: Date = new Date()
 
     constructor({
         session,
@@ -42,12 +48,12 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         this.overlay = new BrushingOverlay({
             viewer_driver,
             brush_stroke_handler: {
-                handleNewBrushStroke: (params: {start_position_uvw: vec3, camera_orientation_uvw: quat, data_url: string}) => {
+                handleNewBrushStroke: (params: {start_position_uvw: vec3, camera_orientation_uvw: quat}) => {
                     const stroke = new BrushStroke({
                         gl: this.overlay.gl,
                         start_postition: params.start_position_uvw, //FIXME put scale somewhere
                         color: this.colorPicker.getColor(),
-                        annotated_data_source: new DataSource(params.data_url/*FIXME: grab it from viewer_driver + scale*/),
+                        annotated_data_source: new DataSource(this.brushing_scale_selector.getSelection()!.url),
                         camera_orientation: params.camera_orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
                     })
                     this.doAddBrushStroke(stroke)
@@ -56,9 +62,14 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
                 handleFinishedBrushStroke: (_) => this.updateUpstreamState(this.getBrushStrokes())
             },
         })
-        this.viewer_driver = viewer_driver
         this.element = new CollapsableWidget({display_name: "Training", parentElement}).element
         this.element.classList.add("ItkBrushingWidget")
+        this.viewer_driver = viewer_driver
+        if(viewer_driver.onViewportsChanged){
+            viewer_driver.onViewportsChanged(async () => this.refreshDatasource())
+        }
+
+        this.status_display = createElement({tagName:"p", parentElement: this.element, cssClasses: ["ItkBrushingWidget_status_display"]})
 
         let p: HTMLElement;
 
@@ -70,6 +81,10 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         this.overlay.setBrushingEnabled(brushing_enabled_checkbox.checked)
         const enable_brushing_label = createElement({tagName: "label", innerHTML: "Enable Brushing", parentElement: p});
         (enable_brushing_label as HTMLLabelElement).htmlFor = brushing_enabled_checkbox.id
+
+        p = createElement({tagName: "p", parentElement: this.element})
+        createElement({tagName: "label", innerHTML: "Data resolution (voxel size): ", parentElement: p})
+        this.brushing_scale_selector  = SimpleSelectorWidget.empty<IDataSourceScale>(p)
 
         p = createElement({tagName: "p", parentElement: this.element})
         createElement({tagName: "label", innerHTML: "Brush Color: ", parentElement: p})
@@ -92,12 +107,70 @@ export class BrushingWidget extends Applet<Array<BrushStroke>>{
         createElement({tagName: "h2", innerHTML: "Brush Strokes", parentElement: this.element})
         this.brushStrokesContainer = createElement({tagName: "table", parentElement: this.element, cssClasses: ["ItkBrushingWidget_strokes-container"]})
 
+        this.refreshDatasource()
+
         let render = () => {
             this.overlay.render(this.brushStrokeWidgets.map(w => w.brushStroke), this.rendererDropdown.getRenderer())
             window.requestAnimationFrame(render)
         }
 
         window.requestAnimationFrame(render)
+    }
+
+    public showStatus(message: string){
+        this.status_display.innerHTML = message
+    }
+
+    public clearError(){
+        this.status_display.innerHTML = ""
+    }
+
+    public async refreshDatasource(){
+        //this is necessary for preventing racing
+        const refreshStart = new Date()
+        this.refreshStart = refreshStart
+
+        let refreshWidgets = (
+            scale_opts: IDataSourceScale[], status_message: string, viewport_drivers: IViewportDriver[]
+        ) => {
+            if(refreshStart.getTime() < this.refreshStart.getTime()){
+                return
+            }
+            removeElement(this.brushing_scale_selector.element)
+            this.brushing_scale_selector = new SimpleSelectorWidget<IDataSourceScale>({
+                parentElement: p,
+                options: scale_opts,
+                optionRenderer: (scale) => `${scale.resolution[0]} x ${scale.resolution[1]} x ${scale.resolution[2]} nm`,
+                onSelection: (_) => {},
+            })
+            this.showStatus(status_message)
+            this.overlay.refreshViewports(viewport_drivers)
+        }
+
+        const url = this.viewer_driver.getUrlOnDisplay()
+        const p = this.brushing_scale_selector.element.parentElement!;
+        if(url === undefined){
+            return refreshWidgets([], "No selected training image", [])
+        }
+        if(!url.startsWith("precomputed")){
+            return refreshWidgets([], `Unsuported URL for training image: ${url}`, [])
+        }
+        try{
+            const precomp_chunks = await PrecomputedChunks.create(url)
+            const viewport_drivers = await this.viewer_driver.getViewportDrivers()
+            refreshWidgets(
+                precomp_chunks.scales.map((precomp_scale) => ({
+                    url: precomp_scale.getUrl(),
+                    resolution: [...precomp_scale.resolution],
+                })),
+                `Now training on ${url}`,
+                viewport_drivers
+            )
+        }catch(e){
+            removeElement(this.brushing_scale_selector.element)
+            this.showStatus(`Error: ${e}`)
+            return
+        }
     }
 
     public addBrushStroke(brushStroke: BrushStroke){

@@ -73,6 +73,7 @@ export class SelectorWidget<T>{
 
 export class SimpleSelectorWidget<T>{
     public readonly element: HTMLElement;
+    private selection?: T;
     constructor({options, optionRenderer, onSelection, parentElement}: {
         options: Array<T>,
         optionRenderer: (option: T) => string,
@@ -80,14 +81,35 @@ export class SimpleSelectorWidget<T>{
         parentElement: HTMLElement,
     }){
         this.element = createElement({tagName: "form", parentElement, cssClasses: ["ItkSelector"]})
-        options.forEach(opt => {
-            const p = createElement({tagName: "p", parentElement: this.element})
+        options.forEach((opt, opt_index) => {
+            const p = createElement({tagName: "p", parentElement: this.element, onClick: () => {
+                this.selection = opt
+            }})
             let radio = createInput({inputType: "radio", name: "option_selection", parentElement: p, onClick: () => {
                 onSelection(opt)
             }})
             radio.id = uuidv4()
             const label =createElement({tagName: "label", parentElement: p, innerHTML: " " + optionRenderer(opt)}) as HTMLLabelElement;
             label.htmlFor = radio.id
+            if(opt_index == 0){
+                label.click()
+            }
+        })
+        if(options.length == 0){
+            createElement({tagName: "p", parentElement: this.element, innerHTML: "-- No selections available --"})
+        }
+    }
+
+    public getSelection() : T | undefined{
+        return this.selection
+    }
+
+    public static empty<T>(parentElement: HTMLElement): SimpleSelectorWidget<T>{
+        return new SimpleSelectorWidget<T>({
+            options: [],
+            onSelection: (_) => {},
+            optionRenderer: (_) => "",
+            parentElement,
         })
     }
 }

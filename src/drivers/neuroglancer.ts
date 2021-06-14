@@ -1,15 +1,12 @@
 import { vec3, mat4, quat } from "gl-matrix"
 import { IViewportDriver, IViewerDriver } from "..";
-import { SelectorWidget } from "../gui/widgets/selector_widget";
 import { getElementContentRect } from "../util/misc";
-import { PrecomputedChunks, PrecomputedChunksScale } from "../util/precomputed_chunks_datasource";
 
 type NeuroglancerLayout = "4panel" | "xy" | "xy-3d" | "xz" | "xz-3d" | "yz" | "yz-3d";
 
 export class NeuroglancerViewportDriver implements IViewportDriver{
     private viewer: any
     constructor(
-        public readonly data_url: string,
         public readonly viewer_driver: NeuroglancerDriver,
         public readonly panel: HTMLElement,
         private readonly orientation_offset: quat,
@@ -59,28 +56,27 @@ export class NeuroglancerDriver implements IViewerDriver{
     }
     async getViewportDrivers(): Promise<Array<IViewportDriver>>{
         const panels = Array(...document.querySelectorAll(".neuroglancer-panel")) as Array<HTMLElement>;
+        if(panels.length == 0){
+            return []
+        }
         const layout: NeuroglancerLayout = this.viewer.state.toJSON()["layout"]
         const orientation_offsets = new Map<string, quat>([
             ["xy", quat.create()],
             ["xz", quat.setAxisAngle(quat.create(), vec3.fromValues(1, 0, 0), Math.PI / 2)], // FIXME
             ["yz", quat.setAxisAngle(quat.create(), vec3.fromValues(0, 1, 0), Math.PI / 2)],//FIXME
         ])
-        const data_url = (await this.getDataUrl())?.toString()
-        if(data_url === undefined){
-            return []
-        }
         if(layout == "4panel"){
             console.log("Detected 4panel layout!s!")
             return [
-                new NeuroglancerViewportDriver(data_url, this, panels[0], orientation_offsets.get("xy")!),
-                new NeuroglancerViewportDriver(data_url, this, panels[1], orientation_offsets.get("xz")!),
-                new NeuroglancerViewportDriver(data_url, this, panels[3], orientation_offsets.get("yz")!),
+                new NeuroglancerViewportDriver(this, panels[0], orientation_offsets.get("xy")!),
+                new NeuroglancerViewportDriver(this, panels[1], orientation_offsets.get("xz")!),
+                new NeuroglancerViewportDriver(this, panels[3], orientation_offsets.get("yz")!),
             ]
         }
-        return [new NeuroglancerViewportDriver(data_url, this, panels[0], orientation_offsets.get(layout.replace("-3d", ""))!)]
+        return [new NeuroglancerViewportDriver(this, panels[0], orientation_offsets.get(layout.replace("-3d", ""))!)]
     }
     onViewportsChanged(handler: () => void){
-        //FIXME: check that this async works fine
+        this.viewer.layerManager.layersChanged.add(() => handler())
         this.viewer.layout.changed.add(() => handler())
     }
     refreshViews(views: Array<{name: string, url: string}>, channel_colors: Array<vec3>): void{
@@ -128,34 +124,16 @@ export class NeuroglancerDriver implements IViewerDriver{
             ].join("\n")
     }
 
-    private async getDataUrl(): Promise<string | undefined>{
-        //FIXME: what if there are multiple layers of type image?
-        const urls : Array<string> = this.viewer.state.toJSON().layers
-            .filter((l: any) => l.type == "image")
+    public getImageLayerUrls() : Array<string>{
+        return (this.viewer.state.toJSON().layers || []).filter((l: any) => l.type == "image");
+    }
+
+    public getUrlOnDisplay(): string | undefined{
+        return this.getImageLayerUrls()
+            .filter((l: any) => !("visible" in l) || l.visible)
             .map((l: any) => {
                 let url : string = typeof l.source == "string" ? l.source : l.source.url
                 return url.replace(/\bgs:\/\//, "https://storage.googleapis.com/")
-            });
-        const selected_url = await SelectorWidget.select({
-            title: "Select a data source:", options: urls, optionRenderer: (url: string) => url
-        })
-        if(selected_url === undefined){
-            return undefined
-        }
-        if(!selected_url.startsWith("precomputed")){
-            alert(`ilastik: Unsupported url: ${selected_url}`) //FIXME
-            return undefined
-        }
-        const precomp_chunks = await PrecomputedChunks.create(selected_url)
-        if(precomp_chunks.scales.length == 1){
-            precomp_chunks.scales[0].getUrl()
-        }
-        const selected_scale = await SelectorWidget.select({
-            title: "Select a scale to train ilastik on:",
-            options: precomp_chunks.scales,
-            optionRenderer: (scale: PrecomputedChunksScale) => scale.resolution.map(axis => `${axis}nm`).join(" x "),
-        })
-        return selected_scale?.getUrl()
+            })[0];
     }
-
 }
