@@ -55,7 +55,7 @@ export class OverlayViewport{
             })
 
             let scribbleHandler = (mouseMoveEvent: MouseEvent) => {
-                currentBrushStroke.add_voxel(this.getMouseUvwPosition(mouseMoveEvent))
+                currentBrushStroke.try_add_point_uvw(this.getMouseUvwPosition(mouseMoveEvent))
             }
 
             let handlerCleanup = () => {

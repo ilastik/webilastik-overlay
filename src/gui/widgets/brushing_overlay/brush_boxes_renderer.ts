@@ -225,7 +225,7 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
                 /*mode=*/this.box.getDrawingMode(),
                 /*first=*/0,
                 /*count=*/this.box.numVerts,
-                /*instanceCount=*/brush_stroke.num_voxels
+                /*instanceCount=*/brush_stroke.num_points
             );
         }
     }

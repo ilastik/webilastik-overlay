@@ -1,5 +1,6 @@
+import { vec3 } from "gl-matrix"
 import { sleep } from "../util/misc"
-import { ensureJsonArray, ensureJsonObject, ensureJsonString, IJsonable, JsonObject, JsonValue } from "../util/serialization"
+import { ensureJsonArray, ensureJsonNumber, ensureJsonObject, ensureJsonString, IJsonable, JsonObject, JsonValue } from "../util/serialization"
 
 export class Session{
     public readonly ilastik_url: string
@@ -267,11 +268,17 @@ export class Shape5D{
 }
 
 export class DataSource implements IJsonable{
-    public constructor(public readonly url: string){
+    public constructor(public readonly url: string, public readonly spatial_resolution: vec3){
     }
     public static fromJsonValue(data: JsonValue) : DataSource{
         let obj = ensureJsonObject(data)
-        return new this(ensureJsonString(obj["url"]))
+        const raw_resolution = ensureJsonArray(obj["spatial_resolution"])
+        const resolution = vec3.fromValues(
+            ensureJsonNumber(raw_resolution[0]),
+            ensureJsonNumber(raw_resolution[1]),
+            ensureJsonNumber(raw_resolution[2]),
+        )
+        return new this(ensureJsonString(obj["url"]), resolution)
     }
     public toJsonValue(): JsonObject{
         return {url: this.url}

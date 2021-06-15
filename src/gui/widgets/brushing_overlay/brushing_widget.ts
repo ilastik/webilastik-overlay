@@ -42,11 +42,14 @@ export class BrushingWidget{
             viewer_driver,
             brush_stroke_handler: {
                 handleNewBrushStroke: (params: {start_position_uvw: vec3, camera_orientation_uvw: quat}) => {
-                    this.staging_brush_stroke = new BrushStroke({
+                    this.staging_brush_stroke = BrushStroke.create({
                         gl: this.overlay.gl,
-                        start_postition: params.start_position_uvw, //FIXME put scale somewhere
+                        start_postition_uvw: params.start_position_uvw, //FIXME put scale somewhere
                         color: this.colorPicker.getColor(),
-                        annotated_data_source: new DataSource(this.brushing_scale_selector.getSelection()!.url),
+                        annotated_data_source: new DataSource(
+                            this.brushing_scale_selector.getSelection()!.url,
+                            this.brushing_scale_selector.getSelection()!.resolution,
+                        ),
                         camera_orientation: params.camera_orientation_uvw, //FIXME: realy data space? rename param in BrushStroke?
                     })
                     return this.staging_brush_stroke

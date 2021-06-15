@@ -7,14 +7,14 @@ import { ensureJsonObject, IJsonable, JsonObject, JsonValue} from "../../../util
 
 export class BrushStroke extends VertexArray implements IJsonable{
     public readonly camera_orientation: quat
-    public num_voxels : number
+    public num_points : number
     public readonly color : vec3
     public readonly positions_buffer: Vec3AttributeBuffer
     public readonly annotated_data_source: DataSource;
 
-    constructor({gl, start_postition, color, camera_orientation, annotated_data_source}: {
+    private constructor({gl, points_vx, color, camera_orientation, annotated_data_source}: {
         gl: WebGL2RenderingContext,
-        start_postition: vec3,
+        points_vx: vec3[],
         color: vec3,
         camera_orientation: quat,
         annotated_data_source: DataSource,
@@ -23,32 +23,49 @@ export class BrushStroke extends VertexArray implements IJsonable{
         super(data)
         this.camera_orientation = quat.create(); quat.copy(this.camera_orientation, camera_orientation)
         this.annotated_data_source = annotated_data_source
-        this.num_voxels = 0
+        this.num_points = 0
         this.color = vec3.create(); vec3.copy(this.color, color)
         this.positions_buffer = new Vec3AttributeBuffer(gl, data, BufferUsageHint.DYNAMIC_DRAW)
-        this.add_voxel(start_postition)
+        points_vx.forEach(pt_vx => this.try_add_point_vx(pt_vx))
+    }
+
+    public static create({gl, start_postition_uvw, color, camera_orientation, annotated_data_source}: {
+        gl: WebGL2RenderingContext,
+        start_postition_uvw: vec3,
+        color: vec3,
+        camera_orientation: quat,
+        annotated_data_source: DataSource,
+    }): BrushStroke{
+        const stroke = new BrushStroke({gl, points_vx: [], color, camera_orientation, annotated_data_source})
+        stroke.try_add_point_uvw(start_postition_uvw)
+        return stroke
+    }
+
+    public get resolution(): vec3{
+        return this.annotated_data_source.spatial_resolution
     }
 
     private getLastVoxelRef() : vec3{
-        return this.getVertRef(this.num_voxels - 1)
+        return this.getVertRef(this.num_points - 1)
     }
 
-    public add_voxel(voxel: vec3){
-        let rounded_centered_voxel = vec3.fromValues(
-            Math.floor(voxel[0]),
-            Math.floor(voxel[1]),
-            Math.floor(voxel[2])
-        )
-        if(vec3.equals(this.getLastVoxelRef(), rounded_centered_voxel)){
-            return
+    public try_add_point_uvw(point_uvw: vec3): boolean{
+        let point_vx = vec3.floor(vec3.create(), vec3.divide(vec3.create(), point_uvw, this.resolution))
+        return this.try_add_point_vx(point_vx)
+    }
+
+    public try_add_point_vx(point_vx: vec3): boolean{
+        if(this.num_points > 0 && vec3.equals(this.getLastVoxelRef(), point_vx)){
+            return false
         }
-        // console.log(`Added voxel ${vecToString(rounded_centered_voxel)} to brush stroke`)
-        vec3.copy(this.getVertRef(this.num_voxels), rounded_centered_voxel)
+        console.log(`Added voxel ${vec3.str(point_vx)} to brush stroke`)
+        vec3.copy(this.getVertRef(this.num_points), point_vx)
         this.positions_buffer.populate({
-            dstByteOffset: this.num_voxels * voxel.length * Float32Array.BYTES_PER_ELEMENT,
-            data: new Float32Array(rounded_centered_voxel)
+            dstByteOffset: this.num_points * point_vx.length * Float32Array.BYTES_PER_ELEMENT,
+            data: new Float32Array(point_vx)
         })
-        this.num_voxels += 1
+        this.num_points += 1
+        return true
     }
 
     public destroy(){
@@ -57,7 +74,7 @@ export class BrushStroke extends VertexArray implements IJsonable{
 
     public toJsonValue(): JsonObject{
         let raw_voxels: Array<{x: number, y: number, z: number}> = []
-        for(let i=0; i<this.num_voxels; i++){
+        for(let i=0; i<this.num_points; i++){
             let vert = this.getVertRef(i)
             raw_voxels.push({x: vert[0], y: vert[1], z: vert[2]})
         }
@@ -96,13 +113,9 @@ export class BrushStroke extends VertexArray implements IJsonable{
             camera_orientation = quat.create()
         }
         let annotated_data_source = DataSource.fromJsonValue(raw["raw_data"])
-        let brush_stroke = new BrushStroke({
-            gl, start_postition: voxels[0], camera_orientation, color, annotated_data_source
+        return new BrushStroke({
+            gl, points_vx: voxels, camera_orientation, color, annotated_data_source
         })
-        for(let i=1; i<voxels.length; i++){
-            brush_stroke.add_voxel(voxels[i])
-        }
-        return brush_stroke
     }
 }
 
