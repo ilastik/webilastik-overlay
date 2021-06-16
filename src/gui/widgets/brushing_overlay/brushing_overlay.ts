@@ -95,8 +95,8 @@ export class OverlayViewport{
         return new OrthoCamera({
             left: -viewport_width_in_voxels / 2,
             right: viewport_width_in_voxels / 2,
-            near: -1,//-voxel_diagonal_length,
-            far: 1,//voxel_diagonal_length,
+            near: -1000,//-voxel_diagonal_length,
+            far: 1000,//voxel_diagonal_length,
             bottom: -viewport_height_in_voxels / 2,
             top: viewport_height_in_voxels / 2,
             position: camera_pose_w.position_w,
