@@ -27,7 +27,7 @@ export class BrushingWidget{
     public readonly brushing_enabled_checkbox: HTMLInputElement
 
     private staging_brush_stroke: BrushStroke | undefined = undefined
-    private destroyed = false
+    private animationRequestId: number = 0
 
     constructor({
         session,
@@ -109,19 +109,6 @@ export class BrushingWidget{
         })
 
         this.refreshDatasource()
-
-        let render = () => {
-            let strokes = this.brushStrokeContainer.getBrushStrokes()
-            if(this.staging_brush_stroke){
-                strokes.push(this.staging_brush_stroke)
-            }
-            this.overlay.render(strokes, this.rendererDropdown.getRenderer())
-            if(!this.destroyed){
-                window.requestAnimationFrame(render)
-            }
-        }
-
-        window.requestAnimationFrame(render)
     }
 
     public showStatus(message: string){
@@ -157,6 +144,17 @@ export class BrushingWidget{
                 this.brushing_enabled_checkbox.click()
             }
             this.brushing_enabled_checkbox.disabled = scale_opts.length == 0
+
+            window.cancelAnimationFrame(this.animationRequestId)
+            const render = () => {
+                let strokes = this.brushStrokeContainer.getBrushStrokes()
+                if(this.staging_brush_stroke){
+                    strokes.push(this.staging_brush_stroke)
+                }
+                this.overlay.render(strokes, this.rendererDropdown.getRenderer())
+                this.animationRequestId = window.requestAnimationFrame(render)
+            }
+            this.animationRequestId = window.requestAnimationFrame(render)
         }
 
         const url = this.viewer_driver.getUrlOnDisplay()
@@ -186,7 +184,7 @@ export class BrushingWidget{
     }
 
     public destroy(){
-        this.destroyed = true
+        window.cancelAnimationFrame(this.animationRequestId)
         this.overlay.destroy()
         this.brushStrokeContainer.destroy()
         removeElement(this.element)
