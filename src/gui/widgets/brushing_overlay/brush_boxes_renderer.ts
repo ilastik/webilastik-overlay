@@ -118,6 +118,8 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
                 in vec3 a_vert_pos_o; //box vertex, different for every vertex
                 in vec3 a_offset_vx; //voxel coordinates (cube)
 
+                uniform vec3 u_brush_resolution;
+
                 uniform mat4 u_voxel_to_world;
                 uniform mat4 u_world_to_clip;
                 uniform mat3 u_clip_to_world;
@@ -132,10 +134,13 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
                 ${debugColors ? `out vec3 color;` : ``}
 
                 void main(){
-                    vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)).xyz;
+                    vec3 voxel_shape_vx = vec3(1,1,1);
+                    vec3 voxel_shape_uvw = voxel_shape_vx * u_brush_resolution;
+                    vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(voxel_shape_uvw, 0)).xyz;
 
                     vec3 box_center_vx = a_offset_vx + vec3(0.5, 0.5, 0.5); // 0.5 -> center of the voxel
-                    vec4 box_center_w = u_voxel_to_world * vec4(box_center_vx, 1.0);
+                    vec3 box_center_uvw = box_center_vx * u_brush_resolution;
+                    vec4 box_center_w = u_voxel_to_world * vec4(box_center_uvw, 1.0);
                     vec4 box_center_c = u_world_to_clip * box_center_w;
 
                     vec3 vert_pos_w = (a_vert_pos_o * voxel_shape_w) + box_center_w.xyz; //apply voxel_to_world just to the offset so faces don't flip
@@ -154,6 +159,7 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
                 precision mediump float;
 
                 uniform mat4 u_voxel_to_world;
+                uniform vec3 u_brush_resolution;
 
                 ${debugColors ? `in` : `uniform`} vec3 color;
                 in vec3 v_dist_vert_proj_to_box_center_w;
@@ -162,7 +168,7 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
                 out highp vec4 outf_color;
 
                 void main(){
-                    vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(1,1,1, 0)).xyz; // w=0 because this is a distance, not a point
+                    vec3 voxel_shape_w = abs(u_voxel_to_world * vec4(u_brush_resolution, 0)).xyz; // w=0 because this is a distance, not a point
                     if(all(lessThanEqual(
                         abs(v_dist_vert_proj_to_box_center_w), voxel_shape_w / 2.0  //if projection onto slicing plane is still inside box
                     ))){
@@ -220,6 +226,7 @@ export class BrushelBoxRenderer extends ShaderProgram implements BrushRenderer{
             if(!this.debugColors){
                 this.uniform3fv("color", brush_stroke.color)
             }
+            this.uniform3fv("u_brush_resolution", brush_stroke.resolution)
             brush_stroke.positions_buffer.useAsInstacedAttribute({vao: this.vao, location: a_offset_vx_location, attributeDivisor: 1})
             this.gl.drawArraysInstanced( //instance-draw a bunch of cubes, one cube for each voxel in the brush stroke
                 /*mode=*/this.box.getDrawingMode(),
