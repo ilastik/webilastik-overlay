@@ -308,3 +308,11 @@ export function injectCss(url: URL){
 export function removeElement(element: HTMLElement){
     element.parentNode?.removeChild(element)
 }
+
+export function show_if_changed(key: string, value: any, suffix = ""){
+    const str_value = JSON.stringify(value);
+    if((window as any)[key] !== str_value){
+        (window as any)[key] = str_value
+        console.log(`===> ${key} is now ${str_value} ${suffix}`)
+    }
+}
