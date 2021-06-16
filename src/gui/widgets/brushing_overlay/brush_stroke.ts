@@ -58,7 +58,6 @@ export class BrushStroke extends VertexArray implements IJsonable{
         if(this.num_points > 0 && vec3.equals(this.getLastVoxelRef(), point_vx)){
             return false
         }
-        console.log(`Added voxel ${vec3.str(point_vx)} to brush stroke`)
         vec3.copy(this.getVertRef(this.num_points), point_vx)
         this.positions_buffer.populate({
             dstByteOffset: this.num_points * point_vx.length * Float32Array.BYTES_PER_ELEMENT,
