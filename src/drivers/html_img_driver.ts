@@ -55,7 +55,9 @@ export class HtmlImgDriver implements IViewerDriver{
                             x: [x, Math.min(x + increment, this.img.width)],
                             y: [y, Math.min(y + increment, this.img.height)],
                             z: [0, 1]
-                        }).replace(/^precomputed:\/\//, "") + "?format=png"
+                        })
+                        .withAddedSearchParams(new Map([["format", "png"]]))
+                        .href.replace(/^precomputed:\/\//, "")
                     }
                 }
             })

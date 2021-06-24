@@ -170,7 +170,7 @@ export class BrushingWidget{
             const viewport_drivers = await this.viewer_driver.getViewportDrivers()
             refreshWidgets(
                 precomp_chunks.scales.map((precomp_scale) => ({
-                    url: precomp_scale.getUrl(),
+                    url: precomp_scale.getUrl().href,
                     resolution: [...precomp_scale.resolution],
                 })),
                 `Now training on ${url}`,

@@ -16,7 +16,7 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "moduleResolution": "node",
-    "target": "ES2017",
+    "target": "ES2018",
     "newLine": "LF",
     "typeRoots": [],
     "module": "CommonJS"
