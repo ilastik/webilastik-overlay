@@ -4,8 +4,8 @@ import { BrushRenderer } from './brush_renderer'
 import { OrthoCamera } from './camera'
 // import { PerspectiveCamera } from './camera'
 import { ClearConfig, RenderParams, ScissorConfig } from '../../../gl/gl'
-import { changeOrientationBase, coverContents, createElement, insertAfter, removeElement } from '../../../util/misc'
-import { IViewerDriver, IViewportDriver } from '../../../drivers/viewer_driver'
+import { changeOrientationBase, coverContents, insertAfter, removeElement } from '../../../util/misc'
+import { IViewportDriver } from '../../../drivers/viewer_driver'
 import { IBrushStrokeHandler, BrushStroke } from './brush_stroke'
 
 
@@ -166,36 +166,34 @@ export class OverlayViewport{
     }
 
     public destroy(){
-        this.element.parentNode!.removeChild(this.element)
+        removeElement(this.element)
     }
 }
 
 export class BrushingOverlay{
+    public readonly trackedElement: HTMLElement
     public readonly element: HTMLCanvasElement
-    public readonly gl: WebGL2RenderingContext
-    public readonly viewer_driver: IViewerDriver
-
     private readonly brush_stroke_handler: IBrushStrokeHandler
+    public readonly gl: WebGL2RenderingContext
+
     private viewports: Array<OverlayViewport> = []
     private brushing_enabled: boolean = false
 
     public constructor({
-        viewer_driver,
+        trackedElement,
+        viewport_drivers,
         brush_stroke_handler,
+        gl,
     }: {
-        viewer_driver: IViewerDriver,
+        trackedElement: HTMLElement,
+        viewport_drivers: Array<IViewportDriver>,
         brush_stroke_handler: IBrushStrokeHandler,
+        gl: WebGL2RenderingContext
     }){
-        this.viewer_driver = viewer_driver
+        this.trackedElement = trackedElement;
         this.brush_stroke_handler = brush_stroke_handler
-        this.element = createElement({tagName: "canvas", parentElement: document.body}) as HTMLCanvasElement;
-        this.gl = this.element.getContext("webgl2", {depth: true, stencil: true})!
-    }
-
-    public refreshViewports(viewport_drivers: Array<IViewportDriver>){
-        this.viewports.forEach((viewport) => {
-            viewport.destroy()
-        })
+        this.gl = gl
+        this.element = gl.canvas as HTMLCanvasElement;
         this.viewports = viewport_drivers.map((viewport_driver) => {
             const viewport = new OverlayViewport({brush_stroke_handler: this.brush_stroke_handler, viewport_driver, gl: this.gl})
             viewport.setBrushingEnabled(this.brushing_enabled)
@@ -209,8 +207,7 @@ export class BrushingOverlay{
     }
 
     public render = (brushStrokes: Array<BrushStroke>, renderer: BrushRenderer) => {
-        const trackedElement = this.viewer_driver.getTrackedElement()
-        coverContents({target: trackedElement, overlay: this.element})
+        coverContents({target: this.trackedElement, overlay: this.element})
         this.element.width = this.element.scrollWidth
         this.element.height = this.element.scrollHeight
         this.viewports.forEach((viewport) => {
@@ -220,6 +217,5 @@ export class BrushingOverlay{
 
     public destroy(){
         this.viewports.forEach(viewport => viewport.destroy())
-        removeElement(this.element)
     }
 }

@@ -99,3 +99,11 @@ export function ensureJsonArray(value: JsonValue): JsonArray{
     }
     return value
 }
+
+export function ensureJsonNumberTripplet(value: JsonValue): [number, number, number]{
+    let number_array = ensureJsonArray(value).map(element => ensureJsonNumber(element))
+    if(number_array.length != 3){
+        throw Error(`Expected number tripplet, found this: ${JSON.stringify(value)}`)
+    }
+    return [number_array[0], number_array[1], number_array[2]]
+}

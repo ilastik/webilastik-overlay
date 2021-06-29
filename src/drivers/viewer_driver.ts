@@ -1,16 +1,17 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 
-export interface IViewerDriver{
-    getViewportDrivers: () => Promise<Array<IViewportDriver>>;
-    getTrackedElement: () => HTMLElement;
-    refreshViews: (views: Array<{name: string, url: string}>, channel_colors: Array<vec3>) => void;
-    onViewportsChanged?: (handler: () => void) => void;
-    getUrlOnDisplay(): string | undefined;
+export interface IDataView{
+    name: string,
+    url: string,
 }
 
-export interface IMultiscaleDataSource{
-    url: string;
-    scales: Array<IDataSourceScale>;
+export interface IViewerDriver{
+    getViewportDrivers: () => Array<IViewportDriver>;
+    getTrackedElement: () => HTMLElement;
+    openImage: (params: {name: string, url: string, similar_url_hint: string | undefined}) => void;
+    refreshPredictions: (views: Array<{name: string, url: string, channel_colors: Array<vec3> | undefined}>) => void;
+    onViewportsChanged?: (handler: () => void) => void;
+    getDataViewOnDisplay(): IDataView | undefined;
 }
 
 export interface IDataSourceScale{

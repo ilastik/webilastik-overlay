@@ -49,9 +49,10 @@ export class PredictingWidget extends Applet<PredictingAppletState>{
                     return {
                         name: `lane${ds_index}`,
                         url: `precomputed://${this.session.session_url.toString()}/${this.name}/datasource=${encoded_ds_url}/run_id=${run_id}`,
+                        channel_colors: new_state.channel_colors
                     }
                 })
-                viewer_driver.refreshViews(views, new_state.channel_colors)
+                viewer_driver.refreshPredictions(views)
             }
         })
     }

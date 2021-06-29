@@ -1,10 +1,10 @@
 import { vec3, quat, mat4 } from "gl-matrix";
-import { IViewerDriver } from "..";
-import { createElement } from "../util/misc";
-import { PrecomputedChunks } from "../util/precomputed_chunks_datasource";
+// import { IViewerDriver } from "..";
+// import { createElement } from "../util/misc";
+// import { PrecomputedChunks } from "../util/precomputed_chunks_datasource";
 import { IViewportDriver, IViewportGeometry } from "./viewer_driver";
 
-export class HtmlImgDriver implements IViewerDriver{
+export class HtmlImgDriver{// implements IViewerDriver{
     public readonly img: HTMLImageElement;
     public readonly container: HTMLElement;
     public readonly data_url: string;
@@ -29,39 +29,39 @@ export class HtmlImgDriver implements IViewerDriver{
     public getTrackedElement(): HTMLImageElement{
         return this.img
     }
-    public refreshViews(views: Array<{name: string, url: string}>, _channel_colors: Array<vec3>){
-        const output_css_class = "ilastik_img_output_image"
-        document.querySelectorAll("." + output_css_class).forEach(element => {
-            const htmlElement = (element as HTMLElement)
-            htmlElement.parentElement?.removeChild(htmlElement)
-        })
-        views.forEach(view => {
-            if(!view.url.startsWith("precomputed://")){
-                const img = createElement({
-                    tagName: "img", parentElement: this.container, cssClasses: [output_css_class]
-                }) as HTMLImageElement;
-                img.src = view.url
-                return
-            }
-            const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
-            PrecomputedChunks.create(view.url).then(precomp_chunks => {
-                const scale = precomp_chunks.scales[0]
-                const increment = 128
-                for(let y=0; y<this.img.height; y += increment){
-                    let row = createElement({tagName: "div", parentElement: container})
-                    for(let x=0; x<this.img.width; x += increment){
-                        let tile = createElement({tagName: "img", parentElement: row, inlineCss: {float: "left"}}) as HTMLImageElement
-                        tile.src = scale.getChunkUrl({
-                            x: [x, Math.min(x + increment, this.img.width)],
-                            y: [y, Math.min(y + increment, this.img.height)],
-                            z: [0, 1]
-                        })
-                        .withAddedSearchParams(new Map([["format", "png"]]))
-                        .href.replace(/^precomputed:\/\//, "")
-                    }
-                }
-            })
-        })
+    public refreshViews(_views: Array<{name: string, url: string}>, _channel_colors: Array<vec3>){
+        // const output_css_class = "ilastik_img_output_image"
+        // document.querySelectorAll("." + output_css_class).forEach(element => {
+        //     const htmlElement = (element as HTMLElement)
+        //     htmlElement.parentElement?.removeChild(htmlElement)
+        // })
+        // views.forEach(view => {
+        //     if(!view.url.startsWith("precomputed://")){
+        //         const img = createElement({
+        //             tagName: "img", parentElement: this.container, cssClasses: [output_css_class]
+        //         }) as HTMLImageElement;
+        //         img.src = view.url
+        //         return
+        //     }
+        //     const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
+        //     PrecomputedChunks.create(view.url).then(precomp_chunks => {
+        //         const scale = precomp_chunks.scales[0]
+        //         const increment = 128
+        //         for(let y=0; y<this.img.height; y += increment){
+        //             let row = createElement({tagName: "div", parentElement: container})
+        //             for(let x=0; x<this.img.width; x += increment){
+        //                 let tile = createElement({tagName: "img", parentElement: row, inlineCss: {float: "left"}}) as HTMLImageElement
+        //                 tile.src = scale.getChunkUrl({
+        //                     x: [x, Math.min(x + increment, this.img.width)],
+        //                     y: [y, Math.min(y + increment, this.img.height)],
+        //                     z: [0, 1]
+        //                 })
+        //                 .withAddedSearchParams(new Map([["format", "png"]]))
+        //                 .href.replace(/^precomputed:\/\//, "")
+        //             }
+        //         }
+        //     })
+        // })
     }
     public getUrlOnDisplay(): string | undefined{
         return this.data_url

@@ -17,6 +17,14 @@ export class Session{
         this.token = token
     }
 
+    public static btoa(url: String): string{
+        return btoa(url.toString()).replace("+", "-").replace("/", "_")
+    }
+
+    public static atob(encoded: String): string{
+        return atob(encoded.replace("-", "+").replace("_", "/"))
+    }
+
     public static async create({ilastik_url, session_duration_seconds, timeout_s, onProgress=(_) => {}}: {
         ilastik_url: URL,
         session_duration_seconds: number,

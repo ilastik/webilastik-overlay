@@ -1,6 +1,7 @@
 import { vec3, mat4, quat } from "gl-matrix"
 import { IViewportDriver, IViewerDriver } from "..";
 import { getElementContentRect } from "../util/misc";
+import { IDataView } from "./viewer_driver";
 
 type NeuroglancerLayout = "4panel" | "xy" | "xy-3d" | "xz" | "xz-3d" | "yz" | "yz-3d";
 
@@ -49,12 +50,19 @@ export class NeuroglancerViewportDriver implements IViewportDriver{
     })
 }
 
+interface INeuroglancerLayer{
+    name: string,
+    source: string,
+    visible: boolean,
+    shader: string | undefined
+}
+
 export class NeuroglancerDriver implements IViewerDriver{
     constructor(public readonly viewer: any){}
     getTrackedElement() : HTMLElement{
         return document.querySelector("canvas")! //FIXME: double-check selector
     }
-    async getViewportDrivers(): Promise<Array<IViewportDriver>>{
+    getViewportDrivers(): Array<IViewportDriver>{
         const panels = Array(...document.querySelectorAll(".neuroglancer-panel")) as Array<HTMLElement>;
         if(panels.length == 0){
             return []
@@ -79,31 +87,50 @@ export class NeuroglancerDriver implements IViewerDriver{
         this.viewer.layerManager.layersChanged.add(() => handler())
         this.viewer.layout.changed.add(() => handler())
     }
-    refreshViews(views: Array<{name: string, url: string}>, channel_colors: Array<vec3>): void{
+    refreshPredictions(views: Array<{name: string, url: string, channel_colors: Array<vec3>}>): void{
         views.forEach(view => this.refreshLayer({
-            name: view.name, url: view.url, shader: this.makePredictionsShader(channel_colors)
+            name: view.name, url: view.url, shader: this.makePredictionsShader(view.channel_colors)
         }))
+    }
+    openImage(params: {name: string, url: string, similar_url_hint: string | undefined}){
+        let shader: string | undefined = undefined;
+        if(params.similar_url_hint !== undefined){
+            const similar_layers = this.getImageLayers().filter(layer => layer.source == params.similar_url_hint)
+            if(similar_layers.length > 0){
+                shader = similar_layers[0].shader
+            }
+        }
+        this.openNewDataSource({name: params.name, url: params.url, shader})
+    };
+
+
+    private refreshLayer({name, url, shader}: {name: string, url: string, shader: string}){
+        console.log(`Refreshing layer ${name} with url ${url}`)
+        if(!this.dropLayer(name)){
+            return
+        }
+        this.openNewDataSource({name, url, shader})
     }
 
     private getLayerManager(): any {
         return this.viewer.layerSpecification.layerManager;
     }
 
-    private dropLayer(name: string){
+    private dropLayer(name: string): boolean{
         const layerManager = this.getLayerManager();
         const predictionsLayer = layerManager.getLayerByName(name);
 
         if(predictionsLayer !== undefined){
             layerManager.removeManagedLayer(predictionsLayer);
+            return true
         }
+        return false
     }
 
-    public async refreshLayer({name, url, shader}: {name: string, url: string, shader: string}){
-        console.log(`Refreshing layer ${name} with url ${url}`)
-        this.dropLayer(name)
+    private openNewDataSource(params: {name: string, url: string, shader: string | undefined}){
         const newPredictionsLayer = this.viewer.layerSpecification.getLayer(
-            name,
-            {source: url, shader: shader}
+            params.name,
+            {source: params.url, shader: params.shader}
         );
         this.viewer.layerSpecification.add(newPredictionsLayer);
     }
@@ -124,16 +151,23 @@ export class NeuroglancerDriver implements IViewerDriver{
             ].join("\n")
     }
 
-    public getImageLayerUrls() : Array<string>{
-        return (this.viewer.state.toJSON().layers || []).filter((l: any) => l.type == "image");
+    public getImageLayers() : Array<INeuroglancerLayer>{
+        return (this.viewer.state.toJSON().layers || [])
+        .filter((l: any) => l.type == "image")
+        .map((l: any) : INeuroglancerLayer => ({
+                name: l.name,
+                source: l.source.replace(/\bgs:\/\//, "https://storage.googleapis.com/"),
+                visible: l.visible  === undefined ? true : l.visible,
+                shader: l.shader
+        }));
     }
 
-    public getUrlOnDisplay(): string | undefined{
-        return this.getImageLayerUrls()
-            .filter((l: any) => !("visible" in l) || l.visible)
-            .map((l: any) => {
-                let url : string = typeof l.source == "string" ? l.source : l.source.url
-                return url.replace(/\bgs:\/\//, "https://storage.googleapis.com/")
-            })[0];
+    public getDataViewOnDisplay(): IDataView | undefined{
+        return this.getImageLayers()
+            .filter(layer => layer.visible)
+            .map(layer => ({
+                name: layer.name,
+                url: layer.source,
+            }))[0];
     }
 }
