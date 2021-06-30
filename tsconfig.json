@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strictFunctionTypes": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "outDir": "build/cjs",
