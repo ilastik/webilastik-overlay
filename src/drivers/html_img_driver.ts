@@ -1,70 +1,70 @@
 import { vec3, quat, mat4 } from "gl-matrix";
-// import { IViewerDriver } from "..";
-// import { createElement } from "../util/misc";
-// import { PrecomputedChunks } from "../util/precomputed_chunks_datasource";
-import { IViewportDriver, IViewportGeometry } from "./viewer_driver";
+import { IViewerDriver } from "..";
+import { createElement, ParsedUrl } from "../util/misc";
+import { PrecomputedChunks } from "../util/precomputed_chunks_datasource";
+import { IDataView, IViewportDriver, IViewportGeometry } from "./viewer_driver";
 
-export class HtmlImgDriver{// implements IViewerDriver{
+export class HtmlImgDriver implements IViewerDriver{
     public readonly img: HTMLImageElement;
     public readonly container: HTMLElement;
-    public readonly data_url: string;
+    public readonly data_url: ParsedUrl;
     constructor({img}:{img: HTMLImageElement}){
         this.img = img
         this.container = img.parentElement || document.body
         try{
-            this.data_url = new URL(this.img.src).toString()
+            this.data_url = ParsedUrl.parse(this.img.src)
         }catch{
-            let url = new URL(window.location.href)
-            if(this.img.src.startsWith("/")){
-                url.pathname = this.img.src
-            }else{
-                url.pathname = url.pathname.replace(/\/$/, "") + "/" + this.img.src
-            }
-            this.data_url = url.toString()
+            this.data_url = ParsedUrl.parse(window.location.href).concat(this.img.src)
         }
     }
-    public async getViewportDrivers() : Promise<Array<HtmlImgViewportDriver>>{
+    public getViewportDrivers() : Array<HtmlImgViewportDriver>{
         return [new HtmlImgViewportDriver(this.img)]
     }
     public getTrackedElement(): HTMLImageElement{
         return this.img
     }
-    public refreshViews(_views: Array<{name: string, url: string}>, _channel_colors: Array<vec3>){
-        // const output_css_class = "ilastik_img_output_image"
-        // document.querySelectorAll("." + output_css_class).forEach(element => {
-        //     const htmlElement = (element as HTMLElement)
-        //     htmlElement.parentElement?.removeChild(htmlElement)
-        // })
-        // views.forEach(view => {
-        //     if(!view.url.startsWith("precomputed://")){
-        //         const img = createElement({
-        //             tagName: "img", parentElement: this.container, cssClasses: [output_css_class]
-        //         }) as HTMLImageElement;
-        //         img.src = view.url
-        //         return
-        //     }
-        //     const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
-        //     PrecomputedChunks.create(view.url).then(precomp_chunks => {
-        //         const scale = precomp_chunks.scales[0]
-        //         const increment = 128
-        //         for(let y=0; y<this.img.height; y += increment){
-        //             let row = createElement({tagName: "div", parentElement: container})
-        //             for(let x=0; x<this.img.width; x += increment){
-        //                 let tile = createElement({tagName: "img", parentElement: row, inlineCss: {float: "left"}}) as HTMLImageElement
-        //                 tile.src = scale.getChunkUrl({
-        //                     x: [x, Math.min(x + increment, this.img.width)],
-        //                     y: [y, Math.min(y + increment, this.img.height)],
-        //                     z: [0, 1]
-        //                 })
-        //                 .withAddedSearchParams(new Map([["format", "png"]]))
-        //                 .href.replace(/^precomputed:\/\//, "")
-        //             }
-        //         }
-        //     })
-        // })
+    public openImage(params: {name: string, url: string, similar_url_hint: string | undefined}){
+        //FIXME: this should update the tracked element
+        let img = document.createElement("img")
+        img.src = params.url
+        this.img.parentElement!.appendChild(img)
     }
-    public getUrlOnDisplay(): string | undefined{
-        return this.data_url
+    public refreshPredictions(views: Array<{name: string, url: string, channel_colors: Array<vec3>}>){
+        const output_css_class = "ilastik_img_output_image"
+        document.querySelectorAll("." + output_css_class).forEach(element => {
+            const htmlElement = (element as HTMLElement)
+            htmlElement.parentElement?.removeChild(htmlElement)
+        })
+        views.forEach(view => {
+            if(!view.url.startsWith("precomputed://")){
+                const img = createElement({
+                    tagName: "img", parentElement: this.container, cssClasses: [output_css_class]
+                }) as HTMLImageElement;
+                img.src = view.url
+                return
+            }
+            const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
+            PrecomputedChunks.create(ParsedUrl.parse(view.url)).then(precomp_chunks => {
+                const scale = precomp_chunks.scales[0]
+                const increment = 128
+                for(let y=0; y<this.img.height; y += increment){
+                    let row = createElement({tagName: "div", parentElement: container})
+                    for(let x=0; x<this.img.width; x += increment){
+                        let tile = createElement({tagName: "img", parentElement: row, inlineCss: {float: "left"}}) as HTMLImageElement
+                        tile.src = scale.getChunkUrl({
+                            x: [x, Math.min(x + increment, this.img.width)],
+                            y: [y, Math.min(y + increment, this.img.height)],
+                            z: [0, 1]
+                        })
+                        .withAddedSearchParams(new Map([["format", "png"]]))
+                        .href.replace(/^precomputed:\/\//, "")
+                    }
+                }
+            })
+        })
+    }
+    public getDataViewOnDisplay(): IDataView | undefined{
+        return {name: this.data_url.name, url: this.data_url.href}
     }
 }
 
