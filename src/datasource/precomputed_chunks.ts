@@ -1,7 +1,7 @@
 import { vec3 } from "gl-matrix"
 import { DataSource, Session } from "../client/ilastik"
-import { ParsedUrl } from "./misc"
-import { ensureJsonArray, ensureJsonNumber, ensureJsonNumberTripplet, ensureJsonObject, ensureJsonString, JsonValue } from "./serialization"
+import { ParsedUrl } from "../util/misc"
+import { ensureJsonArray, ensureJsonNumber, ensureJsonNumberTripplet, ensureJsonObject, ensureJsonString, JsonValue } from "../util/serialization"
 
 
 const encodings = ["raw", "jpeg", "compressed_segmentation"] as const;
