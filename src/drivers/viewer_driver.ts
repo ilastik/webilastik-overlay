@@ -8,8 +8,7 @@ export interface IDataView{
 export interface IViewerDriver{
     getViewportDrivers: () => Array<IViewportDriver>;
     getTrackedElement: () => HTMLElement;
-    openImage: (params: {name: string, url: string, similar_url_hint: string | undefined}) => void;
-    refreshPredictions: (views: Array<{name: string, url: string, channel_colors: Array<vec3>}>) => void;
+    refreshView: (params: {name: string, url: string, similar_url_hint?: string, channel_colors?: vec3[]}) => void;
     onViewportsChanged?: (handler: () => void) => void;
     getDataViewOnDisplay(): IDataView | undefined;
 }

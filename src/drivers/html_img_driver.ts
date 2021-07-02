@@ -23,44 +23,29 @@ export class HtmlImgDriver implements IViewerDriver{
     public getTrackedElement(): HTMLImageElement{
         return this.img
     }
-    public openImage(params: {name: string, url: string, similar_url_hint: string | undefined}){
-        //FIXME: this should update the tracked element
-        let img = document.createElement("img")
-        img.src = params.url
-        this.img.parentElement!.appendChild(img)
-    }
-    public refreshPredictions(views: Array<{name: string, url: string, channel_colors: Array<vec3>}>){
+    public refreshView(view: {name: string, url: string, similar_url_hint?: string, channel_colors?: vec3[]}){
         const output_css_class = "ilastik_img_output_image"
         document.querySelectorAll("." + output_css_class).forEach(element => {
             const htmlElement = (element as HTMLElement)
             htmlElement.parentElement?.removeChild(htmlElement)
         })
-        views.forEach(view => {
-            if(!view.url.startsWith("precomputed://")){
-                const img = createElement({
-                    tagName: "img", parentElement: this.container, cssClasses: [output_css_class]
-                }) as HTMLImageElement;
-                img.src = view.url
-                return
-            }
-            const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
-            PrecomputedChunks.create(ParsedUrl.parse(view.url)).then(precomp_chunks => {
-                const scale = precomp_chunks.scales[0]
-                const increment = 128
-                for(let y=0; y<this.img.height; y += increment){
-                    let row = createElement({tagName: "div", parentElement: container})
-                    for(let x=0; x<this.img.width; x += increment){
-                        let tile = createElement({tagName: "img", parentElement: row, inlineCss: {float: "left"}}) as HTMLImageElement
-                        tile.src = scale.getChunkUrl({
-                            x: [x, Math.min(x + increment, this.img.width)],
-                            y: [y, Math.min(y + increment, this.img.height)],
-                            z: [0, 1]
-                        })
-                        .withAddedSearchParams(new Map([["format", "png"]]))
-                        .href.replace(/^precomputed:\/\//, "")
-                    }
+        const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
+        PrecomputedChunks.create(ParsedUrl.parse(view.url)).then(precomp_chunks => {
+            const scale = precomp_chunks.scales[0]
+            const increment = 128
+            for(let y=0; y<this.img.height; y += increment){
+                let row = createElement({tagName: "div", parentElement: container})
+                for(let x=0; x<this.img.width; x += increment){
+                    let tile = createElement({tagName: "img", parentElement: row, inlineCss: {float: "left"}}) as HTMLImageElement
+                    tile.src = scale.getChunkUrl({
+                        x: [x, Math.min(x + increment, this.img.width)],
+                        y: [y, Math.min(y + increment, this.img.height)],
+                        z: [0, 1]
+                    })
+                    .withAddedSearchParams(new Map([["format", "png"]]))
+                    .href.replace(/^precomputed:\/\//, "")
                 }
-            })
+            }
         })
     }
     public getDataViewOnDisplay(): IDataView | undefined{

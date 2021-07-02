@@ -119,7 +119,7 @@ export class BrushingWidget{
             optionRenderer: (scale) => scale.toResolutionDisplayString(),
             onOk: async (scale) => {
                 const stripped_precomp_chunks = await scale.toStrippedPrecomputedChunks(this.session) //FIXME: race condition?
-                this.viewer_driver.openImage({
+                this.viewer_driver.refreshView({
                     name: BrushingWidget.training_view_name_prefix + `${data_view.name} (${scale.toResolutionDisplayString()})`,
                     url: stripped_precomp_chunks.url.getSchemedHref("://"),
                     similar_url_hint: dataProvider.url.getSchemedHref("://"),

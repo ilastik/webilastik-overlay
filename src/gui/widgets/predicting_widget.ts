@@ -49,13 +49,12 @@ export class PredictingWidget extends Applet<PredictingAppletState>{
                     let predictions_url = ParsedUrl.parse(session.session_url).withDataScheme("precomputed")
                         .concat(`${this.name}/datasource=${encoded_ds_url}/run_id=${uuidv4()}`);
                     let precomp_predictions = await PrecomputedChunks.create(predictions_url)
-                    viewer_driver.refreshPredictions([
-                        {
-                            name: `lane${ds_index}`,
-                            url: precomp_predictions.url.getSchemedHref("://"),
-                            channel_colors: new_state.channel_colors
-                        }
-                    ])
+                    viewer_driver.refreshView({
+                        name: `lane${ds_index}`,
+                        url: precomp_predictions.url.getSchemedHref("://"),
+                        similar_url_hint: ds.url.toString(),
+                        channel_colors: new_state.channel_colors
+                    })
                 })
             }
         })

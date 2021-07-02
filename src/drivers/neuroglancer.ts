@@ -87,24 +87,20 @@ export class NeuroglancerDriver implements IViewerDriver{
         this.viewer.layerManager.layersChanged.add(() => handler())
         this.viewer.layout.changed.add(() => handler())
     }
-    refreshPredictions(views: Array<{name: string, url: string, channel_colors: Array<vec3>}>): void{
-        views.forEach(view => this.refreshLayer({
-            name: view.name, url: view.url, shader: this.makePredictionsShader(view.channel_colors)
-        }))
-    }
-    openImage(params: {name: string, url: string, similar_url_hint: string | undefined}){
+    refreshView(params: {name: string, url: string, similar_url_hint?: string, channel_colors?: vec3[]}){
         let shader: string | undefined = undefined;
-        if(params.similar_url_hint !== undefined){
+        if(params.channel_colors !== undefined){
+            shader = this.makePredictionsShader(params.channel_colors)
+        }else if(params.similar_url_hint !== undefined){
             const similar_layers = this.getImageLayers().filter(layer => layer.source == params.similar_url_hint)
             if(similar_layers.length > 0){
                 shader = similar_layers[0].shader
             }
         }
-        this.openNewDataSource({name: params.name, url: params.url, shader})
-    };
+        this.refreshLayer({name: params.name, url: params.url, shader})
+    }
 
-
-    private refreshLayer({name, url, shader}: {name: string, url: string, shader: string}){
+    private refreshLayer({name, url, shader}: {name: string, url: string, shader?: string}){
         console.log(`Refreshing layer ${name} with url ${url}`)
         this.dropLayer(name)
         this.openNewDataSource({name, url, shader})
@@ -125,7 +121,7 @@ export class NeuroglancerDriver implements IViewerDriver{
         return false
     }
 
-    private openNewDataSource(params: {name: string, url: string, shader: string | undefined}){
+    private openNewDataSource(params: {name: string, url: string, shader?: string}){
         const newPredictionsLayer = this.viewer.layerSpecification.getLayer(
             params.name,
             {source: params.url, shader: params.shader}
