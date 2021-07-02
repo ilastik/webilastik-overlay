@@ -3,7 +3,8 @@ import { Applet } from "../../client/applets/applet";
 import { DataSource, Session } from "../../client/ilastik";
 import { PrecomputedChunks } from "../../datasource/precomputed_chunks";
 import { IViewerDriver } from "../../drivers/viewer_driver";
-import { ParsedUrl, uuidv4 } from "../../util/misc";
+import { uuidv4 } from "../../util/misc";
+import { ParsedUrl } from "../../util/parsed_url";
 import { ensureJsonArray, ensureJsonBoolean, ensureJsonNumber, ensureJsonObject, JsonObject, JsonValue } from "../../util/serialization";
 
 class PredictingAppletState{

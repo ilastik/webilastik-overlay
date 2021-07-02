@@ -1,7 +1,7 @@
 import { quat, vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
 import { DataSource, Session } from "../../../client/ilastik"
-import { createElement, createInput, ParsedUrl, removeElement } from "../../../util/misc"
+import { createElement, createInput, removeElement } from "../../../util/misc"
 import { PrecomputedChunks, PrecomputedChunksScale, } from "../../../datasource/precomputed_chunks"
 import { CollapsableWidget } from "../collapsable_applet_gui"
 import { OneShotSelectorWidget, SelectorWidget } from "../selector_widget"
@@ -11,6 +11,7 @@ import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
 import { BrushStrokesContainer } from "./brush_strokes_container"
+import { ParsedUrl } from "../../../util/parsed_url"
 
 export class BrushingWidget{
     public static training_view_name_prefix = "ilastik training: "

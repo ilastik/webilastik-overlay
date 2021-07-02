@@ -1,6 +1,6 @@
 import { vec3 } from "gl-matrix"
 import { DataSource, Session } from "../client/ilastik"
-import { ParsedUrl } from "../util/misc"
+import { ParsedUrl } from "../util/parsed_url";
 import { ensureJsonArray, ensureJsonNumber, ensureJsonNumberTripplet, ensureJsonObject, ensureJsonString, JsonValue } from "../util/serialization"
 
 

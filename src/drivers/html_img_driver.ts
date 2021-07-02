@@ -1,6 +1,7 @@
 import { vec3, quat, mat4 } from "gl-matrix";
 import { IViewerDriver } from "..";
-import { createElement, ParsedUrl } from "../util/misc";
+import { createElement } from "../util/misc";
+import { ParsedUrl } from "../util/parsed_url";
 import { PrecomputedChunks } from "../datasource/precomputed_chunks";
 import { IDataView, IViewportDriver, IViewportGeometry } from "./viewer_driver";
 
