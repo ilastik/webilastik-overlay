@@ -106,9 +106,7 @@ export class NeuroglancerDriver implements IViewerDriver{
 
     private refreshLayer({name, url, shader}: {name: string, url: string, shader: string}){
         console.log(`Refreshing layer ${name} with url ${url}`)
-        if(!this.dropLayer(name)){
-            return
-        }
+        this.dropLayer(name)
         this.openNewDataSource({name, url, shader})
     }
 
