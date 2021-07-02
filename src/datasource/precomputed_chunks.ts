@@ -14,7 +14,7 @@ export function ensureEncoding(value: string): Encoding{
     return variant
 }
 
-export class Scale{
+export class PrecomputedChunksScale{
     public readonly base_url: ParsedUrl
     public readonly key: string
     public readonly size: [number, number, number]
@@ -62,7 +62,7 @@ export class Scale{
         return `${this.resolution[0]} x ${this.resolution[1]} x ${this.resolution[2]} nm`
     }
 
-    public isSameResolutionAs(other: Scale): boolean{
+    public isSameResolutionAs(other: PrecomputedChunksScale): boolean{
         return vec3.equals(this.resolution, other.resolution)
     }
 
@@ -76,7 +76,7 @@ export class Scale{
 
     public static fromJsonValue(base_url: ParsedUrl, value: JsonValue){
         const obj = ensureJsonObject(value)
-        return new Scale(base_url, {
+        return new PrecomputedChunksScale(base_url, {
             key: ensureJsonString(obj.key),
             size: ensureJsonNumberTripplet(obj.size),
             resolution: ensureJsonNumberTripplet(obj.resolution),
@@ -113,14 +113,14 @@ export class PrecomputedChunks{
     public readonly type: Type;
     public readonly data_type: DataType;
     public readonly num_channels: number;
-    public readonly scales: Scale[];
+    public readonly scales: PrecomputedChunksScale[];
 
     constructor(params: {
         url: ParsedUrl,
         type: Type,
         data_type: DataType,
         num_channels: number,
-        scales: Array<Scale>,
+        scales: Array<PrecomputedChunksScale>,
     }){
         if(params.url.href.includes("/info")){
             debugger;
@@ -150,7 +150,7 @@ export class PrecomputedChunks{
             type: ensureType(ensureJsonString(raw_info["type"])),
             data_type: ensureDataType(ensureJsonString(raw_info["data_type"])),
             num_channels: ensureJsonNumber(raw_info["num_channels"]),
-            scales: ensureJsonArray(raw_info["scales"]).map(raw_scale => Scale.fromJsonValue(url, raw_scale))
+            scales: ensureJsonArray(raw_info["scales"]).map(raw_scale => PrecomputedChunksScale.fromJsonValue(url, raw_scale))
         })
     }
 
@@ -158,8 +158,8 @@ export class PrecomputedChunks{
         return this.url.href.includes("stripped_precomputed_info/url=")
     }
 
-    public findScale(target: vec3 | Scale): Scale | undefined{
-        const resolution = target instanceof Scale ? target.resolution : target
+    public findScale(target: vec3 | PrecomputedChunksScale): PrecomputedChunksScale | undefined{
+        const resolution = target instanceof PrecomputedChunksScale ? target.resolution : target
         return this.scales.find(scale => vec3.equals(scale.resolution, resolution))
     }
 

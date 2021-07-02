@@ -2,7 +2,7 @@ import { quat, vec3 } from "gl-matrix"
 import { IViewerDriver, BrushStroke } from "../../.."
 import { DataSource, Session } from "../../../client/ilastik"
 import { createElement, createInput, ParsedUrl, removeElement } from "../../../util/misc"
-import { PrecomputedChunks, Scale, } from "../../../datasource/precomputed_chunks"
+import { PrecomputedChunks, PrecomputedChunksScale, } from "../../../datasource/precomputed_chunks"
 import { CollapsableWidget } from "../collapsable_applet_gui"
 import { OneShotSelectorWidget, SelectorWidget } from "../selector_widget"
 import { Vec3ColorPicker } from "../vec3_color_picker"
@@ -113,7 +113,7 @@ export class BrushingWidget{
         }
 
         createElement({tagName: "label", innerHTML: "Select a voxel size to annotate on:", parentElement: this.controlsContainer});
-        new OneShotSelectorWidget<Scale>({
+        new OneShotSelectorWidget<PrecomputedChunksScale>({
             parentElement: this.controlsContainer,
             options: dataProvider.scales,
             optionRenderer: (scale) => scale.toResolutionDisplayString(),
