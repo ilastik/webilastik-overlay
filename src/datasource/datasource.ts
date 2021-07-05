@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix";
-import { Session } from "../client/ilastik";
+import { DataSource, Session } from "../client/ilastik";
 import { ParsedUrl } from "../util/parsed_url";
 
 export interface IMultiscaleDataSource{
@@ -12,4 +12,5 @@ export interface IDataScale{
     readonly resolution: vec3;
     toDisplayString(): string;
     toStrippedMultiscaleDataSource(session: Session) : Promise<IMultiscaleDataSource>;
+    toIlastikDataSource(): DataSource;
 }

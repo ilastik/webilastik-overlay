@@ -73,6 +73,10 @@ export class PrecomputedChunksScale implements IDataScale{
         return await StrippedPrecomputedChunks.strip(original, this.resolution, session)
     }
 
+    public toIlastikDataSource() : DataSource{
+        return new DataSource(this.getUrl().getSchemedHref("://"), this.resolution)
+    }
+
     public static fromJsonValue(base_url: ParsedUrl, value: JsonValue){
         const obj = ensureJsonObject(value)
         return new PrecomputedChunksScale(base_url, {
@@ -180,11 +184,6 @@ export class StrippedPrecomputedChunks extends PrecomputedChunks{
         }
         this.original = params.original
         this.scale = this.scales[0]
-    }
-
-    public toIlastikDataSource() : DataSource{
-        let original_scale = this.original.findScale(this.scales[0].resolution)!
-        return new DataSource(original_scale.getUrl().getSchemedHref("://"), original_scale.resolution)
     }
 
     public static match(url: ParsedUrl): RegExpMatchArray | null{

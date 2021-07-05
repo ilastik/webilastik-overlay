@@ -2,7 +2,7 @@ import { quat, vec3 } from "gl-matrix"
 import { BrushStroke } from "../../.."
 import { DataSource, Session } from "../../../client/ilastik"
 import { createElement, createInput, removeElement } from "../../../util/misc"
-import { PredictionsPrecomputedChunks, StrippedPrecomputedChunks, } from "../../../datasource/precomputed_chunks"
+import { PredictionsPrecomputedChunks } from "../../../datasource/precomputed_chunks"
 import { CollapsableWidget } from "../collapsable_applet_gui"
 import { OneShotSelectorWidget, SelectorWidget } from "../selector_widget"
 import { Vec3ColorPicker } from "../vec3_color_picker"
@@ -95,8 +95,8 @@ export class BrushingWidget{
         if(data_view instanceof Error){
             return this.showStatus(`${data_view}`)
         }
-        if(data_view.datasource instanceof StrippedPrecomputedChunks){
-            return this.startTraining(data_view.datasource.toIlastikDataSource())
+        if(data_view.datasource.scales.length == 1){
+            return this.startTraining(data_view.datasource.scales[0].toIlastikDataSource())
         }
         if(data_view.datasource instanceof PredictionsPrecomputedChunks){
             //FIXME: allow more annotations?

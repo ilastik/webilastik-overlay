@@ -2,6 +2,7 @@
 import { vec3 } from "gl-matrix";
 import { Session } from "../client/ilastik";
 import { IMultiscaleDataSource } from "../datasource/datasource";
+import { HtmlImgSource } from "../datasource/html_img";
 import { PrecomputedChunks, PredictionsPrecomputedChunks, StrippedPrecomputedChunks } from "../datasource/precomputed_chunks";
 import { IViewerDriver, IViewportDriver } from "../drivers/viewer_driver";
 import { ParsedUrl } from "../util/parsed_url";
@@ -60,7 +61,9 @@ export class Viewer{
         }
         let current_url = ParsedUrl.parse(native_view.url)
         let multiscale_datasource : IMultiscaleDataSource;
-        if(PredictionsPrecomputedChunks.match(current_url)){
+        if(HtmlImgSource.accepts(current_url)){
+            multiscale_datasource = new HtmlImgSource(current_url)
+        }else if(PredictionsPrecomputedChunks.match(current_url)){
             multiscale_datasource = await PredictionsPrecomputedChunks.createFor({
                 ilastik_session: this.ilastik_session, raw_data: current_url
             })

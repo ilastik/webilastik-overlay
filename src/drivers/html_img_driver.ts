@@ -4,6 +4,7 @@ import { createElement } from "../util/misc";
 import { ParsedUrl } from "../util/parsed_url";
 import { PrecomputedChunks } from "../datasource/precomputed_chunks";
 import { IDataView, IViewportDriver, IViewportGeometry } from "./viewer_driver";
+import { HtmlImgSource } from "../datasource/html_img";
 
 export class HtmlImgDriver implements IViewerDriver{
     public readonly img: HTMLImageElement;
@@ -31,6 +32,12 @@ export class HtmlImgDriver implements IViewerDriver{
             htmlElement.parentElement?.removeChild(htmlElement)
         })
         const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
+        const url = ParsedUrl.parse(view.url)
+
+        if(HtmlImgSource.accepts(url)){
+            return //FIXME
+        }
+
         PrecomputedChunks.fromUrl(ParsedUrl.parse(view.url)).then(precomp_chunks => {
             const scale = precomp_chunks.scales[0]
             const increment = 128
