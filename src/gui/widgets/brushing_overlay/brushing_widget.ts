@@ -2,7 +2,7 @@ import { quat, vec3 } from "gl-matrix"
 import { BrushStroke } from "../../.."
 import { DataSource, Session } from "../../../client/ilastik"
 import { createElement, createInput, removeElement } from "../../../util/misc"
-import { PredictionsPrecomputedChunks } from "../../../datasource/precomputed_chunks"
+import { PredictionsPrecomputedChunks, StrippedPrecomputedChunks } from "../../../datasource/precomputed_chunks"
 import { CollapsableWidget } from "../collapsable_applet_gui"
 import { OneShotSelectorWidget, SelectorWidget } from "../selector_widget"
 import { Vec3ColorPicker } from "../vec3_color_picker"
@@ -13,6 +13,7 @@ import { BrushRenderer } from "./brush_renderer"
 import { BrushStrokesContainer } from "./brush_strokes_container"
 import { IDataScale } from "../../../datasource/datasource"
 import { Viewer } from "../../viewer"
+import { HtmlImgSource } from "../../../datasource/html_img"
 
 export class BrushingWidget{
     public static training_view_name_prefix = "ilastik training: "
@@ -95,8 +96,13 @@ export class BrushingWidget{
         if(data_view instanceof Error){
             return this.showStatus(`${data_view}`)
         }
-        if(data_view.datasource.scales.length == 1){
+        if(data_view.datasource instanceof HtmlImgSource){
             return this.startTraining(data_view.datasource.scales[0].toIlastikDataSource())
+        }
+        if(data_view.datasource instanceof StrippedPrecomputedChunks){
+            let originalDataProvider = data_view.datasource.original
+            let scale = originalDataProvider.findScale(data_view.datasource.scales[0].resolution)!
+            return this.startTraining(scale.toDataSource())
         }
         if(data_view.datasource instanceof PredictionsPrecomputedChunks){
             //FIXME: allow more annotations?
