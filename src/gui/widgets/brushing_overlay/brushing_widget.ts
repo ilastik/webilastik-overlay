@@ -1,8 +1,8 @@
 import { quat, vec3 } from "gl-matrix"
-import { IViewerDriver, BrushStroke } from "../../.."
+import { BrushStroke } from "../../.."
 import { DataSource, Session } from "../../../client/ilastik"
 import { createElement, createInput, removeElement } from "../../../util/misc"
-import { PrecomputedChunks, PrecomputedChunksScale, } from "../../../datasource/precomputed_chunks"
+import { PredictionsPrecomputedChunks, StrippedPrecomputedChunks, } from "../../../datasource/precomputed_chunks"
 import { CollapsableWidget } from "../collapsable_applet_gui"
 import { OneShotSelectorWidget, SelectorWidget } from "../selector_widget"
 import { Vec3ColorPicker } from "../vec3_color_picker"
@@ -11,19 +11,19 @@ import { BrushelBoxRenderer } from "./brush_boxes_renderer"
 import { BrushelLinesRenderer } from "./brush_lines_renderer"
 import { BrushRenderer } from "./brush_renderer"
 import { BrushStrokesContainer } from "./brush_strokes_container"
-import { ParsedUrl } from "../../../util/parsed_url"
+import { IDataScale } from "../../../datasource/datasource"
+import { Viewer } from "../../viewer"
 
 export class BrushingWidget{
     public static training_view_name_prefix = "ilastik training: "
 
     public readonly gl: WebGL2RenderingContext
-    public readonly viewer_driver: IViewerDriver
+    public readonly viewer: Viewer
     public readonly element: HTMLElement
     public readonly canvas: HTMLCanvasElement
     public readonly status_display: HTMLElement
 
     private brushStrokeContainer: BrushStrokesContainer
-    private refreshStart: number = 0
     private readonly controlsContainer: HTMLElement
     private animationRequestId: number = 0
     private trainingWidget: TrainingWidget | undefined = undefined
@@ -32,18 +32,18 @@ export class BrushingWidget{
     constructor({
         session,
         parentElement,
-        viewer_driver,
+        viewer,
     }: {
         session: Session,
         parentElement: HTMLElement,
-        viewer_driver: IViewerDriver,
+        viewer: Viewer,
     }){
         this.session = session
         this.element = new CollapsableWidget({display_name: "Training", parentElement}).element
         this.element.classList.add("ItkBrushingWidget")
         this.canvas =  createElement({tagName: "canvas", parentElement: document.body}) as HTMLCanvasElement;
         this.gl = this.canvas.getContext("webgl2", {depth: true, stencil: true})!
-        this.viewer_driver = viewer_driver
+        this.viewer = viewer
 
         this.status_display = createElement({tagName:"p", parentElement: this.element, cssClasses: ["ItkBrushingWidget_status_display"]})
         this.controlsContainer = createElement({tagName: "p", parentElement: this.element})
@@ -59,8 +59,8 @@ export class BrushingWidget{
         })
 
         this.showCanvas(false)
-        if(viewer_driver.onViewportsChanged){
-            viewer_driver.onViewportsChanged(() => this.handleViewerDataDisplayChange())
+        if(viewer.onViewportsChanged){
+            viewer.onViewportsChanged(() => this.handleViewerDataDisplayChange())
         }
         this.handleViewerDataDisplayChange()
     }
@@ -85,45 +85,35 @@ export class BrushingWidget{
     }
 
     private async handleViewerDataDisplayChange(){
-        const refreshStart = this.refreshStart = performance.now()
-        const handlingIsOutdated = () => refreshStart < this.refreshStart
-
         this.resetWidgets()
 
-        const data_view = this.viewer_driver.getDataViewOnDisplay()
+        //FIXME: can racing mess this up?
+        const data_view = await this.viewer.getActiveView()
         if(data_view === undefined){
             return
         }
-        let dataProvider: PrecomputedChunks
-        try{
-            dataProvider = await PrecomputedChunks.create(ParsedUrl.parse(data_view.url))
-            if(handlingIsOutdated()){
-                return
-            }
-        }catch(e){
-            return this.showStatus(`${e}`)
+        if(data_view instanceof Error){
+            return this.showStatus(`${data_view}`)
         }
-
-        if(dataProvider.isStripped()){
-            let originalDataProvider = await dataProvider.getUnstripped()
-            if(handlingIsOutdated()){
-                return
-            }
-            let scale = originalDataProvider.findScale(dataProvider.scales[0].resolution)!
-            return this.startTraining(scale.toDataSource())
+        if(data_view.datasource instanceof StrippedPrecomputedChunks){
+            return this.startTraining(data_view.datasource.toIlastikDataSource())
+        }
+        if(data_view.datasource instanceof PredictionsPrecomputedChunks){
+            //FIXME: allow more annotations?
+            return this.showStatus(`Showing predictions for ${data_view.datasource.url.getSchemedHref("://")}`)
         }
 
         createElement({tagName: "label", innerHTML: "Select a voxel size to annotate on:", parentElement: this.controlsContainer});
-        new OneShotSelectorWidget<PrecomputedChunksScale>({
+        new OneShotSelectorWidget<IDataScale>({
             parentElement: this.controlsContainer,
-            options: dataProvider.scales,
-            optionRenderer: (scale) => scale.toResolutionDisplayString(),
+            options: data_view.datasource.scales,
+            optionRenderer: (scale) => scale.toDisplayString(),
             onOk: async (scale) => {
-                const stripped_precomp_chunks = await scale.toStrippedPrecomputedChunks(this.session) //FIXME: race condition?
-                this.viewer_driver.refreshView({
-                    name: BrushingWidget.training_view_name_prefix + `${data_view.name} (${scale.toResolutionDisplayString()})`,
+                const stripped_precomp_chunks = await scale.toStrippedMultiscaleDataSource(this.session) //FIXME: race condition?
+                this.viewer.refreshView({
+                    name: BrushingWidget.training_view_name_prefix + `${data_view.name} (${scale.toDisplayString()})`,
                     url: stripped_precomp_chunks.url.getSchemedHref("://"),
-                    similar_url_hint: dataProvider.url.getSchemedHref("://"),
+                    similar_url_hint: data_view.datasource.url.getSchemedHref("://"),
                 })
             },
         })
@@ -139,7 +129,7 @@ export class BrushingWidget{
             parentElement: this.controlsContainer,
             onNewBrushStroke: stroke => this.brushStrokeContainer.addBrushStroke(stroke),
             datasource,
-            viewerDriver: this.viewer_driver
+            viewer: this.viewer
         })
         this.showStatus(`Now training on ${datasource.url}(${resolution[0]} x ${resolution[1]} x ${resolution[2]} nm)`)
         window.cancelAnimationFrame(this.animationRequestId)
@@ -167,11 +157,11 @@ export class TrainingWidget{
     public readonly rendererSelector: SelectorWidget<BrushRenderer>
     public readonly colorPicker: Vec3ColorPicker
 
-    constructor({gl, parentElement, datasource, viewerDriver, onNewBrushStroke}: {
+    constructor({gl, parentElement, datasource, viewer, onNewBrushStroke}: {
         gl: WebGL2RenderingContext,
         parentElement: HTMLElement,
         datasource: DataSource,
-        viewerDriver: IViewerDriver,
+        viewer: Viewer,
         onNewBrushStroke: (stroke: BrushStroke) => void,
     }){
         this.element = createElement({tagName: "div", parentElement})
@@ -205,8 +195,8 @@ export class TrainingWidget{
 
         this.overlay = new BrushingOverlay({
             gl,
-            trackedElement: viewerDriver.getTrackedElement(),
-            viewport_drivers: viewerDriver.getViewportDrivers(),
+            trackedElement: viewer.getTrackedElement(),
+            viewport_drivers: viewer.getViewportDrivers(),
             brush_stroke_handler: {
                 handleNewBrushStroke: (params: {start_position_uvw: vec3, camera_orientation_uvw: quat}) => {
                     this.staging_brush_stroke = BrushStroke.create({

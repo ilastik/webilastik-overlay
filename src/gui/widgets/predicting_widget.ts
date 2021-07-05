@@ -1,9 +1,8 @@
 import { vec3 } from "gl-matrix";
 import { Applet } from "../../client/applets/applet";
 import { DataSource, Session } from "../../client/ilastik";
-import { PrecomputedChunks } from "../../datasource/precomputed_chunks";
+import { PredictionsPrecomputedChunks } from "../../datasource/precomputed_chunks";
 import { IViewerDriver } from "../../drivers/viewer_driver";
-import { uuidv4 } from "../../util/misc";
 import { ParsedUrl } from "../../util/parsed_url";
 import { ensureJsonArray, ensureJsonBoolean, ensureJsonNumber, ensureJsonObject, JsonObject, JsonValue } from "../../util/serialization";
 
@@ -46,10 +45,7 @@ export class PredictingWidget extends Applet<PredictingAppletState>{
                     return
                 }
                 new_state.datasources.forEach(async (ds, ds_index) => {
-                    let encoded_ds_url = Session.btoa(ds.url.toString())
-                    let predictions_url = ParsedUrl.parse(session.session_url).withDataScheme("precomputed")
-                        .concat(`${this.name}/datasource=${encoded_ds_url}/run_id=${uuidv4()}`);
-                    let precomp_predictions = await PrecomputedChunks.create(predictions_url)
+                    let precomp_predictions = await PredictionsPrecomputedChunks.createFor({ilastik_session: session, raw_data: ParsedUrl.parse(ds.url)})
                     viewer_driver.refreshView({
                         name: `lane${ds_index}`,
                         url: precomp_predictions.url.getSchemedHref("://"),

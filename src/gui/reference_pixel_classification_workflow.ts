@@ -5,13 +5,15 @@ import { createElement, removeElement } from "../util/misc";
 import { PredictingWidget } from "./widgets/predicting_widget";
 import { BrushingWidget } from "./widgets/brushing_overlay/brushing_widget";
 import { FeatureSelectionWidget } from "./widgets/feature_selection";
+import { Viewer } from "./viewer";
 
 export class ReferencePixelClassificationWorkflowGui{
     public readonly element: HTMLElement
     public readonly feature_selection_applet: Applet<FeatureExtractor[]>
     public readonly brushing_applet: BrushingWidget;
     public readonly live_updater: PredictingWidget;
-    session: Session;
+    public readonly session: Session;
+    public readonly viewer: Viewer;
 
     public constructor({parentElement, session, viewer_driver}: {
         parentElement: HTMLElement,
@@ -20,6 +22,7 @@ export class ReferencePixelClassificationWorkflowGui{
     }){
         this.session = session
         this.element = createElement({tagName: "div", parentElement, cssClasses: ["ReferencePixelClassificationWorkflowGui"]})
+        this.viewer = new Viewer({driver: viewer_driver, ilastik_session: session})
         this.feature_selection_applet = new FeatureSelectionWidget({
             name: "feature_selection_applet",
             session,
@@ -28,7 +31,7 @@ export class ReferencePixelClassificationWorkflowGui{
         this.brushing_applet = new BrushingWidget({
             session,
             parentElement: this.element,
-            viewer_driver,
+            viewer: this.viewer,
         })
         this.live_updater = new PredictingWidget({
             session,

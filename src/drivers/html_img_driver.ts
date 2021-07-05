@@ -31,7 +31,7 @@ export class HtmlImgDriver implements IViewerDriver{
             htmlElement.parentElement?.removeChild(htmlElement)
         })
         const container = createElement({tagName: "div", parentElement: this.img.parentElement!, cssClasses: [output_css_class]})
-        PrecomputedChunks.create(ParsedUrl.parse(view.url)).then(precomp_chunks => {
+        PrecomputedChunks.fromUrl(ParsedUrl.parse(view.url)).then(precomp_chunks => {
             const scale = precomp_chunks.scales[0]
             const increment = 128
             for(let y=0; y<this.img.height; y += increment){
@@ -44,7 +44,7 @@ export class HtmlImgDriver implements IViewerDriver{
                         z: [0, 1]
                     })
                     .withAddedSearchParams(new Map([["format", "png"]]))
-                    .href.replace(/^precomputed:\/\//, "")
+                    .href
                 }
             }
         })

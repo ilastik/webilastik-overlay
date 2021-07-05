@@ -1,7 +1,9 @@
 import { vec3 } from "gl-matrix"
 import { DataSource, Session } from "../client/ilastik"
+import { uuidv4 } from "../util/misc";
 import { ParsedUrl } from "../util/parsed_url";
 import { ensureJsonArray, ensureJsonNumber, ensureJsonNumberTripplet, ensureJsonObject, ensureJsonString, JsonValue } from "../util/serialization"
+import { IDataScale, IMultiscaleDataSource } from "./datasource";
 
 
 const encodings = ["raw", "jpeg", "compressed_segmentation"] as const;
@@ -14,7 +16,7 @@ export function ensureEncoding(value: string): Encoding{
     return variant
 }
 
-export class PrecomputedChunksScale{
+export class PrecomputedChunksScale implements IDataScale{
     public readonly base_url: ParsedUrl
     public readonly key: string
     public readonly size: [number, number, number]
@@ -58,7 +60,7 @@ export class PrecomputedChunksScale{
         return new DataSource(this.getUrl().getSchemedHref("://"), this.resolution)
     }
 
-    public toResolutionDisplayString(): string{
+    public toDisplayString(): string{
         return `${this.resolution[0]} x ${this.resolution[1]} x ${this.resolution[2]} nm`
     }
 
@@ -66,12 +68,9 @@ export class PrecomputedChunksScale{
         return vec3.equals(this.resolution, other.resolution)
     }
 
-    public async toStrippedPrecomputedChunks(session: Session): Promise<PrecomputedChunks>{
-        const encoded_base_url = Session.btoa(this.base_url.getSchemedHref("://"))
-        const resolution_str = `${this.resolution[0]}_${this.resolution[1]}_${this.resolution[2]}`
-        const compound_url = ParsedUrl.parse(session.session_url)
-            .concat(`stripped_precomputed_info/url=${encoded_base_url}/resolution=${resolution_str}`)
-        return await PrecomputedChunks.create(compound_url)
+    public async toStrippedMultiscaleDataSource(session: Session): Promise<StrippedPrecomputedChunks>{
+        const original = await PrecomputedChunks.fromUrl(this.base_url)
+        return await StrippedPrecomputedChunks.strip(original, this.resolution, session)
     }
 
     public static fromJsonValue(base_url: ParsedUrl, value: JsonValue){
@@ -108,7 +107,7 @@ export function ensureDataType(value: string): DataType{
     return variant
 }
 
-export class PrecomputedChunks{
+export class PrecomputedChunks implements IMultiscaleDataSource{
     public readonly url: ParsedUrl;
     public readonly type: Type;
     public readonly data_type: DataType;
@@ -132,7 +131,7 @@ export class PrecomputedChunks{
         this.scales = params.scales
     }
 
-    public static async create(url: ParsedUrl): Promise<PrecomputedChunks>{
+    public static async fromUrl(url: ParsedUrl): Promise<PrecomputedChunks>{
         url = url.ensureDataScheme("precomputed")
         url = url.name == "info" ? url.getParent() : url
         if(!["http://", "https://"].includes(url.protocol)){
@@ -154,22 +153,141 @@ export class PrecomputedChunks{
         })
     }
 
-    public isStripped(): boolean{
-        return this.url.href.includes("stripped_precomputed_info/url=")
-    }
-
     public findScale(target: vec3 | PrecomputedChunksScale): PrecomputedChunksScale | undefined{
         const resolution = target instanceof PrecomputedChunksScale ? target.resolution : target
         return this.scales.find(scale => vec3.equals(scale.resolution, resolution))
     }
+}
 
-    public async getUnstripped(): Promise<PrecomputedChunks>{
-        const match = this.url.href.match(/stripped_precomputed_info\/url=(?<url>[^/]+)\/resolution=(?<resolution>\d+_\d+_\d+)/)
-        if(match === null){
-            return this
+export class StrippedPrecomputedChunks extends PrecomputedChunks{
+    public readonly original: PrecomputedChunks;
+    public readonly scale: PrecomputedChunksScale;
+    private constructor(params: {
+        url: ParsedUrl,
+        type: Type,
+        data_type: DataType,
+        num_channels: number,
+        scales: Array<PrecomputedChunksScale>,
+        original: PrecomputedChunks
+    }){
+        super(params)
+        const parsed_args = StrippedPrecomputedChunks.parse(params.url)
+        if(params.scales.length != 1){
+            throw Error(`Expected single scale, got ${params.scales.length}`)
         }
-        const encoded_url = match.groups!["url"]
-        const url = ParsedUrl.parse(Session.atob(encoded_url))
-        return await PrecomputedChunks.create(url)
+        if(!vec3.equals(params.scales[0].resolution, parsed_args.resolution)){
+            throw Error(`Bad resolution ${vec3.str(parsed_args.resolution)}`)
+        }
+        this.original = params.original
+        this.scale = this.scales[0]
+    }
+
+    public toIlastikDataSource() : DataSource{
+        let original_scale = this.original.findScale(this.scales[0].resolution)!
+        return new DataSource(original_scale.getUrl().getSchemedHref("://"), original_scale.resolution)
+    }
+
+    public static match(url: ParsedUrl): RegExpMatchArray | null{
+        let url_regex = /stripped_precomputed\/url=(?<url>[^/]+)\/resolution=(?<resolution>\d+_\d+_\d+)/
+        return  url.path.match(url_regex)
+    }
+
+    public static parse(url: ParsedUrl): {url: ParsedUrl, original_url: ParsedUrl, resolution: vec3}{
+        const match = this.match(url)
+        if(!match){
+            throw Error(`Url ${url.getSchemedHref("://")} is not a stripped precomputed chunks URL`)
+        }
+        const raw_resolution = match.groups!["resolution"].split("_").map(axis => parseInt(axis))
+        const resolution = vec3.fromValues(raw_resolution[0], raw_resolution[1], raw_resolution[2])
+        return {
+            url,
+            original_url: ParsedUrl.parse(Session.atob(match.groups!["url"])),
+            resolution,
+        }
+    }
+
+    public static async strip(original: PrecomputedChunks, resolution: vec3, session: Session): Promise<StrippedPrecomputedChunks>{
+        const original_url = original.url.getSchemedHref("://")
+        const resolution_str = `${resolution[0]}_${resolution[1]}_${resolution[2]}`
+        const compound_url = ParsedUrl.parse(session.session_url)
+            .ensureDataScheme("precomputed")
+            .concat(`stripped_precomputed/url=${Session.btoa(original_url)}/resolution=${resolution_str}`)
+        const chunks = await PrecomputedChunks.fromUrl(compound_url)
+
+        return new StrippedPrecomputedChunks({
+            url: compound_url,
+            type: chunks.type,
+            data_type: chunks.data_type,
+            num_channels: chunks.num_channels,
+            scales: chunks.scales,
+            original,
+        })
+    }
+
+    public static async fromUrl(url: ParsedUrl): Promise<StrippedPrecomputedChunks>{
+        const parsed = this.parse(url.ensureDataScheme("precomputed"))
+        const chunks = await PrecomputedChunks.fromUrl(url)
+        return new StrippedPrecomputedChunks({
+            url,
+            type: chunks.type,
+            data_type: chunks.data_type,
+            num_channels: chunks.num_channels,
+            scales: chunks.scales,
+            original: await PrecomputedChunks.fromUrl(parsed.original_url),
+        })
+    }
+}
+
+export class PredictionsPrecomputedChunks extends PrecomputedChunks{
+    public readonly raw_data_url: ParsedUrl;
+    private constructor(params: {
+        url: ParsedUrl,
+        type: Type,
+        data_type: DataType,
+        num_channels: number,
+        scales: Array<PrecomputedChunksScale>,
+    }){
+        super(params)
+        const parsed_args = PredictionsPrecomputedChunks.parse(params.url)
+        this.raw_data_url = parsed_args.raw_data_url
+    }
+
+    public static match(url: ParsedUrl): RegExpMatchArray | null{
+        let url_regex = /predictions\/raw_data=(?<raw_data>[^/?]+)/
+        return url.getSchemedHref("://").match(url_regex)
+    }
+
+    public static parse(url: ParsedUrl): {url: ParsedUrl, raw_data_url: ParsedUrl}{
+        const match = this.match(url)
+        if(!match){
+            throw Error(`Url ${url.getSchemedHref("://")} is not a predictions precomputed chunks URL`)
+        }
+        const raw_data_url = ParsedUrl.parse(Session.atob(match.groups!["raw_data"]))
+        return {
+            url,
+            raw_data_url,
+        }
+    }
+
+    public static async fromUrl(url: ParsedUrl): Promise<PredictionsPrecomputedChunks>{
+        const chunks = await PrecomputedChunks.fromUrl(url.ensureDataScheme("precomputed"))
+        return new PredictionsPrecomputedChunks({
+            ...chunks
+        })
+    }
+
+    public static async createFor({raw_data, ilastik_session}: {raw_data: ParsedUrl, ilastik_session: Session}): Promise<PredictionsPrecomputedChunks>{
+        let raw_data_url = raw_data.getSchemedHref("://")
+        let predictions_url = ParsedUrl.parse(ilastik_session.session_url)
+            .withDataScheme("precomputed")
+            .concat(`predictions/raw_data=${Session.btoa(raw_data_url)}/run_id=${uuidv4()}`);
+        let precomp_chunks = await PrecomputedChunks.fromUrl(predictions_url)
+        return new PredictionsPrecomputedChunks({
+            url: predictions_url,
+            type: precomp_chunks.type,
+            data_type: precomp_chunks.data_type,
+            num_channels: precomp_chunks.num_channels,
+            scales: precomp_chunks.scales,
+        })
     }
 }
