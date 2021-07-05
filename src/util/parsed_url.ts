@@ -71,6 +71,7 @@ export class ParsedUrl {
         }
         let groups = match.groups!;
         return new ParsedUrl({
+            datascheme: groups["datascheme"] || undefined,
             protocol: groups["protocol"],
             hostname: groups["hostname"],
             port: groups["port"] ? parseInt(groups["port"].slice(1)) : undefined,
@@ -133,7 +134,7 @@ export class ParsedUrl {
         params.forEach((value, key) => search_params.append(key, value));
         return new ParsedUrl({
             ...this,
-            search: `?${params.toString()}`,
+            search: `?${search_params.toString()}`,
         });
     }
 }
