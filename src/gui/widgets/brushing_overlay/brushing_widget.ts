@@ -162,6 +162,7 @@ export class TrainingWidget{
     public staging_brush_stroke: BrushStroke | undefined = undefined
     public readonly rendererSelector: SelectorWidget<BrushRenderer>
     public readonly colorPicker: Vec3ColorPicker
+    public readonly datasource: DataSource
 
     constructor({gl, parentElement, datasource, viewer, onNewBrushStroke}: {
         gl: WebGL2RenderingContext,
@@ -171,6 +172,7 @@ export class TrainingWidget{
         onNewBrushStroke: (stroke: BrushStroke) => void,
     }){
         this.element = createElement({tagName: "div", parentElement})
+        this.datasource = datasource
 
         let p: HTMLElement;
 
@@ -220,7 +222,7 @@ export class TrainingWidget{
     }
 
     public render(brushStrokes: Array<BrushStroke>){
-        let strokes = brushStrokes.slice()
+        let strokes = brushStrokes.filter(stroke => stroke.annotated_data_source.equals(this.datasource))
         if(this.staging_brush_stroke){
             strokes.push(this.staging_brush_stroke)
         }
