@@ -64,9 +64,7 @@ export class Viewer{
         if(HtmlImgSource.accepts(current_url)){
             multiscale_datasource = new HtmlImgSource(current_url)
         }else if(PredictionsPrecomputedChunks.match(current_url)){
-            multiscale_datasource = await PredictionsPrecomputedChunks.createFor({
-                ilastik_session: this.ilastik_session, raw_data: current_url
-            })
+            multiscale_datasource = await PredictionsPrecomputedChunks.fromUrl(current_url)
         }else if(StrippedPrecomputedChunks.match(current_url)){
             multiscale_datasource = await StrippedPrecomputedChunks.fromUrl(current_url)
         }else{

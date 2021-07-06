@@ -13,7 +13,6 @@ import { BrushRenderer } from "./brush_renderer"
 import { BrushStrokesContainer } from "./brush_strokes_container"
 import { IDataScale } from "../../../datasource/datasource"
 import { Viewer } from "../../viewer"
-import { HtmlImgSource } from "../../../datasource/html_img"
 
 export class BrushingWidget{
     public static training_view_name_prefix = "ilastik training: "
@@ -96,9 +95,6 @@ export class BrushingWidget{
         if(data_view instanceof Error){
             return this.showStatus(`${data_view}`)
         }
-        if(data_view.datasource instanceof HtmlImgSource){
-            return this.startTraining(data_view.datasource.scales[0].toIlastikDataSource())
-        }
         if(data_view.datasource instanceof StrippedPrecomputedChunks){
             let originalDataProvider = data_view.datasource.original
             let scale = originalDataProvider.findScale(data_view.datasource.scales[0].resolution)!
@@ -106,7 +102,10 @@ export class BrushingWidget{
         }
         if(data_view.datasource instanceof PredictionsPrecomputedChunks){
             //FIXME: allow more annotations?
-            return this.showStatus(`Showing predictions for ${data_view.datasource.url.getSchemedHref("://")}`)
+            return this.showStatus(`Showing predictions for ${data_view.datasource.raw_data_url.getSchemedHref("://")}`)
+        }
+        if(data_view.datasource.scales.length == 1){
+            return this.startTraining(data_view.datasource.scales[0].toIlastikDataSource())
         }
 
         createElement({tagName: "label", innerHTML: "Select a voxel size to annotate on:", parentElement: this.controlsContainer});
