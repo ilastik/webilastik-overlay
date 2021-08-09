@@ -1,3 +1,5 @@
+# NOTICE: !!! this repo has been deprecated in favor of [webilastik](https://github.com/ilastik/webilastik), where you can find both the backend code on the root directory, as well as the overlay code inside `overlay/` !!!
+
 # Ilastik overlay
 
 This project implements a web version of [ilastik](https://www.ilastik.org/), in particular of its [Pixel Classification Workflow](https://www.ilastik.org/documentation/pixelclassification/pixelclassification)
